@@ -1,0 +1,163 @@
+  %input macros (i.e. write your own macros file called MacroFile1.tex)
+%\include{Macros/MacroFile1}
+\documentclass[oneside,openany,11pt]{Classes/CUEDthesisPSnPDF}
+
+\usepackage{babel}
+\usepackage[default,scale=0.95]{opensans}
+\usepackage[T1]{fontenc}
+%\usepackage[utf8]{inputenc}
+\usepackage[letterspace=8]{microtype}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{enumerate}
+\usepackage{listings}
+\usepackage{geometry}
+\usepackage{ragged2e}
+\usepackage{titlesec}
+%\usepackage{minted}
+%\usepackage{tabularx}
+
+\titleformat{\chapter}{\Huge \bfseries}{\thechapter}{15pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-25pt}{10pt}
+
+\newcommand{\op}{\operatorname}
+\newcommand{\bpm}{\begin{pmatrix}}
+\newcommand{\epm}{\end{pmatrix}}
+\newcommand{\bvm}{\begin{vmatrix}}
+\newcommand{\evm}{\end{vmatrix}}
+\newcommand{\Lshr}{\rotatebox[origin=c]{180}{$\Lsh$}}
+\newcommand{\RRightarrow}{\rotatebox[origin=c]{90}{\scalebox{0.7}{$\Downarrow\downarrow$}}}
+\newcommand{\LLeftarrow}{\rotatebox[origin=c]{90}{\scalebox{0.7}{$\Uparrow\uparrow$}}}
+\numberwithin{equation}{chapter}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\definecolor{mygreen}{rgb}{0,.5,0}
+\definecolor{mygray}{rgb}{0.9,0.9,0.9}
+\definecolor{psign}{rgb}{0.9  ,0.1,0.1}
+\definecolor{pregime}{rgb}{0.9,0.5,0.0}
+\definecolor{pregimet}{rgb}{0.6,0.2,0.2}
+\definecolor{pexpo}{rgb}{0.1,0.4,0.7}
+
+
+%\textls{}
+%\MakeUppercase{}
+\usepackage{textcomp}
+
+%\title{\begin{flushleft}Nobody needed those bits anyway \end{flushleft}}
+\title{Low-precision climate computing:\\Nobody needed those bits anyway}
+
+\ifpdf
+  \author{Milan Kl\"ower}
+  \collegeordept{Atmospheric, Oceanic and Planetary Physics}
+  \university{University of Oxford}
+% insert below the file name that contains the crest in-place of 'UnivShield'
+%  \crest{\includegraphics[width=1\textwidth]{Figs/float16_hr_tofino_small.png}}
+
+%
+% insert below the file name that contains the crest in-place of 'UnivShield'
+% \crest{\IncludeGraphicsW{UnivShield}{40mm}{14 14 73 81}}
+%
+%\renewcommand{\submittedtext}{change the default text here if needed}
+\supervisorone{Prof. Tim Palmer, University of Oxford}
+\supervisortwo{Dr. Peter D\"{u}ben, European Centre for Medium-Range Weather Forecasts}
+\degree{Doctor of Philosophy}
+%\subj{Climate Physics: Meteorology and Physical Oceanography}
+\degreedate{Oxford, September 2021}
+
+% turn of those nasty overfull and underfull hboxes
+\hbadness=10000
+\hfuzz=50pt
+
+% Put all the style files you want in the directory StyleFiles and usepackage like this:
+%\usepackage{StyleFiles/watermark}
+
+% Comment out the next line to get single spacing
+\onehalfspacing
+
+\begin{document}
+
+%\language{english}
+
+% A page with the abstract on including title and author etc may be
+% required to be handed in separately. If this is not so, then comment
+% the below 3 lines (between '\begin{abstractseparte}' and
+% 'end{abstractseparate}'), normally like a declaration ... needs some more
+% work, mind as environment abstracts creates a new page!
+% \begin{abstractseparate}
+%   \input{Abstract/abstract}
+% \end{abstractseparate}
+
+% Using the watermark package which is in StyleFiles/
+% and to remove DRAFT COPY ONLY appearing on the top of all pages comment out below line
+%\watermark{DRAFT COPY ONLY}
+
+\newgeometry{textwidth=15cm,textheight=23cm}
+\maketitle
+\restoregeometry
+
+%set the number of sectioning levels that get number and appear in the contents
+\setcounter{secnumdepth}{1}
+\setcounter{tocdepth}{2}
+
+\frontmatter % book mode only
+\pagenumbering{roman}
+%\include{Dedication/dedication}
+\newpage
+\thispagestyle{empty}
+
+%\textbf{Word count}\\
+%\vspace{1em}
+%\begin{tabular}{rl}
+%352& Abstract\\
+%933& Introduction\\
+%2484& Section 2\\
+%2923& Section 3\\
+%2618& Section 4\\
+%808& Section 5\\
+%686& Conclusions\\
+%10,804& Total
+%\end{tabular}
+
+\newgeometry{textwidth=15cm,textheight=23cm}
+
+\include{Dedication/dedication}
+\include{Abstract/abstract}
+\restoregeometry
+
+\tableofcontents
+%\listoffigures
+%\renewcommand{\nompreamble}{\markboth{Nomenclature}{Nomenclature}}
+%\printnomenclature[0.85in]  %% Print the nomenclature
+%\addcontentsline{toc}{chapter}{Nomenclature}
+%\markboth{\sc{Nomenclature}}{\sc{Nomenclature}}
+
+\mainmatter % book mode only
+\include{Introduction/introduction}
+\include{Section1/section1}
+\include{Section2/section2}
+\include{Section3/section3}
+\include{Section4/section4}
+\include{Conclusions/conclusions}
+% \include{Outlook/outlook}
+%\include{Outline/outline}
+
+\backmatter % book mode only
+\appendix
+\include{Appendix1/appendix1}
+%\include{Appendix2/appendix2}
+
+%\bibliographystyle{plainnat}
+%\bibliographystyle{Classes/CUEDbiblio}
+\bibliographystyle{Classes/jmb}
+%\bibliographystyle{Classes/jmb} % bibliography style
+
+\addcontentsline{toc}{chapter}{Acknowledgements}
+\include{Acknowledgement/acknowledgement}
+
+\addcontentsline{toc}{chapter}{Funding}
+\include{Funding/funding}
+
+\renewcommand{\bibname}{References} % changes default name Bibliography to References
+\bibliography{References/bibliography} % References file
+
+\end{document}
