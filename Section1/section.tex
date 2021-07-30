@@ -1,0 +1,382 @@
+\chapter{General methods}
+\label{chap:methods}
+
+\section{Binary number formats}
+\label{sec:numbers}
+
+	\subsection{Integers}
+	\label{sec:integers}
+
+The simplest way to represent a real number in bits is the integer format. An $n$-bit signed integer starts with a
+sign bit followed by a sequence of integer bits, that are decoded as a sum of powers of two with exponents $0,1,...,n-2$.
+An positive integer $x$ with signbit $b_0 = 0$ is therefore decoded in bits $b_1,...,b_{n-2}$ as
+\begin{equation}
+x = \sum_{i=1}^{n-2} 2^{i-1} b_i
+\end{equation}
+To avoid multiple representations of zero and to simplify hardware implementations, negative integers, with a sign bit (red) being 1,
+are decoded with two's complement interpretation (denoted with an underscore) by flipping all other bits and adding $1$ \citep{Choo2003}.
+For example in the 4-bit signed integer format (Int4), ${\color{psign}1}110_{\op{Int4}} = {\color{psign}1}010\_ = -2$.
+The largest representable integer for a format with $n$ bits is therefore $2^{n-1}-1$ and the spacing between
+representable integers is always 1.
+
+	\subsection{Fixed-point numbers}
+	\label{sec:fixpoints}
+
+Fixed-point numbers extend the integer format with $n_f$ fraction bits to $n_i$ signed integer bits to decode an additional sum of
+powers of two with negative exponents $-1,-2,...,-n_f$. A positive fixed-point number is
+\begin{equation}
+x = \sum_{i=1}^{n_i-2} 2^{i-1} b_i  + \sum_{i=1}^{n_f} 2^{-i} b_{n_i-2+i}
+\label{eq:fixedpoint}
+\end{equation}
+Every additional fraction bit reduces the number of integer bits, for example Q6.10 is the 16-bit fixed-point format with
+6 signed integer bits and 10 fraction bits.
+
+Flexibility regarding the dynamic range can therefore be achieved with integer arithmetic if fixed-point numbers are used
+\citep{Russell2017}. Unfortunately, we did not achieve convincing results with integer arithmetic for the applications in this
+study, as rescaling of the equations is desired to place many arithmetic calculations near the largest representable number
+\citep{Klower2019}. However, any result beyond will lead to disastrous results, as integer overflow usually returns a negative
+value following a wrap-around behaviour.
+
+	\subsection{Floating-point numbers}
+	\label{sec:floats}
+
+The IEEE standard on floating-point arithmetic defines how floats encode a real number $x$ in terms of a sign, and several
+exponent and significant bits
+\begin{equation}
+x = (-1)^{sign~bit} \cdot 2^{e-bias} \cdot (1+f)
+\label{eq:float}
+\end{equation}
+The exponent bits $e$ are interpreted as unsigned integers, such that $e-bias$ converts them effectively to signed integers.
+The significant bits $f_i$ define the significand as $f = \sum_{i=1}^{n_f} f_i 2^{-i}$ such that $(1+f)$ is in the bounds $[1,2)$.
+An 8-bit float encodes a real number with a sign bit (red), $n_e = 3$ exponent bits (blue) and $n_f=4$ fraction bits (black) as
+illustrated in the following example
+\begin{equation}
+3.14 \approx {\color{psign}0}{\color{pexpo}100}1001_{\op{Float8}} = (-1)^{\color{psign}0} \cdot 2^{{\color{pexpo}4}-bias}
+\cdot (1+2^{-1}+2^{-4}) = 3.125
+\label{eq:float_pos}
+\end{equation}
+with $bias=2^{n_e-1} - 1 = 3$. Exceptions to Eq. \ref{eq:float} occur for subnormal numbers, infinity (Inf) and Not-a-Number
+(NaN) when all exponent bits are either zero (subnormals) or one (Inf when f=0, or NaN else). 16-bit half-precision floatin-point 
+numbers (Float16) have 5 exponent bits and 10 significant bits. A truncated version of the Float32 format (8 exponent bits, 23 significant bits)
+is BFloat16 with 8 exponent bits and 7 significant bits. Characteristics of various formats are summarised in Table \ref{tab:formats}.
+A format with more exponent bits has a wider dynamic range of representable numbers but lower precision, as fewer bits are available
+for the significant. All floating-point formats have a fixed number of significant bits. Consequently, they have a constant number of
+significant digits throughout their range of representable numbers (subnormals excluded), which is in contrast to posit numbers,
+which are introduced in the next section.
+
+\begin{table}[htbp]
+\center
+\begin{tabular}{l | r | r | l | l | r | r}
+Format & bits & exp bits & $minpos$ & $maxpos$ & $\epsilon$ &  \% NaR \\
+\hline
+Float64    & $64$ & $11$ & $5.0 \cdot 10^{-324}$ & $1.8 \cdot 10^{308}$  & $16.3$ & $0.0$ \\
+Float32    & $32$ & $8$ & $1.0 \cdot 10^{-45}$ & $3.4 \cdot 10^{38}$ & $7.6$ & $0.4$ \\
+Float16    & $16$ & $5$ & $6.0 \cdot 10^{-8}$ & $65504$ & $3.7$ & $3.1$ \\
+BFloat16    & $16$ & $8$ & $ 9.2 \cdot 10^{-41}$ & $3.4 \cdot 10^{38}$ & $2.8$ & $0.4$  \\
+Float8 & $8$ & $3$ & $1.5 \cdot 10^{-2}$ & $15.5$ & $1.9$ & $12.5$\\
+\hline
+Posit32    & $32$ & $2$ &  $7.5 \cdot 10^{-37}$ & $7.5 \cdot 10^{37}$ & $8.8$ & $0.0$ \\
+Posit(16,1) & $16$ & $1$ & $3.7 \cdot 10^{-9}$ & $3.7 \cdot 10^{9}$ & $4.3$ & $0.0$\\
+Posit(16,2) & $16$ & $2$ & $1.4 \cdot 10^{-17}$ & $1.4 \cdot 10^{17}$ & $4.0$ & $0.0$\\
+Posit(8,0) & $8$ & $0$ & $1.5 \cdot 10^{-2}$ & $64$ & $2.2$ & $0.4$  \\
+\hline
+Int16 & $16$ & $0$ & $1$ & $32767$ & $0.8$ & $0$\\
+Q6.10 & $16$ & $0$ & $9.8 \cdot 10^{-4}$ & $32.0$ & $3.7$ & $0$\\
+\hline
+LogFixPoint16 & $16$ & $15$ & $5.4 \cdot 10^{-20}$ & $1.8 \cdot 10^{19}$ & $3.2$ & $0.0$\\
+Approx14 & $14$ & $13$ & $5.4 \cdot 10^{-20}$ & $9.1 \cdot 10^{18}$ & $2.6$ & $0.8$
+\end{tabular}
+\vspace{10pt}
+\caption{Some characteristics of various number formats. $minpos$ is the smallest representable positive number,
+$maxpos$ the largest. The machine precision $\epsilon$, is the decimal precision at $1$. \% NaR denotes the
+percentage of bit patterns that represent not a number (NaN), infinity or not a real (NaR).}
+\label{tab:formats}
+\end{table}
+
+	\subsection{Logarithmic fixed-point numbers}
+	\label{sec:logfixs}
+
+Fixed-point numbers have a limited range and for the applications in this study an unsuitable distribution of decimal precision.
+However, logarithmic fixed-point numbers are similar to floating-point numbers. A $n$-bit logarithmic fixed-point number is defined as
+\begin{equation}
+x = (-1)^{sign~bit} \cdot 2^e
+\label{eq:logfixpoint}
+\end{equation}
+where $e$ is encoded as an $(n-1)$-bit fixed-point number (Eq. \ref{eq:fixedpoint}).
+Consequently, logarithmic fixed-point numbers are equally spaced in log-space and
+have a perfectly flat decimal precision throughout the dynamic range of representable
+numbers (Fig. \ref{fig:decimal_precision}). We call the 16-bit logarithmic fixed-point numbers
+with 7 signed integer bits and 8 fraction bits LogFixPoint16. Approx14 is a proprietary number
+ format developed by Singular Computing, which is essentially a 14-bit logarithmic fixed-point
+ numbers with 7 signed integer bits and 6 fraction bits.
+
+Logarithmic number formats have the advantage that no rounding error is applied for multiplication, as the addition of the exponents
+is exact with fixed-point numbers (as long as no under or overflow occurs). Hence, multiplication with LogFixPoint16 and Approx14
+is not just exact but also fast, due to implementation as integer addition. Conversely, addition with logarithmic numbers is difficult.
+Adding two logarithmic numbers involves the computation of a logarithm, which, however, for low precision numbers can be implemented as a table look-up.
+
+Both LogFixPoint16 and Approx14 come with a round-to-nearest rounding mode in log2-space.  We consider $x_1 = 2^0 = 1$
+and $x_2 = 2^1 = 2$ as two representable numbers as an example with $x$ in between. With round-to-nearest (and tie to even)
+in linear-space all numbers $x$ larger equal $1.5$ are round up and others round down. With round-to-nearest in log2-space
+$2^{\tfrac{1}{2}} = \sqrt{2} = 1.414...$ is the log-midpoint as $\log_2(\sqrt{2}) = 0.5$. Consequently, the numbers between
+$\sqrt{2}$ (inclusive) and $2$ will be round up and only numbers between $1$ and less than $\sqrt{2}$ will round down.
+Hence, the linear range of numbers that will be round up is larger than those that will round down. This rounding is biased
+as the expectation of rounded uniformly distributed values between $1$ and $2$ is not equal to the expectation without rounding.
+Let $\op{round}_{\log_2}(x)$ be the round-to-nearest function in log2-space and $x$ be drawn $N$-times from a random uniform
+distribution $U(1,2)$, then
+\begin{equation}
+    \frac{1}{N}\sum_i^N x_i = 1.5 \neq \frac{1}{N}\sum_i^N \op{round}_{\log_2}(x_i) = 3 - \sqrt{2} = 1.586...
+    \label{eq:biased_rounding}
+\end{equation}
+ We will investigate the effect of this round-to-nearest in log2-space in section \ref{sec:mixed}.
+
+
+	\subsection{Posit numbers}
+	\label{sec:posits}
+
+Posit numbers arise from a projection of the real axis onto a circle (Fig. \ref{fig:circle}), with only one bitpattern for zero and one
+for Not-a-Real (NaR, or complex infinity), which serves as a replacement for Not-a-Number (NaN). The circle is split into
+\emph{regimes}, determined by a constant $useed$, which always marks the north-west on the posit circle (Fig. \ref{fig:circle}b).
+Regimes are defined by $useed^{\pm1}$, $useed^{\pm2}$, $useed^{\pm3}$, etc. To encode these regimes into bits, posit
+numbers extend floating-point arithmetic by introducing regime bits that are responsible for the dynamic range of representable
+numbers. Instead of having a fixed length, regime bits are defined as the sequence of identical bits after the sign bit, which are
+eventually terminated by an opposite bit. The flexible length allows the significand (or mantissa) to occupy more bits when less
+regime bits are needed, which is the case for numbers around one. A resulting higher precision around one is traded against a
+gradually lower precision for large or small numbers. A positive posit number $p$ is decoded as
+\citep{Gustafson2017,Gustafson2017a,Klower2019} (negative posit numbers are converted first to their two's complement, see
+Eq. \ref{eq:2comp})
+\begin{equation}
+p = (-1)^{sign~bit} \cdot useed^k \cdot 2^e \cdot (1+f)
+\label{eq:posit}
+\end{equation}
+where $k$ is the number of regime bits. $e$ is the integer represented by the exponent bits and $f$ is the fraction which is
+encoded in the fraction (or significant) bits. The base $useed = 2^{2^{e_s}}$ is determined by the number of exponent bits
+$e_s$. More exponent bits increase - by increasing $useed$ - the dynamic range of representable numbers for the cost of precision.
+The exponent bits themselves do not affect the dynamic range by changing the value of $2^e$ in Eq. \ref{eq:posit}. They fill gaps of
+powers of 2 spanned by $useed = 4,16,256,...$ for $e_s=1,2,3,...$, and every posit number can be written as $p = \pm 2^n \cdot (1+f)$
+with a given integer $n$ \citep{Gustafson2017,Chen2018}. We will use a notation where Posit($n$,$e_s$) defines the posit numbers
+with $n$ bits including $e_s$ exponent bits. A posit example is provided in the Posit(8,1)-system (i.e. $useed = 4$)
+\begin{equation}
+57 \approx {\color{psign}0}{\color{pregime}111}{\color{pregimet}0}{\color{pexpo}1}11_{\op{Posit}(8,1)} = (-1)^{\color{psign}0}
+\cdot 4^{\color{pregime}2} \cdot 2^{\color{pexpo}1} \cdot (1+2^{-1}+2^{-2}) = 56
+\label{eq:posit_pos}
+\end{equation}
+The sign bit is given in red, regime bits in orange, the terminating regime bit in brown, the exponent bit in blue and the fraction bits in black.
+The $k$-value is inferred from the number of regime bits, that are counted as negative for the bits being 0, and positive, but subtract 1,
+for the bits being 1. The exponent bits are interpreted as unsigned integer and the fraction bits follow the IEEE floating-point standard
+for significant bits. For negative numbers, i.e. the sign bit being 1, all other bits are first converted to their two's complement (\cite{Choo2003},
+denoted with an underscore subscript) by flipping all bits and adding 1,
+\begin{equation}
+\begin{split}
+-0.28 &  \approx 11011110_{\op{Posit}(8,1)} = {\color{psign}1}{\color{pregime}0}{\color{pregimet}1}{\color{pexpo}0}0010\_ \\
+& = (-1)^{\color{psign}1} \cdot 4^{\color{pregime}-1} \cdot 2^{\color{pexpo}0} \cdot (1+2^{-3}) = -0.28125.
+\end{split}
+\label{eq:2comp}
+\end{equation}
+After the conversion to the two's complement, the bits are interpreted in the same way as in Eq. \ref{eq:posit_pos}.
+
+Posits also come with a no overflow/no underflow-rounding mode: Where floats overflow and return infinity when the exact result of an
+arithmetic operation is larger than the largest representable number ($maxpos$), posit arithmetic returns $maxpos$ instead, and similarly
+for underflow where the smallest representable positive number ($minpos$) is returned. This is motivated as rounding to infinity returns a
+result that is infinitely less correct than $maxpos$, although often desired to indicate that an overflow occurred in the simulation.
+Instead, it is proposed to perform overflow-like checks on the software level to simplify exception handling on hardware \citep{Gustafson2017a}.
+Many functions are simplified for posits, as only two exceptions cases have to be handled, zero and NaR. Conversely, Float64 has more than
+$10^{15}$ bitpatterns reserved for NaN, but these only make up $< 0.05\%$ of all available bit patterns. The percentage of redundant
+bitpatterns for NaN increases for floats with fewer exponent bits (Table \ref{tab:formats}), and only poses a noticeable issue for Float16
+and Float8.
+
+The posit number framework also highly recommends \emph{quires}, an additional register on hardware to store intermediate results.
+Dot-product operations are fused with quire arithmetic and can therefore be executed with a single rounding error, which is only applied
+when converting back to posits. The quire concept could also be applied to floating-point arithmetic (fused multiply-add is available on
+some processors), but is technically difficult to implement on hardware for a general dot-product as the required registers would need
+to be much larger in size. For fair comparison we do not take quires into account in this study. The posit number format is explained in
+more detail in \cite{Gustafson2017a}. In order to use posits on a conventional CPU we developed for the Julia programming language
+\citep{Bezanson2017} the posit emulator \emph{SoftPosit.jl} \citep{Klower2019a}, which is a wrapper for the C-based library SoftPosit
+\citep{Leong2020}. The type-flexible programming paradigm, facilitated by the Julia language, is outlined in \ref{sec:julia}.
+
+\subsection{Self-organizing numbers}
+\label{sec:sonums}
+
+\section{Rounding modes}
+\label{sec:rounding}
+
+\subsection{Round to nearest}
+\label{sec:roundnearest}
+
+	\subsection{Stochastic rounding}
+	\label{sec:stochastic_rounding} 
+
+The default rounding mode for floats and posits is round-to-nearest tie-to-even. In this rounding mode an exact result $x$ is rounded
+to the nearest representable number $x_i$. In case $x$ is half-way between two representable numbers, the result will be tied to the
+even. A floating-point number $x_i$ is considered to be even, if its significand ends in a zero bit. These special cases are therefore
+alternately round up or down, which removes a bias that otherwise persists (see Eq. \ref{eq:biased_rounding} for an example of biased rounding).
+Let $x_1$ and $x_2$ be the closest two representable numbers to $x$ and $x_1 \leq x < x_2$ then
+\begin{equation}
+\op{round}_{\op{nearest}}(x) =
+\begin{cases}
+x_1 \quad &\op{if} x - x_1 < x_2 - x,  \\
+x_1 &\op{if} x-x_1 = x_2 - x \op{~and~} x1 \op{~even}, \\
+x_2 &\op{else}.
+\end{cases}
+\label{eq:roundnearest}
+\end{equation}
+
+For stochastic rounding, rounding of $x$ down to a representable number $x_1$ or up to $x_2$ occurs at probabilities that are proportional
+to the distance between $x$ and $x_1$, $x_2$, respectively. Let $\delta$ be the distance between $x_1,x_2$, then
+
+\begin{equation}
+\op{round}_{\op{stoch}}(x) =
+\begin{cases}
+x_1 \quad &\op{with~probability}\quad 1 - \delta^{-1}(x - x_1)  \\
+x_2 &\op{with~probability}\quad  \delta^{-1}(x - x_1).
+\end{cases}
+\label{eq:stochround}
+\end{equation}
+
+This behaviour is illustrated in Fig. \ref{fig:stochround}. In case that $x$ is already identical with a representable number no rounding is applied
+and the chance to obtain another representable number is zero. For $x$ being half way between two representable numbers, the chance of
+round up or round down is 50\%. The introduced absolute rounding error for stochastic rounding is always at least as big as for round-to-nearest,
+and when low-probability round away from nearest occurs, it can be up to $\pm \delta$, whereas for round-to-nearest the error is bound by
+$\pm \tfrac{\delta}{2}$. Although the average absolute rounding error is therefore larger for stochastic rounding, the expected rounding error
+decreases towards zero for repeated roundings
+\begin{equation}
+\lim_{N\to \infty}\frac{1}{N} \sum_i^N \op{round}_{\op{stoch}}(x) = x
+\end{equation}
+as follows by inserting Eq. \ref{eq:stochround}. Stochastic rounding is therefore exact in expectation.
+
+The stochastic rounding mode is implemented for Float16 and BFloat16. Software emulations of both number formats rely on conversion to Float32,
+such that the exact result (to the precision provided by Float32) is known before conversion back to 16 bit. Instead of calculating the probabilities
+given in Eq. \ref{eq:stochround}, we add a stochastic perturbation $\xi \in [-\tfrac{\delta}{2},\tfrac{\delta}{2}]$ to $x$ before round-to-nearest.
+Let $r$ be uniformly distributed in $[0,1]$ then Eq. \ref{eq:stochround} can then be rewritten as
+
+\begin{equation}
+\op{round}_{\op{stoch}}(x) =
+\begin{cases}
+\op{round}_{\op{nearest}}(x +\tfrac{\delta}{2}(r - \tfrac{x-x_1}{\delta}) \quad & \op{if} x_1 = 2^n \op{~and~} x-x_1 < \tfrac{\delta}{4}  \\
+\op{round}_{\op{nearest}}(x + \delta(r-\tfrac{1}{2})) & \op{else}.
+\end{cases}
+\end{equation}
+
+The special case only occurs for $x$ being within $\tfrac{\delta}{4}$ larger than a floating-point number $x_1 = 2^n$, that means with zero significand.
+In this case the distance from $x_1$ to the previous float is only $\tfrac{\delta}{2}$, which has to be accounted for.
+
+
+\subsection{Efficient bitwise implementations}
+\label{sec:bitwiseop}
+
+\section{Error norms}
+\label{sec:error_norms}
+
+\subsection{Mean, absolute and relative error}
+	
+	\subsection{Decimal error and precision}
+	\label{sec:decimal_precision}
+
+The decimal precision is defined as \citep{Gustafson2017,Gustafson2017a}
+\begin{equation}
+\op{decimal} \op{precision} = -\log_{10} \vert \log_{10}( \frac{x_\text{repr}}{x_\text{exact}} ) \vert
+\end{equation}
+where $x_\text{exact}$ is the exact result of an arithmetic operation and $x_\text{repr}$ is the representable number
+that $x_\text{exact}$ is rounded to, given a specified rounding mode. For the common round-to-nearest rounding mode,
+the decimal precision approaches infinity when the exact result approaches the representable number and has a minimum
+in between two representable numbers. This minimum defines the \emph{worst-case} decimal precision, i.e. the decimal
+precision when the rounding error is maximised. The worst-case decimal precision is the number of decimal places that
+are at least correct after rounding.
+
+Fig. \ref{fig:decimal_precision} compares the worst-case decimal precision for various 16 and 8-bit floats and posits,
+as well as 16-bit integers, the fixed-point format Q6.10 (6 integer bits, 10 fraction bits) and logarithmic fixed-point numbers
+LogFixPoint16 and Approx14. Float16 has a nearly constant decimal precision of almost 4 decimal places, which decreases
+for the subnormal numbers towards the smallest representable number $minpos$. 16-bit posits, on the other hand, show an
+increased decimal precision for numbers around 1 and a wider dynamic range, in exchange for less precision for numbers
+around $10^4$ as well as $10^{-4}$.  The machine precision $\epsilon$ (in analogy to the machine error, also known as
+machine epsilon), defined as half the distance between 1 and the next representable number, is given in terms of decimal
+precision and is summarised in Table \ref{tab:formats} for the various formats. Due to the no overflow/no underflow-rounding
+mode, the decimal precision is slightly above zero outside the dynamic range.
+
+The decimal precision of 16-bit integers is negative infinity for any number below 0.5 (round to 0) and maximised for the
+largest representable integer $2^{15} - 1 =  32767$. Similar conclusions hold for the fixed-point format Q6.10, as the decimal
+precision is shifted towards smaller numbers by a factor of $\tfrac{1}{2}$ for each additional fraction bit.
+
+	\section{Type-flexibility through code composability}
+	\subsection{A type-flexible programming paradigm}
+
+Julia's programming paradigms of \emph{multiple-dispatch} and \emph{type-stability} facilitate the use of arbitrary number formats
+without the need to rewrite an algorithm, while compiling functions for specific types \citep{Bezanson2017}. As this is an essential
+feature of Julia and extensively made use of here, we briefly outline the benefits of Julia by computing the harmonic sum
+$\sum_{i=1}^\infty \tfrac{1}{i}$ with various number types as an example. Analytically the harmonic sum diverges, but with
+finite precision arithmetic several issues arise. With an increasing sum the precision is eventually lower than required to
+represent the increment of the next summand. The integer i as well as its inverse $\tfrac{1}{i}$ have to be representable
+in a given number format, and are also subject to rounding errors.
+
+%\begin{figure}[htbp]
+%\small
+%\begin{minted}[breaklines,escapeinside=||,mathescape=true,baselinestretch=0.7, linenos, numbersep=3pt, bgcolor=mygray,gobble=2,
+frame=lines, fontsize=\small, framesep=2mm]{julia}
+%function harmonic_sum(::Type{T},steps::Int=2000) where T
+%
+%    s = zero(T)
+%    o = one(T)
+%
+%    for i in 1:steps
+%
+%        s_old = s
+%        s += o/T(i)
+%
+%        if s == s_old    # check for convergence
+%            println(Float64(s),i)
+%            break
+%        end
+%    end
+%end
+%\end{minted}
+%\caption{A type-flexible harmonic sum function in the Julia language.}
+%\label{fig:harmsum}
+%\end{figure}
+
+Executing the function \texttt{harmonic\_sum} for the first time with a type \texttt{T} as the first argument, triggers Julia's
+\emph{just-in-time} compiler (Fig. \ref{fig:harmsum}). The function is type-stable, as the types of all variables are declared
+and therefore known to the compiler. At the same time Julia allows for type-flexibility, as its \emph{multiple-dispatch} means
+that calling \texttt{harmonic\_sum} with another type \texttt{T2} will result in a separately compiled function for \texttt{T2}.
+We can therefore compute the harmonic sum with arbitrary number types, as long as the zero-element \texttt{zero(T)};
+the one-element \texttt{one(T)}; addition; division; conversion from integer and conversion to float are defined for \texttt{T}.
+
+%\begin{figure}[htbp]
+%\small
+%\begin{minted}[breaklines,escapeinside=||,mathescape=true,baselinestretch=0.7, linenos, numbersep=3pt, bgcolor=mygray, gobble=2,
+frame=lines, fontsize=\small, framesep=2mm]{julia}
+%julia> using SoftPosit
+%julia> using BFloat16s
+%julia> harmonic_sum(Float16)
+%(7.0859375, 513)
+%
+%julia> harmonic_sum(BFloat16)
+%(5.0625, 65)
+%
+%julia> harmonic_sum(Posit16)
+%(7.77734375, 1024)
+%\end{minted}
+%\caption{Harmonic sum example use of the posit emulator \emph{SoftPosit.jl} in the Julia shell. \texttt{Posit16} is the Posit(16,1) standard.}
+%\label{fig:harmsum2}
+%\end{figure}
+
+The harmonic sum converges after 513 elements when using Float16 (Fig. \ref{fig:harmsum2}). The precision of BFloat16
+is so low that the sum already converges after 65 elements, as the addition of the next term $1/66$ is rounded back to
+5.0625. We identify the addition of small terms to prognostic variables of size $\mathcal{O}(1)$ as one of the major challenges
+with low precision arithmetic, which is discussed in more detail in section \ref{sec:mixed}. Using Posit(16,1), the sum only converges
+after 1024 terms, due to the higher decimal precision of posits between 1 and 10.
+
+\subsection{Analysis number formats}
+
+\section{Information theory}
+\label{sec:information}
+
+\subsection{Entropy}
+\label{sec:entropy}
+
+\subsection{Mutual information}
+\label{sec:mutual_information}
+
+\subsection{Preserved information}
+\label{sec:preserved_information}
+
+

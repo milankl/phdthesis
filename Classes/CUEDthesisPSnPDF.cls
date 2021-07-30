@@ -234,14 +234,14 @@
 %  \null\vfill
 \begin{center}
 
-\vspace*{20mm}
+\vspace*{15mm}
     { \huge {\bfseries {\@title}} \par}
 
 %{\large \vspace*{70mm}} %{{\@crest} \par} \vspace*{30mm}}
 
-%\begin{center}
-%    {\large \vspace*{25mm} {{\@crest} \par} \vspace*{25mm}}
-%\end{center}
+\begin{center}
+    {\large \vspace*{35mm} {{\@crest} \par} \vspace*{35mm}}
+\end{center}
 
 \vfill
 
