@@ -1,6 +1,6 @@
   %input macros (i.e. write your own macros file called MacroFile1.tex)
 %\include{Macros/MacroFile1}
-\documentclass[oneside,openany,11pt]{Classes/CUEDthesisPSnPDF}
+\documentclass[oneside,openany,11pt,fleqn]{Classes/CUEDthesisPSnPDF}
 
 \usepackage{babel}
 \usepackage[default,scale=0.95]{opensans}
@@ -14,8 +14,13 @@
 \usepackage{geometry}
 \usepackage{ragged2e}
 \usepackage{titlesec}
+\usepackage{sfmath}
 %\usepackage{minted}
 %\usepackage{tabularx}
+
+\usepackage{caption}
+\DeclareCaptionLabelSeparator{vertbar}{ | }
+\captionsetup{justification=justified, singlelinecheck=false, labelfont=bf, font=small, labelsep=vertbar}
 
 \titleformat{\chapter}{\Huge \bfseries}{\thechapter}{15pt}{\Huge}
 \titlespacing*{\chapter}{0pt}{-25pt}{10pt}
@@ -44,11 +49,13 @@
 \usepackage{textcomp}
 
 %\title{\begin{flushleft}Nobody needed those bits anyway \end{flushleft}}
-\title{Low-precision climate computing:\\Nobody needed those bits anyway}
+\title{Low-precision climate computing:\\Preserving information despite fewer bits}
 
 \ifpdf
   \author{Milan Kl\"ower}
-  \collegeordept{Atmospheric, Oceanic and Planetary Physics}
+  \subdepartment{Atmospheric, Oceanic and Planetary Physics}
+  \department{Department of Physics} 
+  \college{Jesus College}
   \university{University of Oxford}
 % insert below the file name that contains the crest in-place of 'UnivShield'
   \crest{\includegraphics[width=.25\textwidth]{Figures/ox_brand_cmyk_pos.pdf}}

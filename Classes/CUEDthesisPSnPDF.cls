@@ -206,7 +206,9 @@
 % In the subject
 \def\subj#1{\gdef\@subj{#1}}
 % The name of your college or department(eg. Trinity, Pembroke, Maths, Physics)
-\def\collegeordept#1{\gdef\@collegeordept{#1}}
+\def\subdepartment#1{\gdef\@subdepartment{#1}}
+\def\department#1{\gdef\@department{#1}}
+\def\college#1{\gdef\@college{#1}}
 % The name of your University
 \def\university#1{\gdef\@university{#1}}
 % Defining the crest
@@ -240,7 +242,7 @@
 %{\large \vspace*{70mm}} %{{\@crest} \par} \vspace*{30mm}}
 
 \begin{center}
-    {\large \vspace*{35mm} {{\@crest} \par} \vspace*{35mm}}
+    {\large \vspace*{25mm} {{\@crest} \par} \vspace*{25mm}}
 \end{center}
 
 \vfill
@@ -248,7 +250,11 @@
 \end{center}
     {{\Large \@author} \par}
 {\large \vspace*{0ex}
-    {{\@collegeordept} \par}
+    {{\@subdepartment} \par}
+\vspace*{0ex}
+%    {{\@department} \par}
+%\vspace*{0ex}
+    {{\@college} \par}
 \vspace*{0ex}
     {{\@university} \par}
 \vspace*{2ex}
