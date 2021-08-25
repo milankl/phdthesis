@@ -1,4 +1,5 @@
-# Low-precision climate computing
+# Low-precision climate computing: Preserving information despite fewer bits
+
 A thesis submitted for the degree Doctor of Philosophy
 
 Milan Klöwer  
