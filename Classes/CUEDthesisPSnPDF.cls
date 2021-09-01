@@ -43,12 +43,14 @@
 \usepackage{eucal}
 \usepackage[english]{babel}
 \usepackage[usenames, dvipsnames]{color}
-\usepackage[perpage]{footmisc}
+\usepackage[perpage,symbol]{footmisc}
 \usepackage[square, sort, numbers, authoryear]{natbib}
 \usepackage{ifthen}
 \usepackage{ifpdf}
 \usepackage[dvipsnames]{xcolor}
 \definecolor{newblue}{rgb}{0,.6,.5}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
 %Bibliography
 %uncomment next line to change bibliography name to references for Book document class

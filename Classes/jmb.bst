@@ -74,6 +74,7 @@ ENTRY
     type
     volume
     year
+    doi
   }
   {}
   { label extra.label sort.label short.list }
@@ -119,7 +120,11 @@ FUNCTION {output.check}
   if$
 }
 FUNCTION {fin.entry}
-{ add.period$
+{ doi empty$
+  {}
+  {"\href{https://doi.org/" doi "}{\detokenize{" doi "}}" * * * * output}
+  if$
+  add.period$
   write$
   newline$
 }
@@ -425,7 +430,7 @@ FUNCTION {format.names}
   numnames 'namesleft :=
     { namesleft #0 > }
     { s nameptr
-      "{vv~}{ll}{, f{.}.}{, jj}"
+      "{vv~}{ f{}}{ ll}{, jj}"
       format.name$
       bibinfo bibinfo.check
       't :=
@@ -1003,7 +1008,7 @@ FUNCTION {article}
       format.pages output
     }
   if$
-  format.note output
+  format.note output  
   fin.entry
 }
 FUNCTION {book}

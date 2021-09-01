@@ -1,3 +1,4 @@
+
   %input macros (i.e. write your own macros file called MacroFile1.tex)
 %\include{Macros/MacroFile1}
 \documentclass[oneside,openany,11pt,fleqn]{Classes/CUEDthesisPSnPDF}
@@ -10,7 +11,7 @@
 \usepackage{amsmath}
 \usepackage{mathtools}
 \usepackage{enumerate}
-\usepackage{listings}
+%\usepackage{listings}
 \usepackage{geometry}
 \usepackage{ragged2e}
 \usepackage{titlesec}
@@ -20,7 +21,7 @@
 
 \usepackage{caption}
 \DeclareCaptionLabelSeparator{vertbar}{ | }
-\captionsetup{justification=justified, singlelinecheck=false, labelfont=bf, font=small, labelsep=vertbar}
+\captionsetup{justification=justified, singlelinecheck=false, labelfont=bf, font=footnotesize, labelsep=vertbar}
 
 \titleformat{\chapter}{\Huge \bfseries}{\thechapter}{15pt}{\Huge}
 \titlespacing*{\chapter}{0pt}{-25pt}{10pt}
@@ -43,6 +44,10 @@
 \definecolor{pregimet}{rgb}{0.6,0.2,0.2}
 \definecolor{pexpo}{rgb}{0.1,0.4,0.7}
 
+\usepackage{listings}
+\usepackage{xcolor}
+\input{Classes/julia_listings}
+\lstdefinelanguage{JuliaLocal}[]{Julia}{}
 
 %\textls{}
 %\MakeUppercase{}
@@ -103,7 +108,7 @@
 \restoregeometry
 
 %set the number of sectioning levels that get number and appear in the contents
-\setcounter{secnumdepth}{1}
+\setcounter{secnumdepth}{2}
 \setcounter{tocdepth}{2}
 
 \frontmatter % book mode only
@@ -156,8 +161,7 @@
 
 %\bibliographystyle{plainnat}
 %\bibliographystyle{Classes/CUEDbiblio}
-\bibliographystyle{Classes/jmb}
-%\bibliographystyle{Classes/jmb} % bibliography style
+\bibliographystyle{Classes/jmb} % bibliography style
 
 \addcontentsline{toc}{chapter}{Acknowledgements}
 \include{Acknowledgement/acknowledgement}

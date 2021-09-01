@@ -215,7 +215,7 @@ In the following we will describe the maximum entropy training (also called quan
 %\label{fig:sonum_circle}
 %\end{figure}
 
-Given a data set $D$, regarded as $j$-element array of real numbers or a high precision approximation, we wish to find the sonum values $s_i$ for $i \in {1,...,2^{n-1}-1}$ to maximise the entropy for an $n$-bit sonum format when representing the numbers in $D$. The information entropy $H$ (or Shannon entropy, \cite{MacKay2003}) is defined as
+Given a data set $D$, regarded as $j$-element array of real numbers or a high precision approximation, we wish to find the sonum values $s_i$ for $i \in {1,...,2^{n-1}-1}$ to maximise the entropy for an $n$-bit sonum format when representing the numbers in $D$. The information entropy $H$ (or Shannon entropy, \cite{MacKay2003a}) is defined as
 \begin{equation}
      H = -\sum_i p_i \log_2(p_i)
      \label{eq:entropy}
@@ -348,8 +348,8 @@ Sonum16 has a smaller forecast error compared to posits for the important lead t
 \subsection{Round to nearest}
 \label{sec:roundnearest}
 
-	\subsection{Stochastic rounding}
-	\label{sec:stochastic_rounding} 
+\subsection{Stochastic rounding}
+\label{sec:stochastic_rounding} 
 
 The default rounding mode for floats and posits is round-to-nearest tie-to-even. In this rounding mode an exact result $x$ is rounded
 to the nearest representable number $x_i$. In case $x$ is half-way between two representable numbers, the result will be tied to the
@@ -414,8 +414,7 @@ In this case the distance from $x_1$ to the previous float is only $\tfrac{\delt
 
 \subsection{Mean, absolute and relative error}
 	
-	\subsection{Decimal error and precision}
-	\label{sec:decimal_precision}
+\subsection{Decimal error and precision}
 
 The decimal precision is defined as \citep{Gustafson2017,Gustafson2017a}
 \begin{equation}

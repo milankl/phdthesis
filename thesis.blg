@@ -1,0 +1,66 @@
+This is BibTeX, Version 0.99d (TeX Live 2020)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: thesis.aux
+A level-1 auxiliary file: Dedication/dedication.aux
+A level-1 auxiliary file: Abstract/abstract.aux
+A level-1 auxiliary file: Introduction/introduction.aux
+A level-1 auxiliary file: Section1/section.aux
+A level-1 auxiliary file: Section2/section.aux
+A level-1 auxiliary file: Section3/section.aux
+A level-1 auxiliary file: Section4/section.aux
+A level-1 auxiliary file: Section5/section.aux
+A level-1 auxiliary file: Conclusions/conclusions.aux
+A level-1 auxiliary file: Appendix1/appendix1.aux
+The style file: Classes/jmb.bst
+A level-1 auxiliary file: Acknowledgement/acknowledgement.aux
+A level-1 auxiliary file: Funding/funding.aux
+Database file #1: References/bibliography.bib
+Warning--I didn't find a database entry for "MacKay2003a"
+Warning--I didn't find a database entry for "Jeffress2017a"
+Warning--I didn't find a database entry for "Pelkonen2015a"
+Warning--I didn't find a database entry for "Pinard2020a"
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Warning--empty journal in Deutsch1996
+Warning--empty journal in Diamantakis2013
+You've used 115 entries,
+            3037 wiz_defined-function locations,
+            1520 strings with 33207 characters,
+and the built_in function-call counts, 83836 in all, are:
+= -- 6895
+> -- 4755
+< -- 60
++ -- 1711
+- -- 1545
+* -- 7379
+:= -- 12574
+add.period$ -- 341
+call.type$ -- 115
+change.case$ -- 1135
+chr.to.int$ -- 112
+cite$ -- 117
+duplicate$ -- 5589
+empty$ -- 5601
+format.name$ -- 1858
+if$ -- 16691
+int.to.chr$ -- 4
+int.to.str$ -- 1
+missing$ -- 1187
+newline$ -- 349
+num.names$ -- 470
+pop$ -- 2636
+preamble$ -- 1
+purify$ -- 972
+quote$ -- 0
+skip$ -- 2176
+stack$ -- 0
+substring$ -- 3536
+swap$ -- 3087
+text.length$ -- 3
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 1029
+warning$ -- 2
+while$ -- 550
+width$ -- 0
+write$ -- 1355
+(There were 6 warnings)

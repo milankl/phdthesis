@@ -3,59 +3,67 @@
 
 %% CONTRIBUTION
 {\small
-\paragraph{Contributions} This chapter is largely based on the following publication\footnote{with the following author contributions. Conceptualization: MK, MR, JJD. Data curation: MR, JJD, MK. Formal Analysis: MK. Methodology: MK. Visualization: MK. Writing – original draft: MK. Writing – review \& editing: MK, PDD, MR, JJD, TNP. The contributions of Miha, Juanjo, Peter, and Tim are highly appreciated.}
+\paragraph{Contributions} This chapter is largely based on the following publication\footnote{with the following author contributions.
+Conceptualisation: MK, MR, JJD. Data curation: MR, JJD, MK. Formal Analysis: MK. Methodology: MK. Visualisation: MK. Writing –
+original draft: MK. Writing – review \& editing: MK, PDD, MR, JJD, TNP. The contributions of Miha, Juanjo, Peter, and Tim are highly
+appreciated.}
 
 \vspace{\baselineskip}
-\indent M Klöwer, M Razinger, JJ Dominguez, PD Düben and TN Palmer, 2021. \emph{Compressing atmospheric data into its real information content}, \textbf{Nature Computational Science}, in review.
+\indent M Klöwer, M Razinger, JJ Dominguez, PD Düben and TN Palmer, 2021. \emph{Compressing atmospheric data into its real
+information content}, \textbf{Nature Computational Science}, in review.
 \vspace{\baselineskip}}
 
 \section{Introduction}
 \label{sec:compression_introduction}
 
-Many supercomputing centres in the world perform operational weather and climate simulations several times per day1.
+Many supercomputing centres in the world perform operational weather and climate simulations several times per day \citep{Bauer2015}.
 The European Centre for Medium-Range Weather Forecasts (ECMWF) produces 230TB of data on a typical day and
 most of the data is stored on magnetic tapes in its archive. The data production is predicted to quadruple within the
-next decade due to an increased spatial resolution of the forecast model2–4. Initiatives towards operational predictions
-with global storm-resolving simulations, such as Destination Earth5 or DYAMOND6, with a grid spacing of a couple of
+next decade due to an increased spatial resolution of the forecast model \citep{Bauer2020,Voosen2020,Schar2020}.
+Initiatives towards operational predictions with global storm-resolving simulations, such as Destination Earth
+\citep{Bauer2021,Bauer2021a} or DYAMOND \citep{Stevens2019}, with a grid spacing of a couple of
 kilometres will further increase data volume. This data describes physical and chemical variables of atmosphere, ocean
 and land in up to 6 dimensions: three in space, time, forecast lead time, and the ensemble dimension. The latter results
-from calculating an ensemble of forecasts to estimate the uncertainty of predictions7,8. Most geophysical and geochemical
-variables are highly correlated in all of those dimensions, a property that is rarely exploited for climate data compression,
-although multidimensional compressors are being developed9–12.
+from calculating an ensemble of forecasts to estimate the uncertainty of predictions \citep{Molteni1996,Palmer2019}.
+Most geophysical and geochemical variables are highly correlated in all of those dimensions, a property that is rarely
+exploited for climate data compression, although multidimensional compressors are being developed
+\citep{Ballester-Ripoll2020,Lindstrom2014,vonLarcher2019,Zhao2020,Di2016}.
 
 Floating-point numbers are the standard to represent real numbers in binary form. 64-bit double precision floating-point
 numbers (Float64) consist of a sign bit, 11 exponent bits representing a power of two, and 52 mantissa bits allowing for
-16 decimal places of precision across more than 600 orders of magnitude13. Most weather and climate models are based
-on Float64 arithmetics, which has been questioned as the transition to 32-bit single precision floats (Float32) does not
-necessarily decrease the quality of forecasts14,15. Many bits in Float32 only contain a limited amount of information
-as even 16-bit arithmetic has been shown to be sufficient for parts of weather and climate applications16–19.
-The information, as defined by Shannon information theory20,21, for simple chaotic dynamical systems is often zero
-for many of the 32 bits in Float3222. This supports the general concept of low-precision climate modelling for calculations
-and data storage, as, at least in theory, many rounding errors are entirely masked by other uncertainties in the chaotic
-climate system23,24.
+16 decimal places of precision across more than 600 orders of magnitude \citep{IEEE1985}. Most weather and climate
+models are based on Float64 arithmetics, which has been questioned as the transition to 32-bit single precision floats
+(Float32) does not necessarily decrease the quality of forecasts \citep{Vana2017,TintoPrims2019}. Many bits in Float32
+only contain a limited amount of information as even 16-bit arithmetic has been shown to be sufficient for parts of weather
+and climate applications \citep{Hatfield2019,Klower2020b,Ackmann2021,Dawson2018,Fan2019}.
+The information, as defined by Shannon information theory \citep{Shannon1948,MacKay2003a,Kleeman2011},
+for simple chaotic dynamical systems is often zero for many of the 32 bits in Float32 \citep{Jeffress2017a}.
+This supports the general concept of low-precision climate modelling for calculations and data storage, as, at least in theory,
+many rounding errors are entirely masked by other uncertainties in the chaotic climate system
+\citep{Palmer2014a,Palmer2015}.
 
-The bitwise information content has been formulated for predictability in dynamical systems22. It quantifies how much
-individual bits in the floating-point representation contribute to the information necessary to predict the state of a chaotic
-system at a later point in time. This technique has been used to optimise the simulation of simple chaotic systems on
-inexact hardware to reduce the precision as much as possible. Here, we extend the bitwise information content to
-distinguish between bits with real and false information in data and to quantify the preserved real information in
-data compression. 
+The bitwise information content has been formulated for predictability in dynamical systems \citep{Jeffress2017a}.
+It quantifies how much individual bits in the floating-point representation contribute to the information necessary
+to predict the state of a chaotic system at a later point in time. This technique has been used to optimise the
+simulation of simple chaotic systems on inexact hardware to reduce the precision as much as possible. Here, we
+extend the bitwise information content to distinguish between bits with real and false information in data and to
+quantify the preserved real information in data compression. 
 
-Data compression for floating-point numbers often poses a trade-off in size, precision and speed25–27:
+Data compression for floating-point numbers often poses a trade-off in size, precision and speed
+\citep{Silver2017,Kuhn2016a,Hubbe2013}:
 Higher compression factors for smaller file sizes can be achieved with lossy compression, which reduces
 the precision and introduces rounding errors. Additionally, higher compression requires more sophisticated
 compression algorithms, which can decrease compression and/or decompression speed. A reduction in
 precision is not necessarily a loss of real information, as occurring rounding errors are relative to a reference
-that itself comes with uncertainty. Here, we calculate the bitwise real information content20–22 of atmospheric
-data to discard bits that contain no information28,29 and only compress the real information content.
-Combined with modern compression algorithms10,30–32 the multi-dimensional correlation of climate
-data is exploited for higher compression efficiency33,34.
+that itself comes with uncertainty. Here, we calculate the bitwise real information content \citep{Shannon1948,Jeffress2017a,Kleeman2011}
+of atmospheric data to discard bits that contain no information \citep{Zender2016,Kouznetsov2020} and only compress the real
+information content. Combined with modern compression algorithms \citep{Lindstrom2014,Lindstrom2006} the multi-dimensional
+correlation of climate data is exploited for higher compression efficiency \citep{Baker2016,Baker2019,Woodring2011}.
 
-\section{Methods}
-\label{sec:compression_methods}
+\section{Data}
+\label{sec:compression_data}
 
-\subsection{Data}
-%\label{sec:compression_data}
+\subsection{Copernicus Atmospheric Monitoring Service}
 
 CAMS data is analysed for one time step on 01/12/2019 12:00 UTC, bilinearly regridded onto a regular 0.4\textdegree{}x0.4\textdegree{}
 longitude-latitude grid using climate data operators (cdo) v1.9. All 137 vertical model levels are included.
@@ -66,24 +74,12 @@ All compression methods here include the conversion from Float64 to Float32.
 
 Only longitude-latitude grids are considered in this paper. However, the methodology can be applied to other grids too.
 For example, ECMWF’s octahedral grid collapses the two horizontal dimensions into a single horizontal dimension
-which circles on latitude bands around the globe starting at the South Pole till reaching the North Pole55.
+which circles on latitude bands around the globe starting at the South Pole till reaching the North Pole \citep{Malardel2016}.
 Fewer grid points of the octahedral grid reduce the size, but the correlation in latitudinal direction cannot be exploited.
 
-\subsection{Bitpattern entropy}
-%\label{sec:compression_bitpattern_entropy}
-
-An $n$-bit number format has $2^n$ bitpatterns available to encode a real number.
-For most data arrays, not all bitpatterns are used at uniform probability. The bitpattern entropy is the Shannon information entropy $H$,
-in units of bits, calculated from the probability of each bitpattern 
-	\begin{equation}
-	H = - \sum_{i=1}^{2^n} p_i \log_2(p_i)
-	\end{equation}
-The bitpattern entropy is $H \leq n$  and maximised to $n$ bits for a uniform distribution. The free entropy is the difference $n-H$.
-
 \subsection{Grid definitions}
-\label{sec:compression_grid}
 
-The compression methods described here are applied to gridded binary data.Data on structured grids can be represented as a tensor,
+The compression methods described here are applied to gridded binary data. Data on structured grids can be represented as a tensor,
 such that for two dimensions that data can be arranged in a matrix $A$  with elements $a_{ij}$ and $i,j$ indices.
 Adjacent elements in $A$, e.g. $a_{ij}$ and $a_{i+1,j}$, are also adjacent grid points. Every element $a_{ij}$ is a floating-point number,
 or in general a number represented in any binary format. The $n$ bits in $a_{ij}$ are described as bit positions, including sign, exponent
@@ -92,18 +88,31 @@ bit position fixed. For example, the sequence of bits consisting of the first ma
 and so on. We may refer to these bits as bits from adjacent grid points. Every bit position in elements of $A$ is itself a matrix, e.g.
 the matrix of sign bits across all grid points.
 
-\subsection{Real information content}
-\label{sec:compression_methods_realinformation}
+\section{Methods: Information content}
+\label{sec:compression_methods_information_content}
+\subsection{Bitpattern entropy}
 
-The Shannon information entropy20 $H$ in units of bits takes for a bitstream $b = b_1b_2...b_k...b_l$, i.e. a sequence of bits of length $l$, the form
+An $n$-bit number format has $2^n$ bitpatterns available to encode a real number.
+For most data arrays, not all bitpatterns are used at uniform probability. The bitpattern entropy is the Shannon information entropy $H$,
+in units of bits \citep{Shannon1948}, calculated from the probability of each bitpattern 
+	\begin{equation}
+	H = - \sum_{i=1}^{2^n} p_i \log_2(p_i)
+	\end{equation}
+The bitpattern entropy is $H \leq n$  and maximised to $n$ bits for a uniform distribution. The free entropy is the difference $n-H$.
+
+\subsection{Real information content}
+
+The Shannon information entropy $H$ in units of bits \citep{Shannon1948} takes for a bitstream $b = b_1b_2...b_k...b_l$, i.e. a sequence
+of bits of length $l$, the form
 	\begin{equation}
 	H = -p_0\log_2(p_0) - p_1\log_2(p_1)
 	\label{eq:bit_unconditional_entropy}
 	\end{equation}
 with $p_0,p_1$ being the probability of a bit $b_k$ in $b$ being $0$ or $1$.
-The entropy is maximised to 1 bit for equal probabilities $p_0 = p_1 = \tfrac{1}{2}$ in $b$. We derive the mutual information40–42 of
-two bitstreams $r = r_1r_2...r_k...r_l$ and $s = s_1s_2...s_k...s_l$. The mutual information is defined via the joint probability mass function $p_{rs}$,
- which here takes the form of a 2x2 matrix
+The entropy is maximised to 1 bit for equal probabilities $p_0 = p_1 = \tfrac{1}{2}$ in $b$. We derive the mutual information
+\citep{Schreiber2000,Kraskov2004,Pothapakula2019}
+of two bitstreams $r = r_1r_2...r_k...r_l$ and $s = s_1s_2...s_k...s_l$. The mutual information is defined via the joint probability
+mass function $p_{rs}$, which here takes the form of a 2x2 matrix
  	\begin{equation}
 	p_{rs} = \begin{pmatrix} p_{00} & p_{01} \\ p_{10} & p_{11} \end{pmatrix}
 	\end{equation}
@@ -129,7 +138,7 @@ Eq. \ref{eq:bit_unconditional_entropy} the mutual information $M$ of succeeding 
 	I = H - p_0H_0 - p_1H_1
 	\label{eq:realinformation_content}
 	\end{equation}
-which is the real information content $I$. This definition is similar to \cite{Jeffress2017} but avoids an additional assumption of an uncertainty
+which is the real information content $I$. This definition is similar to \cite{Jeffress2017a} but avoids an additional assumption of an uncertainty
 measure. Their formulation similarly uses the state of bits as predictors but assesses the conditional probability density function (pdf) of a
 dynamical system as predictands. The binwidth of the pdf is chosen to represent the uncertainty in the system, which the bitwise real information
 strongly depends on. The formulation here avoids such an additional assumption of uncertainty as bits are used as both predictors and
@@ -176,7 +185,8 @@ and the fraction of preserved information $P$ is the redundancy-weighted mean of
 	P(X,Y) = \frac{ \sum_{q=1}^n R(x_q,y_q)I(x_q)}{\sum_{q=1}^n I(x_q)}
 	\end{equation}
 The quantity $\sum_{q=1}^nI(x_q)$ is the total information in $X$ and therefore also in $A$. The redundancy is $R=1$ for bits that are
-unchanged during rounding and $R=0$ for bits that are rounded to zero. The preserved information with bitshave or halfshave28,29
+unchanged during rounding and $R=0$ for bits that are rounded to zero. The preserved information with bitshave or halfshave
+\citep{Zender2016,Kouznetsov2020}
 (i.e. replacing mantissa bits without real information with either 00...00 or 10...00, respectively) is therefore equivalent to truncating
 the bitwise real information for the (half)shaved bits. For round-to-nearest, however, the carry bit depends on the state of bits across 
 several bit positions. To account for interdependency of bit positions the mutual information has to be extended to include more bit
@@ -226,6 +236,9 @@ We consider real information below $H_f$ as insignificantly different from 0 and
 	a mean of 10. \textbf{c,d} Compression factors for \textbf{a,b} when preserving 99\% of information. Shading denotes the interdecile range.}
 	\label{fig:information_correlation}
 \end{figure}
+
+\section{Methods: Properties of real information}
+\label{sec:compression_methods_properties}
 
 \subsection{Dependency of the bitwise real information on correlation}
 
@@ -303,15 +316,17 @@ floats repeatedly will have no effect beyond the first application (idempotence)
 The preservation of gradients and other higher-order derivatives in data is a challenging aspect of compression.
 Removing false information in data via rounding can result in identical values in adjacent grid points. Even if these values
 were not identical before rounding, they may not be significantly different from each other in the sense of real and false
-information. In this case, a previously weak but non-zero gradient will be rounded to zero. 
+information. In this case, a previously weak but non-zero gradient will be rounded to zero. In other cases the rounding error
+is small compared to the standard deviation of the data, such that rounding has a negligible impact on the variance as
+values are independently equally likely to be round up or down.
 
 This can be illustrated in the example of analysing oceanic fronts obtained from satellite measurements of sea surface
-temperatures (Fig. \ref{compression_gradients}). Identified by large horizontal gradients in temperature, the location
+temperatures (Fig. \ref{fig:compression_gradients}). Identified by large horizontal gradients in temperature, the location
 and strength of oceanic fronts is well preserved using compressed data. However, areas of very weak gradients can
-largely vanish with round+lossless (Fig.  \ref{compression_gradients}e). In this case the temperature in adjacent grid
+largely vanish with round+lossless (Fig.  \ref{fig:compression_gradients}e). In this case the temperature in adjacent grid
 points is insignificantly different from each other and therefore the gradient zero after the removal of false information.
 Weak gradients are better preserved with Zfp compression at similar compression factors, but its block structure becomes
-visible (Fig.  \ref{compression_gradients}f). 
+visible (Fig. \ref{fig:compression_gradients}f). 
 
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/information_error_ssim.pdf}
@@ -321,36 +336,16 @@ visible (Fig.  \ref{compression_gradients}f).
 	The preserved information is presented as a function of the decimal error, which itself increases exponentially for
 	every additional bit (small circles) that is discarded due to rounding. Denoted circles present the number of mantissa bits
 	that have to be retained during compression to preserve at least 99\% of information. \textbf{b} The preserved information
-	increases as a function of the structural similarity (SSIM)56. The proposed threshold for climate data of SSIM=0.99995 by
-	Baker et al. 2019 is shaded52. All variables are very close or above the Baker threshold when preserving 99\% of information.
-	\textbf{c} The decimal error is proportional to the square root of the structural dissimilarity 1-SSIM for binary rounding within the
-	information-preserving compression}
+	increases as a function of the structural similarity (SSIM, \cite{Wang2004}). The proposed threshold for climate data of
+	SSIM=0.99995 by \cite{Baker2019} is shaded. All variables are very close or above the Baker threshold when preserving
+	99\% of information. \textbf{c} The decimal error is proportional to the square root of the structural dissimilarity 1-SSIM
+	for binary rounding within the information-preserving compression}
 	\label{fig:information_error_ssim}
 \end{figure}
 
-\subsection{Linear and logarithmic quantization}
-
-The $n$-bit linear quantization compression for each element $a$ in an array $A$ is
-	\begin{equation}
-	\tilde{a} = \op{round} \left( 2^{n-1} \frac{a - \min(A)}{\max(A) - \min(A)} \right)
-	\end{equation}
-with $\op{round}$ a function that rounds to the nearest integer in $0,...,2^{n-1}$. Consequently, every compressed element $\tilde{a}$
-can be stored with $n$ bits. The $n$-bit logarithmic quantization compression for every element $a\geq0$ in $A$ is
-	\begin{equation}
-	\tilde{a} = \begin{cases} 0 \quad &\text{if } a = 0, \\
-	\text{round}\left( c + \Delta^{-1}\log(a) \right) + 1 \quad &\text{else.} \end{cases}
-	\end{equation}
-which reserves the bit pattern zero to encode 0. The logarithmic spacing is
-	\begin{equation}
-	\Delta = \frac{\log(\max(A)) - \log(\min^+(A))}{2^{n}-2}
-	\end{equation}
-The constant $c = 1/2 - \Delta^{-1}\log(\text{min}^+(A)(\exp(\Delta)+1)/2)$ is chosen to implement round-to-nearest in linear space
-instead of in logarithmic space, for which $c=-\Delta^{-1}\log(\text{min}^+(A))$. The function $\min^+(A)$  is the minimum of all
-positive elements in $A$.
-
 \subsection{Structural similarity}
 
-A metric to assess the quality of lossy compression in image processing is the structural similarity index measure (SSIM)57.
+A metric to assess the quality of lossy compression in image processing is the structural similarity index measure (SSIM, \cite{Wang2004}).
 For images it is based on comparisons of luminance, contrast and structure. For floating-point arrays the luminance contributions
 to SSIM can be interpreted as the preservation of the mean; the contrast compares the variances and the structure compares the
 correlation. The SSIM of two arrays $A,B$ of same size is defined as
@@ -378,17 +373,41 @@ threshold of 99\% preserved real information is reasonable. In general, the pres
 structural similarity SSIM (or SSIM$_{\log}$) for rounded floating-point arrays, further supporting the usage of preserved
 information as a metric for data compression. 
 
+\section{Methods: Compression}
+\label{sec:compression_methods_compression}
+
+\subsection{Linear and logarithmic quantization}
+
+The $n$-bit linear quantization compression for each element $a$ in an array $A$ is
+	\begin{equation}
+	\tilde{a} = \op{round} \left( 2^{n-1} \frac{a - \min(A)}{\max(A) - \min(A)} \right)
+	\end{equation}
+with $\op{round}$ a function that rounds to the nearest integer in $0,...,2^{n-1}$. Consequently, every compressed element $\tilde{a}$
+can be stored with $n$ bits. The $n$-bit logarithmic quantization compression for every element $a\geq0$ in $A$ is
+	\begin{equation}
+	\tilde{a} = \begin{cases} 0 \quad &\text{if } a = 0, \\
+	\text{round}\left( c + \Delta^{-1}\log(a) \right) + 1 \quad &\text{else.} \end{cases}
+	\end{equation}
+which reserves the bit pattern zero to encode 0. The logarithmic spacing is
+	\begin{equation}
+	\Delta = \frac{\log(\max(A)) - \log(\min^+(A))}{2^{n}-2}
+	\end{equation}
+The constant $c = 1/2 - \Delta^{-1}\log(\text{min}^+(A)(\exp(\Delta)+1)/2)$ is chosen to implement round-to-nearest in linear space
+instead of in logarithmic space, for which $c=-\Delta^{-1}\log(\text{min}^+(A))$. The function $\min^+(A)$  is the minimum of all
+positive elements in $A$.
+
 \subsection{Lossless compression}
 
 We use Zstandard as a default lossless algorithm for the round+lossless method. Zstandard is a modern compression algorithm
 that combines many techniques to form a single compressor with tunable 22 compression levels that allow large trade-offs between
-compression speed and factors47,49. Here, we use compression level 10, as it presents a reasonable compromise between speed
-and size. Zstandard outperforms other tested algorithms (deflate, LZ4, LZ4HC and Blosc) in our applications and is also found to be
-among the best in the lzbench compression benchmark47 and other studies have focused on comparisons44. Lossless compressors
-are often combined with reversible transformations that preprocess the data. The so-called bitshuffle44 transposes an array on the
+compression speed and factors \citep{Skibinski2020,Collet2020}. Here, we use compression level 10, as it presents a reasonable
+compromise between speed and size. Zstandard outperforms other tested algorithms (deflate, LZ4, LZ4HC and Blosc) in our
+applications and is also found to be among the best in the lzbench compression benchmark \citep{Skibinski2020} and other studies
+have focused on comparisons \citep{Delaunay2019}. Lossless compressors
+are often combined with reversible transformations that preprocess the data. The so-called bitshuffle transposes an array on the
 bit-level, such that bit positions (e.g. the sign bit) of floating-point numbers are stored next to each other in memory. Another example
-is the bitwise XOR-operation58 with the preceding floating-point value, which sets subsequent bits that are identical to 0. Neither
-bitshuffle nor XOR significantly increased the compression factors in our applications.
+is the bitwise XOR-operation \citep{Pelkonen2015a} with the preceding floating-point value, which sets subsequent bits that are identical
+to 0. Neither bitshuffle nor XOR significantly increased the compression factors in our applications.
 
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/error_distributions.pdf}
@@ -409,7 +428,7 @@ The Zfp compression algorithm divides a $d$-dimensional array into blocks of siz
 in every dimension of the data. Within each block a transformation of the data is applied with specified absolute
 error tolerance or precision, which bounds a local relative error. We use Zfp in its precision mode, which offers
 discrete levels to manually adjust the retained precision. Due to the rather logarithmic distribution of CAMS data
-(Fig. S1), a log-preprocessing of the data is applied to prevent sign changes (including a flushing to zero) within
+(Fig. \ref{fig:cams_histograms}), a log-preprocessing of the data is applied to prevent sign changes (including a flushing to zero) within
 the compression. The error introduced by Zfp is approximately normally distributed and therefore usually yields
 higher maximum errors compared to round-to-nearest in float arithmetic, although median errors are comparable.
 In order to find an equivalent error level between the two methods, we therefore choose the precision level of Zfp
@@ -445,8 +464,8 @@ and the compression factor (highest for level 22). Compression speed reduces fro
 to 2 MB/s at level 22 (Fig. \ref{fig:compression_speed}b), such that for high compression factors about a thousand cores
 would be required in parallel to compress in real time the 2GB/s data production at ECMWF. For Zstandard at compression
 level 10 speeds of at least 100MB/s are achieved, but at the cost of about 50\% larger file sizes. We use compression level
-10 throughout this study as a compromise. The decompression speed is independent of the level (Fig. S7c). The additional
-performance cost of binary rounding is with 2 GB/s negligible. Zfp reaches compression speeds of about 200 MB/s
+10 throughout this study as a compromise. The decompression speed is independent of the level (Fig. \ref{fig:compression_speed}c).
+The additional performance cost of binary rounding is with 2 GB/s negligible. Zfp reaches compression speeds of about 200 MB/s
 (single-threaded, including the log-preprocessing) in our application, enough to compress ECMWF’s data production in real
 time with a small number of processors in parallel.
 
@@ -468,9 +487,11 @@ time with a small number of processors in parallel.
 	\label{fig:compression_bitpattern_hist}
 \end{figure}
 
-\section{Drawbacks of current compression methods}
+\section{Results}
+\label{sec:compression_results}
+\subsection{Drawbacks of current compression methods}
 
-The Copernicus Atmospheric Monitoring Service35 (CAMS) is performing operational predictions with an extended
+The Copernicus Atmospheric Monitoring Service (CAMS, \cite{Inness2019}) is performing operational predictions with an extended
 version of the Integrated Forecasting System IFS, the global atmospheric forecast model implemented by ECMWF.
 CAMS includes various atmospheric composition variables, like aerosols, trace and greenhouse gases that are
 important to monitor global air quality. The system monitors for example the spread of volcanic eruptions or
@@ -478,9 +499,9 @@ emissions from wildfires. Most variables in CAMS have a multi-modal statistical 
 orders of magnitude (Fig. \ref{fig:cams_histograms}).
 
 The current compression technique for CAMS is the linear quantization, widely used in the weather and climate
-community through the data format GRIB236. CAMS uses the 24-bit version, which encodes values in a data array
-with integers from $0$ to $2^{24}-1$. These 24-bit unsigned integers represent values linearly distributed in the
-min-max range. Unused sign or exponent bits from the floating-point representation are therefore avoided and
+community through the data format GRIB2 \citep{WMO2003}. CAMS uses the 24-bit version, which encodes values
+in a data array with integers from $0$ to $2^{24}-1$. These 24-bit unsigned integers represent values linearly distributed
+in the min-max range. Unused sign or exponent bits from the floating-point representation are therefore avoided and
 some of the trailing mantissa bits are discarded in quantization. Choosing the number of bits for quantization
 determines the file size, but the precision follows implicitly, leaving the required precision or amount of preserved
 information unassessed.
@@ -510,16 +531,18 @@ weather or climate model and post-processing.
 	\label{fig:bitinformation}
 \end{figure}
 
-\section{Bitwise real information content}
+\subsection{Bitwise real information content}
 
 Many of the trailing mantissa bits in floating-point numbers occur independently and at similar probability,
-i.e. with high information entropy21,22. These seemingly random bits are incompressible37–39, reducing
+i.e. with high information entropy \citep{Kleeman2011,Jeffress2017a}. These seemingly random bits are
+incompressible \citep{MacKay2003a,Ziv1977,Huffman1952}, reducing
 the efficiency of compression algorithms. However, they probably also contain a vanishing amount of real
 information, which has to be analysed to identify bits with and without real information. The former should
 be conserved while the latter should be discarded to increase compression efficiency.
 
-We define the bitwise real information content as the mutual information20,37,40–43 of bits in adjacent grid
-points (Fig. \ref{infograph}). A bit contains more real information the stronger the statistical
+We define the bitwise real information content as the mutual information
+\citep{Shannon1948,MacKay2003a,Schreiber2000,Kraskov2004,Pothapakula2019,DelSole2004} of bits in
+adjacent grid points (Fig. \ref{fig:infograph}). A bit contains more real information the stronger the statistical
 dependence to the adjacent bits is. Bits without real information are identified when this dependence is
 insignificantly different from zero and we regard the remaining entropy in these bits as false information.
 The adjacent bit can be found in any of the dimensions of the data, e.g. in longitude, time or in the ensemble
@@ -533,8 +556,8 @@ independence of adjacent grid points (Fig. \ref{fig:information_resolution} and 
 If valuable scientific information is present in such seemingly random data, then the bitwise real information
 content as defined here is unsuited. 
 
-\cite{Jeffress2017} formulate the bitwise information content for simple chaotic systems, assuming an
-inherent natural uncertainty which had to be defined22. Their approach aims to enable reduced precision
+\cite{Jeffress2017a} formulate the bitwise information content for simple chaotic systems, assuming an
+inherent natural uncertainty which had to be defined. Their approach aims to enable reduced precision
 simulations on inexact hardware. Here, we reformulate the bitwise real information as the mutual information
 in adjacent grid points for the application in climate data compression. The quantization in the floating-point
 representation is used as an uncertainty, such that no additional assumption on the uncertainty of the underlying
@@ -565,7 +588,7 @@ Aiming for 99\% preserved information is found to be a reasonable compromise.
 	\label{fig:map_roundlossless_zfp}
 \end{figure}
 
-\section{Compressing only the real information}
+\subsection{Compressing only the real information}
 
 Based on the bitwise real information content, we suggest a new strategy for data compression of climate variables:
 First, we diagnose the real information for each bit position. Afterwards, we round bits with no significant real information
@@ -573,17 +596,19 @@ to zero, before applying lossless data compression. This allows us to minimise i
 efficiency of compression algorithms.
 
 Bits with no or only little real information (but high entropy) are discarded via binary round-to-nearest as defined in the
-IEEE-754 standard13 (see ??). This rounding mode is bias-free and therefore will ensure global conservation of
-quantities important in climate model data. Rounding removes the incompressible false information and therefore
-increases compressibility. While rounding is irreversible for the bits with false information, the bits with real
-information remain unchanged and are bitwise reproducible after decompression. Both the real information
+IEEE-754 standard (see section \ref{sec:roundnearest}, \cite{IEEE1985}). This rounding mode is bias-free and therefore
+will ensure global conservation of quantities important in climate model data. Rounding removes the incompressible false
+information and therefore increases compressibility. While rounding is irreversible for the bits with false information, the
+bits with real information remain unchanged and are bitwise reproducible after decompression. Both the real information
 analysis and the rounding mode are deterministic, also satisfying reproducibility.
 
-Lossless compression algorithms can be applied efficiently to rounded floating-point arrays (the round+lossless method).
-Many general-purpose lossless compression algorithms are available38,39,44–49, which are based on dictionaries and
-other statistical techniques to remove redundancies. Most algorithms operate on bitstreams and exploit the correlation
-of data in a single dimension only, we therefore describe this method as 1-dimensional (1D) compression. Here, we
-use Zstandard for lossless compression, which has emerged as a widely available default in recent years (see Methods).
+Lossless compression algorithms can be applied efficiently to rounded floating-point arrays (the \emph{round+lossless} method).
+Many general-purpose lossless compression algorithms are available
+\citep{Ziv1977,Ziv1978,Huffman1952,Delaunay2019,Deutsch1996,Skibinski2020,Alted2010,Collet2020}, which are based on
+dictionaries and other statistical techniques to remove redundancies. Most algorithms operate on bitstreams and exploit the
+correlation of data in a single dimension only, we therefore describe this method as 1-dimensional (1D) compression. Here, we
+use Zstandard for lossless compression \citep{Collet2020}, which has emerged as a widely available default in recent years
+(see section \ref{sec:compression_methods_compression}).
 
 The compression of water vapour at 100\% preserved information (16 mantissa bits are retained) yields a compression
 factor of 7x relative to 64-bit floats (Fig. \ref{fig:map_roundlossless_zfp}a). At 99\% of preserved information
@@ -605,15 +630,14 @@ a 15-fold storage efficiency increase is achieved compared to the current method
 
 Compressing all variables in CAMS and comparing error norms reveals the advantages of the 1D round+lossless method
 compared to the 24-bit linear quantization technique currently in use (Fig. \ref{fig:compression_error}). The maximum decimal
-errors (see ??) are smaller for many variables due to the logarithmic distribution of floating-point numbers. Some variables
-are very compressible (>60x) due to many zeros in the data, which is automatically made use of in the lossless compression.
+errors (see section \ref{sec:error_norms}) are smaller for many variables due to the logarithmic distribution of floating-point numbers.
+Some variables are very compressible (>60x) due to many zeros in the data, which is automatically made use of in the lossless compression.
 Compression factors are between 3x and 60x for most variables, with a geometric mean of 6x when preserving 100\% of information.
 Accepting a 1\% information loss the geometric mean reaches 17x, which is the overall compression factor for the entire CAMS data
 set with this method when compared to data storage with 64 bits per value.
 
 Furthermore, the 24-bit linear quantization could be replaced by a 16-bit logarithmic quantization, as the mean and absolute errors
 are comparable. The decimal errors are often even lower and naturally bound in a logarithmic quantization despite fewer available bits.
-
 
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/precipitation_compression.png}
@@ -658,10 +682,21 @@ therefore still sufficiently high to preserve the point sources.
 In an operational setting we recommend the following workflow: First, for each variable the bitwise real information
 content is analysed from a representative subset of the data. Representative is, for example, a single time step for
 subsequent time steps if the statistics of the data distribution are not expected to change. From the bitwise real information
-the number of mantissa bits to preserve 99\% of information is determined  (the keepbits). Second, during the simulation the
+the number of mantissa bits to preserve 99\% of information is determined  (the \emph{keepbits}). Second, during the simulation the
 arrays that will be archived are rounded to the number of keepbits (which are held fixed) and compressed. The first step
 should be done offline, meaning once in advance of a data-producing simulation. Only the second step has to be performed
 online, meaning every time data is archived. 
+
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/compressfac_comparison.pdf}
+	\caption{\textbf{Multidimensional compression allows for higher compression factors.}
+	\mbox{1-dimensional} compression (round+lossless) of temperature reaches at most 25x when preserving 99\% 
+	of real information with the round+lossless method, whereas 71x is reached with 4-dimensional (4D)
+	space-time compression using Zfp compression. Preserving 100\% of information considerably lowers
+	the compression factors to 4-9x. Error brackets represent the min-max range of compression when
+	applied to various data samples.}
+	\label{fig:compressfac_comparison}
+\end{figure}
 
 The presented round+lossless compression technique separates the lossy removal of false information and the actual lossless
 compression. This provides additional flexibilities as any lossless compressor can be used and application-specific choices can
@@ -675,18 +710,6 @@ lossy compressors, however, the separation of real and false information has to 
 compressors. While such a translation is challenging in general, we present results from combining the bitwise real information
 analysis with one modern multidimensional compressor in the next section.
 
-
-\begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/compressfac_comparison.pdf}
-	\caption{\textbf{Multidimensional compression allows for higher compression factors.}
-	\mbox{1-dimensional} compression (round+lossless) of temperature reaches at most 25x when preserving 99\% 
-	of real information with the round+lossless method, whereas 71x is reached with 4-dimensional (4D)
-	space-time compression using Zfp compression. Preserving 100\% of information considerably lowers
-	the compression factors to 4-9x. Error brackets represent the min-max range of compression when
-	applied to various data samples.}
-	\label{fig:compressfac_comparison}
-\end{figure}
-
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/ensemble_forecast.pdf}
 	\caption{\textbf{Verification of an ensemble forecast with the probabilistic forecast error based on ensemble data
@@ -699,14 +722,16 @@ analysis with one modern multidimensional compressor in the next section.
 	\label{fig:ensemble_forecast}
 \end{figure}
 
-\section{Multidimensional climate data compression}
+\subsection{Multidimensional climate data compression}
 
-Modern compressors have been developed for multidimensional floating-point arrays10,30,31, which compress in
+Modern compressors have been developed for multidimensional floating-point arrays
+\citep{Lindstrom2006,Di2016,Ballester-Ripoll2020,Zhao2020,vonLarcher2019}, which compress in
 several dimensions simultaneously. We will compare the 1D round+lossless compression to Zfp, a modern compression
-algorithm for two to four dimensions10. Zfp divides a $d$-dimensional array into blocks of $4^d$  values (i.e. the edge length is 4),
-which allows to exploit the correlation of climate data in up to 4 dimensions. To extend the concept of information-preserving
+algorithm for two to four dimensions \citep{Lindstrom2014,Pinard2020a,Poppick2020,Hammerling2019}.
+Zfp divides a $d$-dimensional array into blocks of $4^d$  values (i.e. the edge length is 4), which allows to
+exploit the correlation of climate data in up to 4 dimensions. To extend the concept of information-preserving
 compression to modern compressors like Zfp, the bitwise real information is translated to the precision options of Zfp
-(more details in the Methods).
+(more details in section \ref{sec:compression_methods_compression}).
 
 Multidimensional compression imposes additional inflexibilities for data retrieval: Data is compressed and decompressed
 in larger chunks, which can increase the load on the data archive. For example, if the data is compressed across the time
@@ -726,25 +751,38 @@ In that sense, including the hourly-resolved forecast lead time instead of the v
 higher compression factors. 4D space-time compression is the most efficient, reaching 60-75x at 99\% preserved information.
 For temperature this is equivalent to a median absolute error of 0.1\textdegree{}C (Fig. \ref{fig:map_roundlossless_zfp}b).
 
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/ensemble_information.pdf}
+	\caption{\textbf{Bitwise real information content for temperature in various dimensions. a} ensemble, \textbf{b} longitude,
+	\textbf{c} latitude, \textbf{d} vertical and \textbf{e} forecast lead time. The ensemble information effectively encodes the
+	ensemble mean, which is less information than in most other dimensions. Longitude, latitude and forecast lead time
+	have the highest total information which should be preserved in compression. The ensemble information decreases
+	over time as the ensemble spread increases (Fig. \ref{fig:ensemble_forecast}).}
+	\label{fig:ensemble_information}
+\end{figure}
+
 Compressing the entire CAMS dataset in the three spatial dimensions with Zfp while preserving 99\% of the information yields
-an overall compression factor of 24x (Fig. \ref{fig:compression_errors}). Maximum absolute error and decimal errors are for
-most variables very similar to 1D round+lossless (see Methods for a discussion why they are not identical), providing evidence
-that a multidimensional compression is preferable for higher compression factors. 
+an overall compression factor of 24x (Fig. \ref{fig:compression_error}). Maximum absolute error and decimal errors are for
+most variables very similar to 1D round+lossless (see Fig. \ref{fig:compression_error_distribution} and section
+\ref{sec:compression_methods_compression} for a discussion why they are not identical), providing evidence that a
+multidimensional compression is preferable for higher compression factors. 
 
 Due to the limited meaning of error norms in the presence of uncertainties in the uncompressed reference data, the forecast
-error is assessed to quantify the quality of compressed atmospheric data. The continuous ranked probability score50–52 (CRPS),
+error is assessed to quantify the quality of compressed atmospheric data. The continuous ranked probability score
+(CRPS, \cite{Matheson1976,Hersbach2000,Zamo2018}),
 a generalisation of the root-mean-square error for probabilistic forecasts, is evaluated for global surface temperature using observations
-every 6 hours as truth (Fig. \ref{ensemble_forecast}). Compared to the uncompressed data, no significant increase of the CRPS forecast error 
+every 6 hours as truth (Fig. \ref{fig:ensemble_forecast}). Compared to the uncompressed data, no significant increase of the CRPS forecast error 
 occurs for individual locations or globally at 99\% and 97\% preserved information. The usefulness for the end user of the global temperature
 forecast is therefore unaltered at these levels of preserved information in the compression. Contrarily, with an information loss larger than
 5\% the CRPS forecast error starts to increase, while large compression factors beyond 150x are achieved.
 
-\section{A data compression Turing test}
+\subsection{A data compression Turing test}
 
 In numerical weather predictions, progress in the development of global weather forecasts is often assessed using a set of error metrics,
 summarised in so-called \emph{score cards}. These scores cover important variables in various large scale regions, such as 2m-temperature
 over Europe or horizontal wind speed at different vertical levels in the Southern Hemisphere. With a similar motivation as in \cite{Baker2019},
-we suggest assessing the efficiency of climate data compression using similar scores, which have to be passed similar to a Turing test33,54.
+we suggest assessing the efficiency of climate data compression using similar scores, which have to be passed similar to a Turing test
+\citep{Baker2016,Turing1950}.
 The compressed forecast data should be indistinguishable from the uncompressed data in all of these score tests, or at least indistinguishable
 from the current compression method while allowing higher compression factors. 
 
@@ -755,6 +793,7 @@ fails such a data compression Turing test, there is additional value in conducti
 and evaluating the passes may identify further compression potential.
 
 \section{Discussion}
+\label{sec:compression_discussion}
 
 While weather and climate forecast centres produce very large amounts of data, especially for future cloud and storm-resolving models,
 only the real information content in this data should be stored. We have here presented a methodology to identify real and false information
@@ -778,9 +817,9 @@ precision to the user, which may lead to subjective choices or the same precisio
 To be attractive for large data sets, a compression method should enable compression as well as decompression at reasonable speeds.
 ECMWF produces data at about 2GB/s, including CAMS which creates about 15 MB/s. Data on ECMWF’s archive is compressed once,
 but downloaded on average at 120 MB/s by different users, such that both high compression and decompression speeds are important.
-The (de)compression speeds obtained here are all at least 100MB/s single-threaded (Fig. \ref{fig:compression_speed}), but faster speeds
-are available in exchange for lower compression factors (see ??). The real information is only analysed once and ultimately
-independent of the compressor choice.
+The (de)compression speeds obtained here are all at least 100MB/s single-threaded, but faster speeds
+are available in exchange for lower compression factors (Fig. \ref{fig:compression_speed}). The real information is only analysed once
+and ultimately independent of the compressor choice.
 
 Lossy compression inevitably introduces errors compared to the uncompressed data. Weather and climate forecast data, however,
 already contains uncertainties which are in most cases larger than the compression error. For example, limiting the precision of
