@@ -2,13 +2,16 @@
 \label{chap:orbits}
 
 %% CONTRIBUTION
-\paragraph{Contributions} This chapter is largely based on the following publication
+\paragraph{Contributions} This chapter is largely based on the following publication\footnote{with the following author contributions.
+Conceptualisation: MK, PVC, EAP. Data curation: MK. Formal Analysis: MK. Methodology: MK. Visualisation: MK. Writing – original draft:
+MK. Writing – review and editing: MK, PVC, EAP, TNP. The contributions of Peter, Adam and Tim are highly appreciated.}
 
 \vspace{\baselineskip}
-\indent M Klöwer, P Coveney, EA Paxton, and TN Palmer, 2021. \emph{On periodic orbits in chaotic systems simulated at low precision}, submitted.
+\indent M Klöwer, PV Coveney, EA Paxton, and TN Palmer, 2021.
+\emph{On periodic orbits in chaotic systems simulated at low precision}, in preparation.
 \vspace{\baselineskip}
 
-\noindent with the following author contributions. Conceptualisation: MK, PC, EAP. Data curation: MK. Formal Analysis: MK. Methodology: MK. Visualisation: MK. Writing – original draft: MK. Writing – review and editing: MK, PC, EAP, TNP. The contributions of Peter, Adam and Tim are highly appreciated.
+
 
 \section{Introduction}
 
@@ -16,8 +19,78 @@ Once upon a time
 
 \section{Methods}
 \subsection{Wasserstein distance}
+
+The invariant measure of a chaotic dynamical system is estimated with histogram binning. To assess the agreement
+of two histograms representing invariant measures (either simulated or analytical) we use the Wasserstein distance,
+a metric that derives from the theory of optimal transport, with an $L^1$ cost. The Wasserstein distance $W_1(\mu,\nu)$
+is defined as the least cost at which one can transport all probability mass from histogram $\mu$ to another histogram $\nu$,
+where the cost to move mass $m$ from a bin at location $x$ to a bin at location $y$ is $m \vert x-y \vert$ \citep{Paxton2021,Villani2003}.
+This gives a non-parametric method to compare probability distributions which accounts for both differences in the probabilities
+of events as well as their separations in the underlying space, so that closeness in Wasserstein distance truly corresponds
+to a natural notion of closeness between probability distributions \citep[Thm 7.12]{Villani2003}.
+
 \subsection{An improved random number generator for uniformly distributed floats}
+
+Conventional random number generation for a float $f$ from a uniform distribution $U(0,1)$
+in $[0,1)$ uses the following technique: First, 10, 23, or 52 random bits (for Float16, Float32, or Float64, respectively)
+from an unsigned integer are used to set the mantissa bits of floating-point one. This creates a floating-point
+number that is uniformly distributed in $[1,2)$ as all float formats are uniformly distributed in that range. Second,
+$1$ is subtracted to obtain a float in $[0,1)$, i.e. $f \sim U(1,2) - 1$. While this approach is fast, it is statistically
+imperfect as the resulting distribution does not contain all floats in $[0,1)$ due to the rounding error introduced
+by the subtraction. This technique only samples from every second float in $[\tfrac{1}{2},1)$, every fourth in
+$[\tfrac{1}{4},\tfrac{1}{2})$ and so every $2n$-th float in $[2^{-n-1},2^{-n})$. Furthermore, the smallest positive
+number that can be obtained is about $10^{-7}$ for Float32 and $10^{-16}$ for Float64. This is many orders of
+magnitude larger than minpos, the smallest representable positive float, which is about $10^{-45}$, $10^{-324}$ for
+Float32, Float64, respectively.
+
+We therefore developed a statistically improved conversion from a random unsigned integer to a uniformly distributed
+float in $[0,1)$. Counting the number of leading zeros $l$ of a random unsigned integer yields $l = 0$ at probability
+$p = \tfrac{1}{2}$, $l=1$ at probability $p=\tfrac{1}{4}$ and $l = k$ at probability $p=2^{-k-1}$. These probabilities
+correspond exactly to the share of power-2 exponents in the unit range $[0,1)$ for floats.
+Consequently, we translate the number of leading zeros $l$  to the respective exponent bits and use the remaining
+bits of the unsigned integers for the mantissa bits. The statistical flaws from the conventional conversion as presented
+above are avoided, but for practical reasons the smallest float that can be sampled is about $10^{-20}$ for both Float32
+and Float64. It is therefore practically impossible to sample a zero with this technique, just as the chance of obtaining a
+zero in $[0,1)$ is effectively 0 for floats with 32 or 64 bit. For Float32, for example, we implement this technique as shown
+in Listing \ref{lst:randfloat}, the implementations for Float16 and Float64 are similar. See our implementation in the Julia-package
+\href{https://github.com/JuliaRandom/RandomNumbers.jl}{RandomNumbers.jl} for further details. The random number generation
+for uniformly distributed floats is used throughout this study.
+
+\begin{figure}[tbhp]
+\begin{lstlisting}[language=JuliaLocal,label=lst:randfloat,caption={\textbf{An improved random number generator (RNG) for uniformly
+distributed floats.} The Julia function \texttt{randfloat} takes \texttt{rng} as an argument for an RNG for 64-bit unsigned integers \texttt{UInt64}.
+\texttt{\%} is the remainder after division, for unsigned integers effectively converting between unsigned integers by adding leading
+zeros or discarding leading bits. \texttt{?} indicates a one-line if-clause. \texttt{\&} is the bitwise logical and-operation. \texttt{$\vert$}
+is the bitwise logical or-operation.}]
+function randfloat(rng::Random.AbstractRNG,::Type{Float32})
+
+    # 64 random bits with generator rng
+    ui = rand(rng,UInt64)
+
+    # count leading zeros of random UInt64
+    lz = leading_zeros(ui)
+
+    # then convert leading zeros to exponent bits of Float32
+    # e.g. 01111110, and bitshift to the right position via <<23
+    e = ((126 - lz) % UInt32) << 23
+
+    # reuse the last bits of ui for the 23 mantissa bits
+    # unless the leading zeros reach into those for lz > 40
+    ui = lz > 40 ? rand(rng,UInt64) : ui
+
+    # ui % UInt32 drops the first 32 bits
+    # & 0x007f_ffff sets non-mantissa bits to 0
+    # e | then combines exponent and mantissa
+    # and reinterpret the UInt32 as Float32
+    return reinterpret(Float32,e | ((ui % UInt32) & 0x007f_ffff))
+end
+\end{lstlisting}
+\end{figure}
+
 \subsection{Monte Carlo orbit search}
+
+
+
 \subsection{Efficient orbit search with distributed computing}
 
 \section{Revisiting the generalised Bernoulli map}

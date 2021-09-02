@@ -1,135 +1,278 @@
 \chapter{General methods}
 \label{chap:methods}
 
+This chapter presents the methods that are used in several of the following chapters. We introduce various binary number formats and
+their rounding modes, and present error norms to quantify the resulting rounding errors. It follows a section focusing on
+programming aspects around type-flexibility and composability to illustrate how custom number formats can be used within
+the Julia programming language. The chapter closes with an introduction to information theory to explain the essential concepts
+to quantify information in binary number formats.
+
 \section{Binary number formats}
 \label{sec:numbers}
 
-	\subsection{Integers}
-	\label{sec:integers}
+This section describes encodings for binary integers (section \ref{sec:integers}), and different formats that approximate real numbers:
+Fixed-point numbers (section \ref{sec:fixpoints}),
+floating-point numbers (section \ref{sec:floats}),
+logarithmic fixed-point numbers (section \ref{sec:logfixs}),
+posits (section \ref{sec:posits}) and the self-organising numbers sonums (section \ref{sec:sonums}).
 
-The simplest way to represent a real number in bits is the integer format. An $n$-bit signed integer starts with a
-sign bit followed by a sequence of integer bits, that are decoded as a sum of powers of two with exponents $0,1,...,n-2$.
-An positive integer $x$ with signbit $b_0 = 0$ is therefore decoded in bits $b_1,...,b_{n-2}$ as
+\subsection{Integers}
+\label{sec:integers}
+
+\subsubsection{Unsigned integers}
+
+Non-negative integers are represented in binary as unsigned integers. An $n$-bit unsigned integer is a sequence of $n$ bits
+$b_1, ..., b_n$ which are decoded into the integer $u$ as a sum of powers of two with exponents $n-1,n-2,...,1,0$
 \begin{equation}
-x = \sum_{i=1}^{n-2} 2^{i-1} b_i
+	u = \sum_{i=1}^{n} b_i 2^{n-i}
+	\label{eq:uint}
 \end{equation}
-To avoid multiple representations of zero and to simplify hardware implementations, negative integers, with a sign bit (red) being 1,
-are decoded with two's complement interpretation (denoted with an underscore) by flipping all other bits and adding $1$ \citep{Choo2003}.
-For example in the 4-bit signed integer format (Int4), ${\color{psign}1}110_{\op{Int4}} = {\color{psign}1}010\_ = -2$.
-The largest representable integer for a format with $n$ bits is therefore $2^{n-1}-1$ and the spacing between
-representable integers is always 1.
+We hereby use the big-endian notation \citep{Cohen1981,James1990}, such that the first bit $b_1$ represents the most significant figure and the last bit $b_n$ the
+least significant. For example, the $n=4$ bit unsigned integer \texttt{0101} is decoded as
+$0 \cdot 2^3 + 1 \cdot 2^2 + 0 \cdot 2^1 + 1 \cdot 2^0$ and therefore represents the integer $5$ in decimal.
 
-	\subsection{Fixed-point numbers}
-	\label{sec:fixpoints}
+$n$-bit signed integers will be referred to as UInt$n$, such that the 8-bit version is called UInt8, and so on. It is often convenient to
+write the hexadecimal format to represent unsigned integers or any bit sequence in general. We prefix a hexadecimal with
+\texttt{0x}, such that \texttt{1100010010100101} in binary is equivalent to \texttt{0xc4a5} in hexadecimal. Always 4 bits are hereby
+grouped and represented with one of the 16 symbols from 0-9 and a-f for the 16 possible states from \texttt{0000} (=\texttt{0x0})
+to \texttt{1111} (=\texttt{0xf}).
 
-Fixed-point numbers extend the integer format with $n_f$ fraction bits to $n_i$ signed integer bits to decode an additional sum of
-powers of two with negative exponents $-1,-2,...,-n_f$. A positive fixed-point number is
+The range of representable integers with UInt$n$ is 0 to $2^n-1$. Addition, subtraction and multiplication with a result within this
+range is exact so that no rounding has to be applied. A result outside this range is in most implementations subject to a \emph{wrap-around}
+behaviour which is equivalent to subsequent modulo operation with $2^n$. For example, for UInt16 we have \texttt{0xffff + 0x1 = 0x0}, i.e.
+adding 1 to 65536 would return 0; or \texttt{0x0000 - 0x1 = 0xffff}, i.e. subtracting 1 from 0 returns 65536. Such an example of modulo
+arithmetic avoids special cases (like NaN for floats, see section \ref{sec:floats}), but can easily yield catastrophic results when integers
+are used to approximate real numbers for scientific simulations.
+
+\subsubsection{Signed integers}
+While unsigned integers cannot represent negative numbers, signed integers use the first bit $b_1$ to indicate the sign ($b_1 = 0$ is
+positive and $b_1 = 1$ negative). One way to decode an $n$-bit signed integer is the sign and magnitude representation
 \begin{equation}
-x = \sum_{i=1}^{n_i-2} 2^{i-1} b_i  + \sum_{i=1}^{n_f} 2^{-i} b_{n_i-2+i}
-\label{eq:fixedpoint}
+	s = (-1)^{b_1}\sum_{i=2}^{n} b_i 2^{n-i-1}
+	\label{eq:int}
 \end{equation}
-Every additional fraction bit reduces the number of integer bits, for example Q6.10 is the 16-bit fixed-point format with
-6 signed integer bits and 10 fraction bits.
+which covers the range $[-2^{n-1}-1,2^{n-1}-1]$ but uses two bitpatterns to encode 0 (\texttt{0x00$\dots$00} = +0 and \texttt{0x10$\dots$00} = -0).
+However, to avoid multiple representations of zero and to simplify hardware implementations, the sign and magnitude representation
+is rarely used. The most common representation uses the two's complement, which flips all bits in a sequence (i.e. \texttt{0 $\to$ 1} and \texttt{1 $\to$ 0})
+and adds \texttt{1}. For example, the two's complement of \texttt{0101} is \texttt{1011}. The two's complement representation of negative
+integers, i.e. the sign bit is 1, first flips all magnitude bits and then adds $1$ before using Eq. \ref{eq:int} for decoding. For example,
+in the 4-bit signed integer format Int4 a value is stored as \texttt{{\color{psign}1}110} (the sign bit is marked in red). The magnitude bits of
+\texttt{{\color{psign}1}110} are then converted using the two's complement to \texttt{{\color{psign}1}010} (\texttt{110} is bit flipped into \texttt{001}
+and then adding \texttt{1} yields \texttt{010}), which is the sign and magnitude representation (SignMag) that can be decoded using Eq. \ref{eq:int}
+into $-2$ in decimal: \texttt{{\color{psign}1}110}$_{\op{Int4}} \to$ \texttt{{\color{psign}1}010}$_{\op{SignMag}} \to -2$. 
 
-Flexibility regarding the dynamic range can therefore be achieved with integer arithmetic if fixed-point numbers are used
-\citep{Russell2017}. Unfortunately, we did not achieve convincing results with integer arithmetic for the applications in this
-study, as rescaling of the equations is desired to place many arithmetic calculations near the largest representable number
-\citep{Klower2019}. However, any result beyond will lead to disastrous results, as integer overflow usually returns a negative
-value following a wrap-around behaviour.
+Signed integers with the two's complement representation are in $[-2^{n-1},2^{n-1}-1]$, which is subject to a similar wrap-around behaviour 
+for arithmetic results beyond the representable range as for unsigned integers. The two's complement representation
+is favoured in hardware implementations as no distinction has to be made between signed and unsigned types for the
+arithmetic operations addition, subtraction and multiplication \citep{Choo2003}.
 
-	\subsection{Floating-point numbers}
-	\label{sec:floats}
+\subsection{Fixed-point numbers}
+\label{sec:fixpoints}
 
-The IEEE standard on floating-point arithmetic defines how floats encode a real number $x$ in terms of a sign, and several
-exponent and significant bits
+Fixed-point numbers extend the integer format with fraction bits in order to better approximate real numbers. 
+An $n$-bit fixed-point number format uses next to $n_i$ signed integer bits also $n_f$ fraction bits to encode 
+an additional sum of powers of two with negative exponents $-1,-2,...,-n_f$. Note that $n = n_i + n_f$, so
+every additional fraction bit reduces the number of integer bits. A common notation is, for example,
+Q6.10, which is the 16-bit fixed-point format with 6 signed integer bits and 10 fraction bits.
+A positive fixed-point number is decoded into $x$ as
+\begin{equation}
+x = (-1)^{b_1}\sum_{i=2}^{n_i} b_i 2^{n-i-1}  + \sum_{i=1}^{n_f} b_{n_i+i} 2^{-i}
+\label{eq:fixpoints}
+\end{equation}
+The first summation is identical to the signed integers (Eq. \ref{eq:int}), and therefore might use the sign and magnitude
+representation as presented here, or the two's complement alternatively. Using $n_f = 1$ can only encode real numbers
+at a distance of $\tfrac{1}{2}$ apart, so the representable numbers are $0,\tfrac{1}{2},1,\tfrac{3}{2},2,...$, but using more fraction
+bits allows a higher precision. For $n_f=10$ fraction bits, numbers with a spacing of $2^{-10} \approx 0.001$ are representable,
+which is also the smallest representable positive number called \emph{minpos}. However, this comes at the cost of a reduced
+largest representable number \emph{maxpos} and therefore a smaller range $maxpos-minpos$ (Table \ref{tab:formats}).
+For the format Q6.10 with 6 integer bits and 10 fraction bits the largest representable number is $maxpos = \mathtt{0x7fff} = 2^5-1 + \sum_1^{10} 2^{-i}
+\approx 31.999$. Results beyond maxpos will trigger in many implementations also a wrap-around behaviour as for integers.
+
+In the following we consider the range of a number format to be $maxpos-minpos$, and the dynamic range as
+$\tfrac{maxpos}{minpos}$, usually given in $\log_{10}(\tfrac{maxpos}{minpos})$ orders of magnitude. For a 16-bit fixed-point
+number format the range is approximately $2^{n_i-1}$ and therefore decreases with fewer integer bits.
+However, the dynamic range is always $2^{n-1}$ and therefore only increases for more bits in an $n$-bit format. For Q6.10
+the range is less than $32$ and the dynamic range is 4.5 orders of magnitude.
+
+Choosing the number of integer bits $n_i$ and fraction bits $n_f$ is equivalent to interpreting the bits of a fixed-point number
+as an integer with the scaling factor $2^{-n_f}$. Flexibility regarding the range can therefore be achieved with
+integer arithmetic if fixed-point numbers are used \citep{Russell2017}. Unfortunately, the very limited range at the cost of precision 
+is unsuited for many applications. Nevertheless, they provide exact addition, subtraction and multiplication (as with integers) unless an
+overflow or underflow to 0 occurs. They can be suited to represent monetary values for example. However, fixed-point numbers
+are rarely used since standardized floating-point numbers became widely available in the 1980s and 1990s.
+
+\subsection{Floating-point numbers}
+\label{sec:floats}
+
+While fixed-point numbers have constant accuracy, meaning a fixed number of digits after the decimal point, floating-point
+numbers (or simply floats) were introduced for a \emph{floating} decimal point. In consequence, they have an approximately constant
+number of significant digits across a wide range of representable numbers. Floating-point numbers achieve this by
+encoding an exponent which is multiplied to the significand (also called mantissa).
+
+The floating-point format is standardized in \cite{IEEE1985,IEEE2008} which defines how the bits $b_1,...,b_n$ of an
+$n$-bit float are converted into a real number $x$ in terms of a sign bit, $n_e$ exponent and $n_m$ mantissa bits.
+Most floats (hence they are called \emph{normal floats}) are decoded as
 \begin{equation}
 x = (-1)^{sign~bit} \cdot 2^{e-bias} \cdot (1+f)
 \label{eq:float}
 \end{equation}
-The exponent bits $e$ are interpreted as unsigned integers, such that $e-bias$ converts them effectively to signed integers.
-The significant bits $f_i$ define the significand as $f = \sum_{i=1}^{n_f} f_i 2^{-i}$ such that $(1+f)$ is in the bounds $[1,2)$.
-An 8-bit float encodes a real number with a sign bit (red), $n_e = 3$ exponent bits (blue) and $n_f=4$ fraction bits (black) as
-illustrated in the following example
+and exceptions are discussed in Eq. \ref{eq:float_all}. The exponent bits are interpreted as an unsigned integer $e$, such that $e-bias$ converts
+them effectively to signed integers, with $bias = 2^{n_e-1}-1$. Consequently, both positive and negative exponents can be represented,
+for absolute values of $x$ larger than 1 and in between 0 and 1, respectively. The bias changes with the number of exponent
+bits $n_e$ to have logarithmically a similar range for very large and very small numbers: $e-bias$ is any power of two in
+$[-2^{n_e-1}+2,2^{n_e-1}-1]$ for $e=1,...,2^{n_e}-2$. Note, $e=0$ and $e=2^{n_e}-1$ are reserved for special cases such as 0 and infinity,
+which will be introduced in Eq. \ref{eq:float_all}.
+
+The mantissa bits $m_1,...,m_{n_m}$ are interpreted as the fraction $f = \sum_{i=1}^{n_m} m_i 2^{-i}$, identical to the fraction bits
+of fixed-point numbers (see Eq. \ref{eq:fixpoints}). Including the so-called hidden bit (which represents the addition with $2^0 = 1$
+in Eq. \ref{eq:float}) the term $(1+f)$ is in the bounds $[1,2)$, and therefore encodes the significant digits behind the decimal (or binary)
+point.
+
+An 8-bit float, for example, encodes the closest float to $\pi = 3.14159...$ with a sign bit (red), $n_e = 3$ exponent bits (blue) and
+$n_m=4$ mantissa bits (black) as
 \begin{equation}
-3.14 \approx {\color{psign}0}{\color{pexpo}100}1001_{\op{Float8}} = (-1)^{\color{psign}0} \cdot 2^{{\color{pexpo}4}-bias}
-\cdot (1+2^{-1}+2^{-4}) = 3.125
-\label{eq:float_pos}
+{\color{psign}0}{\color{pexpo}100}1001_{\op{Float8}} = (-1)^{\color{psign}0} \cdot 2^{{\color{pexpo}4}-bias}
+\cdot (1+2^{-1}+2^{-4}) = 3.125 \approx \pi
+\label{eq:float8}
 \end{equation}
-with $bias=2^{n_e-1} - 1 = 3$. Exceptions to Eq. \ref{eq:float} occur for subnormal numbers, infinity (Inf) and Not-a-Number
-(NaN) when all exponent bits are either zero (subnormals) or one (Inf when f=0, or NaN else). 16-bit half-precision floatin-point 
-numbers (Float16) have 5 exponent bits and 10 significant bits. A truncated version of the Float32 format (8 exponent bits, 23 significant bits)
-is BFloat16 with 8 exponent bits and 7 significant bits. Characteristics of various formats are summarised in Table \ref{tab:formats}.
-A format with more exponent bits has a wider dynamic range of representable numbers but lower precision, as fewer bits are available
-for the significant. All floating-point formats have a fixed number of significant bits. Consequently, they have a constant number of
-significant digits throughout their range of representable numbers (subnormals excluded), which is in contrast to posit numbers,
-which are introduced in the next section.
+with $bias=2^{n_e-1} - 1 = 3$ here.
 
-\begin{table}[htbp]
-\center
-\begin{tabular}{l | r | r | l | l | r | r}
-Format & bits & exp bits & $minpos$ & $maxpos$ & $\epsilon$ &  \% NaR \\
-\hline
-Float64    & $64$ & $11$ & $5.0 \cdot 10^{-324}$ & $1.8 \cdot 10^{308}$  & $16.3$ & $0.0$ \\
-Float32    & $32$ & $8$ & $1.0 \cdot 10^{-45}$ & $3.4 \cdot 10^{38}$ & $7.6$ & $0.4$ \\
-Float16    & $16$ & $5$ & $6.0 \cdot 10^{-8}$ & $65504$ & $3.7$ & $3.1$ \\
-BFloat16    & $16$ & $8$ & $ 9.2 \cdot 10^{-41}$ & $3.4 \cdot 10^{38}$ & $2.8$ & $0.4$  \\
-Float8 & $8$ & $3$ & $1.5 \cdot 10^{-2}$ & $15.5$ & $1.9$ & $12.5$\\
-\hline
-Posit32    & $32$ & $2$ &  $7.5 \cdot 10^{-37}$ & $7.5 \cdot 10^{37}$ & $8.8$ & $0.0$ \\
-Posit(16,1) & $16$ & $1$ & $3.7 \cdot 10^{-9}$ & $3.7 \cdot 10^{9}$ & $4.3$ & $0.0$\\
-Posit(16,2) & $16$ & $2$ & $1.4 \cdot 10^{-17}$ & $1.4 \cdot 10^{17}$ & $4.0$ & $0.0$\\
-Posit(8,0) & $8$ & $0$ & $1.5 \cdot 10^{-2}$ & $64$ & $2.2$ & $0.4$  \\
-\hline
-Int16 & $16$ & $0$ & $1$ & $32767$ & $0.8$ & $0$\\
-Q6.10 & $16$ & $0$ & $9.8 \cdot 10^{-4}$ & $32.0$ & $3.7$ & $0$\\
-\hline
-LogFixPoint16 & $16$ & $15$ & $5.4 \cdot 10^{-20}$ & $1.8 \cdot 10^{19}$ & $3.2$ & $0.0$\\
-Approx14 & $14$ & $13$ & $5.4 \cdot 10^{-20}$ & $9.1 \cdot 10^{18}$ & $2.6$ & $0.8$
-\end{tabular}
-\vspace{10pt}
-\caption{Some characteristics of various number formats. $minpos$ is the smallest representable positive number,
-$maxpos$ the largest. The machine precision $\epsilon$, is the decimal precision at $1$. \% NaR denotes the
-percentage of bit patterns that represent not a number (NaN), infinity or not a real (NaR).}
-\label{tab:formats}
-\end{table}
-
-	\subsection{Logarithmic fixed-point numbers}
-	\label{sec:logfixs}
-
-Fixed-point numbers have a limited range and for the applications in this study an unsuitable distribution of decimal precision.
-However, logarithmic fixed-point numbers are similar to floating-point numbers. A $n$-bit logarithmic fixed-point number is defined as
+In order to also encode 0, plus and minus infinity ($\pm$Inf), and Not-A-Number (NaN), there are exceptions to Eq. \ref{eq:float} that
+are discussed in the following: When all exponent bits and mantissa bits are \texttt{0} a float is decoded as 0. If the exponent bits are
+all \texttt{0} but the mantissa bits are not ($f>0$) a float is decoded as one of the subnormal numbers, which were introduced to uniformly
+fill the gap between 0 and the smallest normal number $2^{-2^{n_e-1}+2}$ (also called \emph{floatmin}) that can be obtained from
+Eq. \ref{eq:float}. Another exception to Eq. \ref{eq:float} occurs when all exponent bits are \texttt{1}, in which case the float is decoded
+as $\pm \infty$ (depending on the sign bit) if the mantissa bits are all \texttt{0}. However, for any non-zero mantissa bits ($f>0$) the float is
+decoded as NaN. In summary,
 \begin{equation}
-x = (-1)^{sign~bit} \cdot 2^e
-\label{eq:logfixpoint}
+x = \begin{cases}
+(-1)^s \cdot 2^{e-bias} \cdot (1+f) \quad &\text{if}~e > 0,\phantom{^{n_e}-1~\text{and}~f > 0} \quad \text{(normals)} \\
+(-1)^s \cdot 2^{1-bias} \cdot f \quad &\text{if}~e=0\phantom{^{n_e}-1}~\text{and}~f > 0, \quad \text{(subnormals)} \\
+(-1)^s \cdot 0 \quad &\text{if}~e=0\phantom{^{n_e}-1}~\text{and}~f = 0, \quad (\pm 0) \\
+(-1)^s \cdot \infty \quad &\text{if}~e=2^{n_e}-1~\text{and}~f = 0, \quad (\pm \text{Inf}) \\
+\text{NaN} \quad &\text{if}~e=2^{n_e}-1~\text{and}~f > 0, \quad \text{(Not-A-Number).}
+\end{cases}
+\label{eq:float_all}
 \end{equation}
-where $e$ is encoded as an $(n-1)$-bit fixed-point number (Eq. \ref{eq:fixedpoint}).
-Consequently, logarithmic fixed-point numbers are equally spaced in log-space and
-have a perfectly flat decimal precision throughout the dynamic range of representable
-numbers (Fig. \ref{fig:decimal_precision}). We call the 16-bit logarithmic fixed-point numbers
-with 7 signed integer bits and 8 fraction bits LogFixPoint16. Approx14 is a proprietary number
- format developed by Singular Computing, which is essentially a 14-bit logarithmic fixed-point
- numbers with 7 signed integer bits and 6 fraction bits.
 
-Logarithmic number formats have the advantage that no rounding error is applied for multiplication, as the addition of the exponents
-is exact with fixed-point numbers (as long as no under or overflow occurs). Hence, multiplication with LogFixPoint16 and Approx14
-is not just exact but also fast, due to implementation as integer addition. Conversely, addition with logarithmic numbers is difficult.
-Adding two logarithmic numbers involves the computation of a logarithm, which, however, for low precision numbers can be implemented as a table look-up.
+Floating-point formats cover a wide range of representable numbers. The smallest positive float is called \emph{minpos}, which is the
+smallest subnormal number encoded as \texttt{0x00$\dots$01}, $minpos = 2^{2-2^{n_e - 1}-n_m}$. The largest positive float is called
+\emph{floatmax} or \emph{maxpos} which occurs for $e=2^{n_e}-2$ (the exponent bits are \texttt{0x11...10}) and 
+$f=2-2^{-n_m}$ (the mantissa bits are \texttt{0x11...11}), hence $maxpos = 2^{2^{n_e}-1}\left(1-2^{-n_m-1}\right)$. For an illustration 
+of the dynamic range covered by some common floating-point formats see Fig. \ref{fig:methods_decprec_floats}. More exponent
+bits allow for a wider dynamic range as both minpos and maxpos effectively scale with $2^{\pm2^{n_e}}$ (positive sign for maxpos,
+negative sign for minpos). However, more exponent bits also mean less mantissa bits which reduces the precision. Consequently,
+for a given number of total bits per float there is a trade-off between range and precision, similar to the trade-off for fixed-point numbers.
+For more details on the precision of floats see section \ref{sec:decimal_precision}.
 
-Both LogFixPoint16 and Approx14 come with a round-to-nearest rounding mode in log2-space.  We consider $x_1 = 2^0 = 1$
-and $x_2 = 2^1 = 2$ as two representable numbers as an example with $x$ in between. With round-to-nearest (and tie to even)
-in linear-space all numbers $x$ larger equal $1.5$ are round up and others round down. With round-to-nearest in log2-space
-$2^{\tfrac{1}{2}} = \sqrt{2} = 1.414...$ is the log-midpoint as $\log_2(\sqrt{2}) = 0.5$. Consequently, the numbers between
-$\sqrt{2}$ (inclusive) and $2$ will be round up and only numbers between $1$ and less than $\sqrt{2}$ will round down.
-Hence, the linear range of numbers that will be round up is larger than those that will round down. This rounding is biased
-as the expectation of rounded uniformly distributed values between $1$ and $2$ is not equal to the expectation without rounding.
-Let $\op{round}_{\log_2}(x)$ be the round-to-nearest function in log2-space and $x$ be drawn $N$-times from a random uniform
-distribution $U(1,2)$, then
+Due to the exponent bits floats are approximately logarithmically distributed on the real number line with about half of the representable
+numbers packed between -1 and 1. However, due to the mantissa bits being a sum of powers of two with negative exponents floats
+are also piecewise uniformly (or linearly) distributed. Within a given range of two powers of two $[2^i,2^{i+1})$, e.g. $[1,2)$ or
+$[\tfrac{1}{8},\tfrac{1}{4})$ only the mantissa bits change, such that the distance $\delta$ between two subsequent 
+floats is always equal and $\delta = 2^{i-n_m}$. But for the next larger power of two, this distance doubles, whereby
+this doubling accounts for the approximately logarithmic distribution of floats throughout the dynamic range. The distance $\delta$ is
+closely related to the rounding error and discussed in more detail in section \ref{sec:roundnearest}.
+
+The two most common floating-point formats are Float32 and Float64. Float32 is a 32-bit format with $n_e=8$ exponent bits and
+$n_m=23$ mantissa bits. Float64 is a 64-bit format with $n_e=11$ exponent bits and $n_m=52$ mantissa bits. Both have been 
+standardized in \cite{IEEE1985}. Recently more widely available on specialised hardware are the two 16-bit low precision formats
+Float16 (5 exponent bits and 10 mantissa bits) and BFloat16 (8 exponent bits and 7 mantissa bits, a truncated version of Float32).
+The number $\pi = 3.14159...$ is encoded in these formats as (sign bit in red, exponent bits in blue, mantissa bits in black)
+\begin{align}
+\text{Float64:}& \quad {\color{psign}0}{\color{pexpo}10000000000}10010010000111111011 \nonumber \\
+			& \quad 01010100010001000010110100011000 = 3.141592653589793 \nonumber \\
+\text{Float32:}& \quad {\color{psign}0}{\color{pexpo}10000000}10010010000111111011011 = 3.1415927 \nonumber \\
+\text{Float16:}& \quad {\color{psign}0}{\color{pexpo}10000}1001001000 = 3.140625 \nonumber \\
+\text{BFloat16:}& \quad {\color{psign}0}{\color{pexpo}10000000}1001001 = 3.140625
+\end{align}
+While both Float16 and BFloat16 represent $\pi$ as 3.140625 note that Float16 is three bits more precise, which just happen to be all \texttt{0}.
+A summary of the characteristic of these floating-point formats is found in Table \ref{tab:formats}. For a more in-depth discussion of
+the precision of these formats see section \ref{sec:decimal_precision}.
+
+\subsection{Logarithmic fixed-point numbers}
+\label{sec:logfixs}
+
+The major difference between floats and integers (or fixed-point numbers) is their ability to represent very large and very small
+numbers simultaneously at similar precision. The floating-point format achieves this with exponent bits such that the floats are
+approximately logarithmically spaced out on the positive and negative part of the real number line. This motivates us to define
+a logarithmic fixed-point number format (in short logfix), which is not a hybrid format of linear and logarithmic spacing as floats are, but
+follows a perfect logarithmic spacing. We implement the logfix formats presented here as the software emulator 
+\href{https://github.com/milankl/LogFixPoint16s.jl}{LogFixPoint16s.jl} and further technical details can be found therein.
+
+Logfixs are an appealing number format as multiplication, division, square root and power are exact and do not include any rounding
+errors unless the result is outside the representable range. This property is equivalent to fixed-point numbers being exact
+on addition and subtraction, which, due to the logarithm, translates to multiplication and division for logfixs. We design an $n$-bit logfix
+format with one sign bit $s$, and in the exponent $n_i$ signed integer bits followed by $n_f$ fraction bits,
+such that $n = 1 + n_i + n_f$. The decoding of a logfix number is defined as
 \begin{equation}
-    \frac{1}{N}\sum_i^N x_i = 1.5 \neq \frac{1}{N}\sum_i^N \op{round}_{\log_2}(x_i) = 3 - \sqrt{2} = 1.586...
-    \label{eq:biased_rounding}
+x = (-1)^{b_1} \cdot 2^k
+\label{eq:logfix}
 \end{equation}
- We will investigate the effect of this round-to-nearest in log2-space in section \ref{sec:mixed}.
+with the exponent $k = i + f$ being a fixed-point number with $n_i$ integer bits and $n_f$ fraction bits. The signed integer $i$
+is in $[-2^{n_i-1},2^{n_i-1}-1]$ (one bit is effectively used for the sign of the exponent) and uses a biased representation similar
+to floats. The fraction $f$ is in $[0,1)$ and identical to the mantissa encoding in floating-point numbers (but without the hidden bit)
+$f = \sum_{i=1}^{n_f} b_{1+n_i+i} 2^{-i}$.
 
+Eq. \ref{eq:logfix} has only two exceptions: The bit pattern \texttt{0x00$\dots$00} is reserved to encode zero and \texttt{0x10$\dots$00}
+to encode Not-A-Real (NaR, which combines NaN with $\pm \infty$ into a single bitpattern and is borrowed from the design of
+posits, see section \ref{sec:posits}). Hence, $x=0$ if $b_1 = k = 0$ and $x = \text{NaR}$ if $b_1 = 1$ but $k=0$.
+
+The trade-off between precision and range is for logfixs similar to floats when choosing a corresponding number of bits:
+The logfix format with $n_i=5$ integer bits and $n_f=10$ fraction bits is similar to Float16 with 5
+exponent bits and 10 mantissa bits. Using $n_i=8$ integer bits and $n_f=7$ fraction bits is similar to BFloat16, such that
+we call these two logfix formats LogFixPoint16 and BLogFixPoint16 in analogy. The smallest representable positive number
+for logfixs is $minpos = 2^{-2^{n_i-1} + 2^{-n_f}}$ which is encoded as \texttt{0x00$...$01}. The largest representable number
+for logfixs is $maxpos = 2^{2^{n_i-1} - 2^{-n_f}}$ encoded as \texttt{0x011$...$1}, such that for our design of logfixs $maxpos = \tfrac{1}{minpos}$, meaning that
+the dynamic range is symmetric around 1.
+
+
+Multiplication, division, square root and power are easily implemented for a logarithmic number format with integer arithmetic. 
+Multiplication of two numbers $x,y$, for example, is equivalent to the addition of the exponents
+\begin{equation}
+xy = (-1)^{s_x \veebar s_y} \cdot 2^{k_x + k_y}
+\label{eq:logfix_mul}
+\end{equation}
+with $\veebar$ being the logical xor-operation on the sign bits $s_x,s_y$. Exceptions to Eq. \ref{eq:logfix_mul} occur for $x = \text{NaR}$
+or $y = \text{NaR}$ in which case $xy = \text{NaR}$, or if no NaRs are present but if $x=0$ or $y=0$ then $xy= 0$. The multiplication 
+is then followed by checking for underflows ($xy < \tfrac{1}{2}minpos$) or overflows ($xy > maxpos$), in which case 0 or NaR is returned,
+respectively. 
+
+Addition and subtraction for logfixs is based on the Gaussian logarithms $G^+,G^-$ which are functions of the argument $a$
+\begin{align}
+G^+(a) = -a + \log_2(1+2^a) \nonumber \\
+G^-(a) = -a + \log_2(1-2^a)
+\label{eq:gauss_log}
+\end{align}
+The evaluation of the Gaussian logarithms makes addition and subtraction for logfixs much more complicated than the other arithmetic operations.
+The result $z = (-1)^{s_z} \cdot 2^{k_z}$ of an addition $x+y = z$ is given by
+\begin{align}
+k_z &= \log_2(\vert x \vert + \vert y \vert) \nonumber \\
+	&= k_y - (k_y - k_x) + \log_2(1+2^{k_y - k_x})  = k_y + G^+(k_y-k_x)
+\label{eq:logfix_add}
+\end{align}
+and similar for subtraction $y-x = z$
+\begin{align}
+k_z &= \log_2(\vert y \vert - \vert x \vert) \nonumber \\
+	&= k_y - (k_y-k_x) + \log_2(1-2^{k_y - k_x}) = k_y + G^-(k_y-k_x)
+\label{eq:logfix_sub}
+\end{align}
+for $y \geq x \geq 0$, which can be generalised to all $x,y$ by rewriting $x+y$ as $y+x$ or $x-y = -(y-x)$, etc. The result of the base-2 logarithm $\log_2$
+inside the Gaussian logarithms has to be rounded to a fixed-point number like $k_x$ and $k_y$ for the subsequent addition. This rounding introduces an error
+as addition and subtraction with logfixs is not exact in general. We will discuss rounding for logfixs in section \ref{sec:roundnearest}.
+
+Instead of evaluation the Gaussian logarithms on every arithmetic operation, they can be precomputed as only a function of the single argument
+$k_y-k_x$. For an $n$-bit logfix format there are only $2^{n-1}-1$ different values for $k_y-k_x$, such that in 16 bit the two precomputed table
+lookups have an upper bound of $32767$ entries each. In practice, such table lookups are considerably smaller as for $k_y \gg k_x$  the functions
+$G^+,G^-$ approach zero, as their increment on $k_y$ is eventually round back to $k_y$. Consequently, there will be a maximum resolvable
+difference $k_y-k_x$ beyond which $G^+$ and $G^-$ do not have to be computed. For the $n=16$-bit format LogFixPoint16 with $n_f=10$
+fraction bits the two table lookups are each 24KB large (11805 entries at 16 bit per entry). For BLogFixPoint16 ($n_f=7$ fraction bits) the two
+table lookups are even smaller at 2KB each (1092 entries at 16 bit per entry). While the small sizes of these table lookups are promising
+for low-precision hardware implementations, addition and subtraction remain the performance and precision bottleneck for logfix
+formats. The size of these table lookups increases exponentially with the number of bits, meaning that implementations
+for 32-bit or 64-bit logfixs cannot be based on table lookups. Such high-precision logfix formats will only be possible
+if the logarithms can be computed directly.  Although the design of floats is mathematically more complicated
+(compare Eq. \ref{eq:float_all} to Eq. \ref{eq:logfix}), they enjoy full hardware support, such that there's currently no 
+competitive hardware based on logfix arithmetic available that could be used as an alternative to floats.
 
 	\subsection{Posit numbers}
 	\label{sec:posits}
@@ -341,6 +484,38 @@ Sonum16 has a smaller forecast error compared to posits for the important lead t
 %\label{fig:L96_error}
 %\end{figure}
 
+\subsection{Summary on number formats}
+\label{sec:summary_formats}
+
+\begin{table}[htbp]
+\center
+\begin{tabular}{l | r | r | l | l | r | r}
+Format & bits & exp bits & $minpos$ & $maxpos$ & $\epsilon$ &  \% NaR \\
+\hline
+Float64    & $64$ & $11$ & $5.0 \cdot 10^{-324}$ & $1.8 \cdot 10^{308}$  & $16.3$ & $0.0$ \\
+Float32    & $32$ & $8$ & $1.0 \cdot 10^{-45}$ & $3.4 \cdot 10^{38}$ & $7.6$ & $0.4$ \\
+Float16    & $16$ & $5$ & $6.0 \cdot 10^{-8}$ & $65504$ & $3.7$ & $3.1$ \\
+BFloat16    & $16$ & $8$ & $ 9.2 \cdot 10^{-41}$ & $3.4 \cdot 10^{38}$ & $2.8$ & $0.4$  \\
+Float8 & $8$ & $3$ & $1.5 \cdot 10^{-2}$ & $15.5$ & $1.9$ & $12.5$\\
+\hline
+Posit32    & $32$ & $2$ &  $7.5 \cdot 10^{-37}$ & $7.5 \cdot 10^{37}$ & $8.8$ & $0.0$ \\
+Posit(16,1) & $16$ & $1$ & $3.7 \cdot 10^{-9}$ & $3.7 \cdot 10^{9}$ & $4.3$ & $0.0$\\
+Posit(16,2) & $16$ & $2$ & $1.4 \cdot 10^{-17}$ & $1.4 \cdot 10^{17}$ & $4.0$ & $0.0$\\
+Posit(8,0) & $8$ & $0$ & $1.5 \cdot 10^{-2}$ & $64$ & $2.2$ & $0.4$  \\
+\hline
+Int16 & $16$ & $0$ & $1$ & $32767$ & $0.8$ & $0$\\
+Q6.10 & $16$ & $0$ & $9.8 \cdot 10^{-4}$ & $32.0$ & $3.7$ & $0$\\
+\hline
+LogFixPoint16 & $16$ & $15$ & $5.4 \cdot 10^{-20}$ & $1.8 \cdot 10^{19}$ & $3.2$ & $0.0$\\
+BLogFixPoint16 & $16$ & $15$ & $5.4 \cdot 10^{-20}$ & $9.1 \cdot 10^{18}$ & $2.6$ & $0.0$
+\end{tabular}
+\vspace{10pt}
+\caption{\textbf{Some characteristics of various number formats.} $minpos$ is the smallest representable positive number,
+$maxpos$ the largest. The machine precision $\epsilon$, is the decimal precision at $1$ (see section \ref{sec:decimal_precision}).
+\% NaR denotes the percentage of bit patterns that represent Not-A-Number (NaN), infinity or Not-A-Real (NaR).}
+\label{tab:formats}
+\end{table}
+
 
 \section{Rounding modes}
 \label{sec:rounding}
@@ -412,9 +587,25 @@ In this case the distance from $x_1$ to the previous float is only $\tfrac{\delt
 \section{Error norms}
 \label{sec:error_norms}
 
-\subsection{Mean, absolute and relative error}
+\subsection{Mean and absolute error}
+\label{sec:meanabs_error}
+
+\subsection{Relative error}
+\label{sec:relative_error}
 	
 \subsection{Decimal error and precision}
+\label{sec:decimal_precision}
+
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/methods/float32_16_bfloat_decprec.pdf}
+	\caption{\textbf{Decimal precision of Float16, BFloat16 and Float32 over the range of representable numbers.}
+	The decimal precision is worst-case, i.e. given in terms of decimal places that are at least correct after rounding
+	(see section \ref{sec:decimal_precision}). The smallest representable number (minpos), the smallest normal number
+	(floatmin) and the largest representable number (maxpos) are denoted with vertical dashed lines (see section \ref{sec:floats}).
+	The subnormal range is between minpos and floatmin.}
+	\label{fig:methods_decprec_floats}
+\end{figure}
+
 
 The decimal precision is defined as \citep{Gustafson2017,Gustafson2017a}
 \begin{equation}
@@ -441,8 +632,8 @@ The decimal precision of 16-bit integers is negative infinity for any number bel
 largest representable integer $2^{15} - 1 =  32767$. Similar conclusions hold for the fixed-point format Q6.10, as the decimal
 precision is shifted towards smaller numbers by a factor of $\tfrac{1}{2}$ for each additional fraction bit.
 
-	\section{Type-flexibility through code composability}
-	\subsection{A type-flexible programming paradigm}
+\section{Type-flexibility through code composability}
+\subsection{A type-flexible programming paradigm}
 
 Julia's programming paradigms of \emph{multiple-dispatch} and \emph{type-stability} facilitate the use of arbitrary number formats
 without the need to rewrite an algorithm, while compiling functions for specific types \citep{Bezanson2017}. As this is an essential
