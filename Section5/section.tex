@@ -36,7 +36,7 @@ operations per second.
 Float16 is the 16-bit variant of Float32 and Float64 and is defined in the 2008 revision of the IEEE-754 standard on floating-point arithmetic
 \citep{IEEE1985,IEEE2008}. Alternatives such as bfloat16 \citep{Burgess2019, Kalamkar2019}, minifloats \citep{Fox2020}, logarithmic
 fixed-point numbers \citep{Johnson2020,Johnson2018,Sun2020}, posits
-\citep{Gustafson2017a,Chaurasiya2018,Klower2019a,Klower2020b,Langroudi2019,Zhang2020} and stochastic rounding
+\citep{Gustafson2017a,Chaurasiya2018,Klower2019a,Klower2020a,Langroudi2019,Zhang2020} and stochastic rounding
 \citep{Croci2020,Hopkins2020,Mikaitis2020,Paxton2021} have been investigated, but most of these are not available on
 standard supercomputing hardware. Currently only floats (and integers) enjoy a widely available support in terms of hardware,
 libraries and compilers that ultimately make it possible to execute complex computational applications.
@@ -46,14 +46,14 @@ errors are masked by other sources of error \citep{Palmer2015}. Typical rounding
 many orders of magnitude smaller than errors in the observations, from coarse resolution or underrepresented physical processes.
 Low-precision calculations are therefore, at least in theory, sufficient without a loss in accuracy for a weather forecast or a climate prediction.
 Emulated in parts of weather and climate models, 16-bit half precision has been shown to be a potential route to accelerated simulations
-\citep{Dawson2018,Chantry2019, Hatfield2019, Klower2020b}.
+\citep{Dawson2018,Chantry2019, Hatfield2019, Klower2020a}.
 
 Although weather and climate model data often comes with large uncertainties, many intermediate calculations inside a model simulation
 require a higher precision. Time integration is often a precision-critical part of numerical simulations of dynamical systems. Stability constraints
 require small time steps such that tendencies are often several times smaller than the prognostic variables \citep{Courant1967}.
 Adding the two yields a loss of precision from the tendency as small increments can only be poorly resolved in low precision
 \citep{Gill1951,Kahan1965,Moller1965}. In extreme cases this can lead to a model stagnation \citep{Croci2020}, and is often
-dealt with using mixed-precision approaches \citep{Dawson2018,Klower2020b,TintoPrims2019}, where the tendencies are computed
+dealt with using mixed-precision approaches \citep{Dawson2018,Klower2020a,TintoPrims2019}, where the tendencies are computed
 in low-precision, but converted to a high-precision format before addition. This is beneficial as a large share of computing time is
 accelerated with low precision, while precision-critical operations are kept in high precision.
 
@@ -146,7 +146,7 @@ and enstrophy-conserving scheme of \cite{Arakawa1990}. The tracer advection equa
 with a semi-Lagrangian advection scheme \citep{Diamantakis2013,Smolarkiewicz1992}. This scheme calculates
 a departure point for every arrival grid point one time step ago. The tracer field is then interpolated onto the departure point,
 which is used as the tracer concentration at the arrival point for the next time step. More details on the implementation of
-the semi-Lagrangian advection scheme is described in \citep{Klower2020b}. The time integration of ShallowWaters.jl is
+the semi-Lagrangian advection scheme is described in \citep{Klower2020a}. The time integration of ShallowWaters.jl is
 discussed in section \ref{sec:compensated_time_integration}.
 
 \subsection{Choosing a scale with Sherlogs}
@@ -206,7 +206,7 @@ histogram of the entirely unscaled shallow water equations simulated with Float3
 that would arise with Float16 (Fig. \ref{fig:a64fx_bitpatternhist}a). A large share (10\%) of the arithmetic
 results would be below the representable range of Float16. Consequently, running the model without
 any scaling modifications in Float16 would round many numbers to 0, causing so-called underflows
-that deteriorate the simulated dynamics \citep{Klower2020b}. Most of these underflows occur in the
+that deteriorate the simulated dynamics \citep{Klower2020a}. Most of these underflows occur in the
 calculation of gradients, which consequently have to be non-dimensionalised as previously suggested
 \citep{Klower2019a}. This also largely removes a resolution-dependence of the bitpattern histograms,
 such that Float16 simulations are possible across a wide range of resolutions. Dimensionless gradients
@@ -240,7 +240,7 @@ headspace between the largest occurring numbers (about $30000$) to avoid overflo
 The idealised tracer in ShallowWaters.jl takes values in (-1,1), so we scale this variable by $s_q = 2^{15}$
 in order to use most of the Float16 range. This is to allow as many bitpatterns as possible for the interpolation
 in the semi-Lagrangian advection scheme, which uses non-dimensional departure points on a locally relative
-grid for 16-bit arithmetic, as described in \cite{Klower2020b}.
+grid for 16-bit arithmetic, as described in \cite{Klower2020a}.
 
 Consequently, the fully scaled shallow water equations are squeezed well into Float16, making near-optimal
 use of the available bitpatterns, of which only 3\% are unused (NaNs excluded). In contrast, a simulation with
@@ -487,7 +487,7 @@ The compensated time integration minimises rounding errors from this precision-c
 at a slightly higher cost. Benchmarking in comparison to mixed-precision shows that the compensated
 time integration is faster in ShallowWaters.jl while being as precise as mixed-precision.
 
-Alternatives to floats have been discussed for weather and climate simulations previously \citep{Klower2019a,Klower2020b}.
+Alternatives to floats have been discussed for weather and climate simulations previously \citep{Klower2019a,Klower2020a}.
 Although posit numbers \citep{Gustafson2017a} are more precise in these applications, the improvement from floats to
 posits is smaller than using mixed-precision and therefore also smaller than the compensated time integration.
 In that sense, algorithms that are low-precision resilient are far more important than the actual choice of the

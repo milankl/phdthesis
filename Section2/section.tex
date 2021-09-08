@@ -1,4 +1,4 @@
-\chapter{Information-preserving \nobreak{compression}}
+\chapter{Information-preserving \nobreak{compression} for climate data}
 \label{chap:compression}
 
 %% CONTRIBUTION
@@ -35,14 +35,14 @@ numbers (Float64) consist of a sign bit, 11 exponent bits representing a power o
 models are based on Float64 arithmetics, which has been questioned as the transition to 32-bit single precision floats
 (Float32) does not necessarily decrease the quality of forecasts \citep{Vana2017,TintoPrims2019}. Many bits in Float32
 only contain a limited amount of information as even 16-bit arithmetic has been shown to be sufficient for parts of weather
-and climate applications \citep{Hatfield2019,Klower2020b,Ackmann2021,Dawson2018,Fan2019}.
-The information, as defined by Shannon information theory \citep{Shannon1948,MacKay2003a,Kleeman2011},
-for simple chaotic dynamical systems is often zero for many of the 32 bits in Float32 \citep{Jeffress2017a}.
+and climate applications \citep{Hatfield2019,Klower2020a,Ackmann2021,Dawson2018,Fan2019}.
+The information, as defined by Shannon information theory \citep{Shannon1948,MacKay2003,Kleeman2011},
+for simple chaotic dynamical systems is often zero for many of the 32 bits in Float32 \citep{Jeffress2017}.
 This supports the general concept of low-precision climate modelling for calculations and data storage, as, at least in theory,
 many rounding errors are entirely masked by other uncertainties in the chaotic climate system
 \citep{Palmer2014a,Palmer2015}.
 
-The bitwise information content has been formulated for predictability in dynamical systems \citep{Jeffress2017a}.
+The bitwise information content has been formulated for predictability in dynamical systems \citep{Jeffress2017}.
 It quantifies how much individual bits in the floating-point representation contribute to the information necessary
 to predict the state of a chaotic system at a later point in time. This technique has been used to optimise the
 simulation of simple chaotic systems on inexact hardware to reduce the precision as much as possible. Here, we
@@ -55,7 +55,7 @@ Higher compression factors for smaller file sizes can be achieved with lossy com
 the precision and introduces rounding errors. Additionally, higher compression requires more sophisticated
 compression algorithms, which can decrease compression and/or decompression speed. A reduction in
 precision is not necessarily a loss of real information, as occurring rounding errors are relative to a reference
-that itself comes with uncertainty. Here, we calculate the bitwise real information content \citep{Shannon1948,Jeffress2017a,Kleeman2011}
+that itself comes with uncertainty. Here, we calculate the bitwise real information content \citep{Shannon1948,Jeffress2017,Kleeman2011}
 of atmospheric data to discard bits that contain no information \citep{Zender2016,Kouznetsov2020} and only compress the real
 information content. Combined with modern compression algorithms \citep{Lindstrom2014,Lindstrom2006} the multi-dimensional
 correlation of climate data is exploited for higher compression efficiency \citep{Baker2016,Baker2019,Woodring2011}.
@@ -138,7 +138,7 @@ Eq. \ref{eq:bit_unconditional_entropy} the mutual information $M$ of succeeding 
 	I = H - p_0H_0 - p_1H_1
 	\label{eq:realinformation_content}
 	\end{equation}
-which is the real information content $I$. This definition is similar to \cite{Jeffress2017a} but avoids an additional assumption of an uncertainty
+which is the real information content $I$. This definition is similar to \cite{Jeffress2017} but avoids an additional assumption of an uncertainty
 measure. Their formulation similarly uses the state of bits as predictors but assesses the conditional probability density function (pdf) of a
 dynamical system as predictands. The binwidth of the pdf is chosen to represent the uncertainty in the system, which the bitwise real information
 strongly depends on. The formulation here avoids such an additional assumption of uncertainty as bits are used as both predictors and
@@ -534,7 +534,7 @@ weather or climate model and post-processing.
 \subsection{Bitwise real information content}
 
 Many of the trailing mantissa bits in floating-point numbers occur independently and at similar probability,
-i.e. with high information entropy \citep{Kleeman2011,Jeffress2017a}. These seemingly random bits are
+i.e. with high information entropy \citep{Kleeman2011,Jeffress2017}. These seemingly random bits are
 incompressible \citep{MacKay2003a,Ziv1977,Huffman1952}, reducing
 the efficiency of compression algorithms. However, they probably also contain a vanishing amount of real
 information, which has to be analysed to identify bits with and without real information. The former should
@@ -556,7 +556,7 @@ independence of adjacent grid points (Fig. \ref{fig:information_resolution} and 
 If valuable scientific information is present in such seemingly random data, then the bitwise real information
 content as defined here is unsuited. 
 
-\cite{Jeffress2017a} formulate the bitwise information content for simple chaotic systems, assuming an
+\cite{Jeffress2017} formulate the bitwise information content for simple chaotic systems, assuming an
 inherent natural uncertainty which had to be defined. Their approach aims to enable reduced precision
 simulations on inexact hardware. Here, we reformulate the bitwise real information as the mutual information
 in adjacent grid points for the application in climate data compression. The quantization in the floating-point

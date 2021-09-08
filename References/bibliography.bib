@@ -1550,6 +1550,19 @@
   file = {/Users/milan/Zotero/storage/BWWFMRIX/Fan et al. - 2019 - Using DCT-based Approximate Communication to Impro.pdf}
 }
 
+@article{Fasi2021,
+  title = {Algorithms for {{Stochastically Rounded Elementary Arithmetic Operations}} in {{IEEE}} 754 {{Floating}}-{{Point Arithmetic}}},
+  author = {Fasi, Massimiliano and Mikaitis, Mantas},
+  year = {2021},
+  journal = {IEEE Transactions on Emerging Topics in Computing},
+  pages = {1--1},
+  issn = {2168-6750},
+  doi = {10.1109/TETC.2021.3069165},
+  abstract = {We present algorithms for performing the five elementary arithmetic operations (+, /, and) in floating point arithmetic with stochastic rounding, and demonstrate the value of these algorithms by discussing various applications where stochastic rounding is beneficial. The algorithms require that the hardware be compliant with the IEEE 754 floating-point standard and that a floating-point pseudorandom number generator be available. The goal of these techniques is to emulate stochastic rounding when the underlying hardware does not support this rounding mode, as is the case for most existing CPUs and GPUs. Simulating stochastically rounded floating-point operations can be used to explore the behavior of this rounding, as well as to develop applications before hardware with stochastic rounding is available\textemdash once such hardware becomes available, the proposed algorithms can be replaced by calls to the relevant hardware routines. When stochastically rounding double precision operations, the algorithms we propose are between 7.3 and 19 times faster than the implementations that use the GNU MPFR library to simulate extended precision. We test our algorithms on various problems where stochastic rounding is expected to bring advantages, which includes summation algorithms and ordinary differential equation solvers.},
+  keywords = {error-free transformation,floating-point arithmetic,Hardware,IEEE 754,Libraries,Monte Carlo methods,numerical algorithm,numerical analysis,Software,Standards,Stochastic processes,stochastic rounding,Tools},
+  file = {/Users/milan/Zotero/storage/Y4M82NGN/Fasi and Mikaitis - 2021 - Algorithms for Stochastically Rounded Elementary A.pdf;/Users/milan/Zotero/storage/8HQSUZJB/9387551.html}
+}
+
 @article{Fehlberg,
   title = {{Klassische Runge-Kutta-Formeln vierter und niedrigerer 0rdnung mit Schrittweiten-Kontrolle und ihre Anwendung auf W\textasciitilde irmeleitungsprobleme}},
   author = {Fehlberg, E},
@@ -1637,6 +1650,20 @@
   copyright = {2020 The Author(s), under exclusive licence to Springer Nature Limited},
   language = {en},
   file = {/Users/milan/Zotero/storage/V2MGMGZ3/Forster et al. - 2020 - Current and future global climate impacts resultin.pdf;/Users/milan/Zotero/storage/U8PBA8FA/s41558-020-0883-0.html}
+}
+
+@article{Forsythe1959,
+  title = {Reprint of a {{Note}} on {{Rounding}}-{{Off Errors}}},
+  author = {Forsythe, George E.},
+  year = {1959},
+  month = jan,
+  journal = {SIAM Review},
+  volume = {1},
+  number = {1},
+  pages = {66--67},
+  publisher = {{Society for Industrial and Applied Mathematics}},
+  issn = {0036-1445},
+  doi = {10.1137/1001011}
 }
 
 @article{Fox-Kemper2008,
@@ -2030,6 +2057,18 @@
   archiveprefix = {arXiv},
   keywords = {Computer Science - Machine Learning,Computer Science - Neural and Evolutionary Computing,Statistics - Machine Learning},
   file = {/Users/milan/Zotero/storage/M2DCVEID/Gupta et al. - 2015 - Deep Learning with Limited Numerical Precision.pdf;/Users/milan/Zotero/storage/SZ8FYIJX/1502.html}
+}
+
+@book{Gustafson2015,
+  title = {The {{End}} of {{Error}}: {{Unum Computing}}},
+  shorttitle = {The {{End}} of {{Error}}},
+  author = {Gustafson, John L.},
+  year = {2015},
+  month = jan,
+  edition = {1st edition},
+  publisher = {{Chapman and Hall/CRC}},
+  abstract = {The Future of Numerical ComputingWritten by one of the foremost experts in high-performance computing and the inventor of Gustafson's Law, The End of Error: Unum Computing explains a new approach to computer arithmetic: the universal number (unum). The unum encompasses all IEEE floating-point formats as well as fixed-point and exact integer arithmetic. This new number type obtains more accurate answers than floating-point arithmetic yet uses fewer bits in many cases, saving memory, bandwidth, energy, and power.A Complete Revamp of Computer Arithmetic from the Ground UpRichly illustrated in color, this groundbreaking book represents a fundamental change in how to perform calculations automatically. It illustrates how this novel approach can solve problems that have vexed engineers and scientists for decades, including problems that have been historically limited to serial processing.Suitable for Anyone Using Computers for CalculationsThe book is accessible to anyone who uses computers for technical calculations, with much of the book only requiring high school math. The author makes the mathematics interesting through numerous analogies. He clearly defines jargon and uses color-coded boxes for mathematical formulas, computer code, important descriptions, and exercises.},
+  language = {English}
 }
 
 @misc{Gustafson2017,
@@ -2438,6 +2477,23 @@
   language = {en}
 }
 
+@article{Hohfeld1992,
+  title = {Probabilistic Rounding in Neural Network Learning with Limited Precision},
+  author = {H{\"o}hfeld, Markus and Fahlman, Scott E.},
+  year = {1992},
+  month = dec,
+  journal = {Neurocomputing},
+  volume = {4},
+  number = {6},
+  pages = {291--299},
+  issn = {0925-2312},
+  doi = {10.1016/0925-2312(92)90014-G},
+  abstract = {A key question in the design of specialized hardware for simulation of neural networks is whether fixed-point arithmetic of limited precision can be used with existing learning algorithms. Several studies of the backpropagation algorithm report a collapse of learning ability at around 12 to 16 bits of precision, depending on the details of the problem. In this paper, we investigate the effects of limited precision in the Cascade Correlation learning algorithm. As a general result, we introduce techniques for dynamic rescaling and probabilistic rounding that facilitate learning by gradient descent down to 6 bits of precision.},
+  language = {en},
+  keywords = {Backpropagation,cascade correlation learning,limited precision learning,probabilistic rounding},
+  file = {/Users/milan/Zotero/storage/KZAVZE78/092523129290014G.html}
+}
+
 @book{Holton2004,
   title = {An Introduction to Dynamic Meteorology},
   author = {Holton, James R.},
@@ -2482,6 +2538,22 @@
   doi = {10.1098/rsta.2019.0052},
   abstract = {Although double-precision floating-point arithmetic currently dominates high-performance computing, there is increasing interest in smaller and simpler arithmetic types. The main reasons are potential improvements in energy efficiency and memory footprint and bandwidth. However, simply switching to lower-precision types typically results in increased numerical errors. We investigate approaches to improving the accuracy of reduced-precision fixed-point arithmetic types, using examples in an important domain for numerical computation in neuroscience: the solution of ordinary differential equations (ODEs). The Izhikevich neuron model is used to demonstrate that rounding has an important role in producing accurate spike timings from explicit ODE solution algorithms. In particular, fixed-point arithmetic with stochastic rounding consistently results in smaller errors compared to single-precision floating-point and fixed-point arithmetic with round-to-nearest across a range of neuron behaviours and ODE solvers. A computationally much cheaper alternative is also investigated, inspired by the concept of dither that is a widely understood mechanism for providing resolution below the least significant bit in digital signal processing. These results will have implications for the solution of ODEs in other subject areas, and should also be directly relevant to the huge range of practical problems that are represented by partial differential equations.This article is part of a discussion meeting issue `Numerical algorithms for high-performance computational science'.},
   file = {/Users/milan/Zotero/storage/I62FBGZQ/Hopkins et al. - 2020 - Stochastic rounding and reduced-precision fixed-po.pdf;/Users/milan/Zotero/storage/4DM7KHMD/rsta.2019.html}
+}
+
+@article{Hopkins2020b,
+  title = {Stochastic Rounding and Reduced-Precision Fixed-Point Arithmetic for Solving Neural Ordinary Differential Equations},
+  author = {Hopkins, Michael and Mikaitis, Mantas and Lester, Dave R. and Furber, Steve},
+  year = {2020},
+  month = mar,
+  journal = {Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences},
+  volume = {378},
+  number = {2166},
+  pages = {20190052},
+  publisher = {{Royal Society}},
+  doi = {10.1098/rsta.2019.0052},
+  abstract = {Although double-precision floating-point arithmetic currently dominates high-performance computing, there is increasing interest in smaller and simpler arithmetic types. The main reasons are potential improvements in energy efficiency and memory footprint and bandwidth. However, simply switching to lower-precision types typically results in increased numerical errors. We investigate approaches to improving the accuracy of reduced-precision fixed-point arithmetic types, using examples in an important domain for numerical computation in neuroscience: the solution of ordinary differential equations (ODEs). The Izhikevich neuron model is used to demonstrate that rounding has an important role in producing accurate spike timings from explicit ODE solution algorithms. In particular, fixed-point arithmetic with stochastic rounding consistently results in smaller errors compared to single-precision floating-point and fixed-point arithmetic with round-to-nearest across a range of neuron behaviours and ODE solvers. A computationally much cheaper alternative is also investigated, inspired by the concept of dither that is a widely understood mechanism for providing resolution below the least significant bit in digital signal processing. These results will have implications for the solution of ODEs in other subject areas, and should also be directly relevant to the huge range of practical problems that are represented by partial differential equations. This article is part of a discussion meeting issue `Numerical algorithms for high-performance computational science'.},
+  keywords = {dither,fixed-point arithmetic,Izhikevich neuron model,ordinary differential equation,SpiNNaker,stochastic rounding},
+  file = {/Users/milan/Zotero/storage/JSADRX3A/Hopkins et al. - 2020 - Stochastic rounding and reduced-precision fixed-po.pdf}
 }
 
 @inproceedings{Hubbe2013,
@@ -4037,6 +4109,21 @@
   archiveprefix = {arXiv},
   language = {en},
   keywords = {Computer Science - Distributed; Parallel; and Cluster Computing,Computer Science - Mathematical Software}
+}
+
+@article{Muller2015,
+  title = {Rounding {{Methods}} for {{Neural Networks}} with {{Low Resolution Synaptic Weights}}},
+  author = {Muller, Lorenz K. and Indiveri, Giacomo},
+  year = {2015},
+  month = apr,
+  journal = {arXiv:1504.05767 [cs]},
+  eprint = {1504.05767},
+  eprinttype = {arxiv},
+  primaryclass = {cs},
+  abstract = {Neural network algorithms simulated on standard computing platforms typically make use of high resolution weights, with floating-point notation. However, for dedicated hardware implementations of such algorithms, fixed-point synaptic weights with low resolution are preferable. The basic approach of reducing the resolution of the weights in these algorithms by standard rounding methods incurs drastic losses in performance. To reduce the resolution further, in the extreme case even to binary weights, more advanced techniques are necessary. To this end, we propose two methods for mapping neural network algorithms with high resolution weights to corresponding algorithms that work with low resolution weights and demonstrate that their performance is substantially better than standard rounding. We further use these methods to investigate the performance of three common neural network algorithms under fixed memory size of the weight matrix with different weight resolutions. We show that dedicated hardware systems, whose technology dictates very low weight resolutions (be they electronic or biological) could in principle implement the algorithms we study.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Neural and Evolutionary Computing},
+  file = {/Users/milan/Zotero/storage/FYG9XXQ9/Muller and Indiveri - 2015 - Rounding Methods for Neural Networks with Low Reso.pdf;/Users/milan/Zotero/storage/49RE9FJT/1504.html}
 }
 
 @techreport{Muller2019,
@@ -5701,23 +5788,6 @@
   file = {/Users/milan/Zotero/storage/AXW4I2NZ/1284395.html}
 }
 
-@article{Wang2004a,
-  title = {Image Quality Assessment: From Error Visibility to Structural Similarity},
-  shorttitle = {Image Quality Assessment},
-  author = {Wang, Zhou and Bovik, A.C. and Sheikh, H.R. and Simoncelli, E.P.},
-  year = {2004},
-  month = apr,
-  journal = {IEEE Transactions on Image Processing},
-  volume = {13},
-  number = {4},
-  pages = {600--612},
-  issn = {1941-0042},
-  doi = {10.1109/TIP.2003.819861},
-  abstract = {Objective methods for assessing perceptual image quality traditionally attempted to quantify the visibility of errors (differences) between a distorted image and a reference image using a variety of known properties of the human visual system. Under the assumption that human visual perception is highly adapted for extracting structural information from a scene, we introduce an alternative complementary framework for quality assessment based on the degradation of structural information. As a specific example of this concept, we develop a structural similarity index and demonstrate its promise through a set of intuitive examples, as well as comparison to both subjective ratings and state-of-the-art objective methods on a database of images compressed with JPEG and JPEG2000. A MATLAB implementation of the proposed algorithm is available online at http://www.cns.nyu.edu//spl sim/lcv/ssim/.},
-  keywords = {Data mining,Degradation,Humans,Image quality,Indexes,Layout,Quality assessment,Transform coding,Visual perception,Visual system},
-  file = {/Users/milan/Zotero/storage/TGEVHGIP/Wang et al. - 2004 - Image quality assessment from error visibility to.pdf;/Users/milan/Zotero/storage/9VVUDIMD/1284395.html}
-}
-
 @article{Wang2017,
   title = {Decomposition of the {{Mean Barotropic Transport}} in a {{High}}-{{Resolution Model}} of the {{North Atlantic Ocean}}},
   author = {Wang, Yuan and Claus, Martin and Greatbatch, Richard J. and Sheng, Jinyu},
@@ -5731,6 +5801,21 @@
   doi = {10.1002/2017GL074825},
   abstract = {We show how a barotropic shallow water model can be used to decompose the mean barotropic transport from a high-resolution ocean model based on the vertically averaged momentum equations. We apply the method to a high-resolution model of the North Atlantic for which the local vorticity budget is both noisy and dominated by small spatial scales. The shallow water model acts as an effective filter and clearly reveals the transport driven by each term. The potential energy (joint effect of baroclinicity and bottom relief) term is the most important for driving transport, including in the northwest corner, while mean flow advection is important for driving transport along f/H contours around the Labrador Sea continental slope. Both the eddy momentum flux and the mean flow advection terms drive significant transport along the pathway of the Gulf Stream and the North Atlantic Current.},
   language = {en}
+}
+
+@article{Wang2018,
+  title = {Training {{Deep Neural Networks}} with 8-Bit {{Floating Point Numbers}}},
+  author = {Wang, Naigang and Choi, Jungwook and Brand, Daniel and Chen, Chia-Yu and Gopalakrishnan, Kailash},
+  year = {2018},
+  month = dec,
+  journal = {arXiv:1812.08011 [cs, stat]},
+  eprint = {1812.08011},
+  eprinttype = {arxiv},
+  primaryclass = {cs, stat},
+  abstract = {The state-of-the-art hardware platforms for training Deep Neural Networks (DNNs) are moving from traditional single precision (32-bit) computations towards 16 bits of precision -- in large part due to the high energy efficiency and smaller bit storage associated with using reduced-precision representations. However, unlike inference, training with numbers represented with less than 16 bits has been challenging due to the need to maintain fidelity of the gradient computations during back-propagation. Here we demonstrate, for the first time, the successful training of DNNs using 8-bit floating point numbers while fully maintaining the accuracy on a spectrum of Deep Learning models and datasets. In addition to reducing the data and computation precision to 8 bits, we also successfully reduce the arithmetic precision for additions (used in partial product accumulation and weight updates) from 32 bits to 16 bits through the introduction of a number of key ideas including chunk-based accumulation and floating point stochastic rounding. The use of these novel techniques lays the foundation for a new generation of hardware training platforms with the potential for 2-4x improved throughput over today's systems.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/milan/Zotero/storage/WUNWYPUB/Wang et al. - 2018 - Training Deep Neural Networks with 8-bit Floating .pdf;/Users/milan/Zotero/storage/WUMFHXVJ/1812.html}
 }
 
 @article{Wedi2014,
