@@ -2,7 +2,7 @@
 \label{chap:methods}
 
 %% CONTRIBUTION
-\paragraph{Contributions} \small Parts of this chapter are based on the following publication \footnote{with the following author contributions.
+\small \paragraph{Contributions} Parts of this chapter are based on the following publication \footnote{with the following author contributions.
 Conceptualisation: MK, PDD. Data curation: MK. Formal Analysis: MK. Methodology: MK. Visualisation: MK. Writing – original draft:
 MK. Writing – review and editing: MK, PDD, TNP. The contributions of Peter and Tim are highly appreciated.}
 
@@ -15,7 +15,7 @@ MK. Writing – review and editing: MK, PDD, TNP. The contributions of Peter and
 
 This chapter presents the methods that are used in several of the following chapters. We introduce various binary number formats and
 their rounding modes, and present error norms to quantify the resulting rounding errors. It follows a section focusing on
-programming aspects around type-flexibility and composability to illustrate how custom number formats can be used within
+programming aspects around type flexibility and composability to illustrate how custom number formats can be used within
 the Julia programming language. The chapter closes with an introduction to information theory to explain the essential concepts
 to quantify information in binary number formats.
 
@@ -1000,13 +1000,13 @@ $maxpos$ will yield desastrous results to the the wrap-around behaviour of integ
 Similar conclusions hold for the fixed-point format Q6.10, as the decimal precision is simply shifted towards smaller
 numbers by a factor of $\tfrac{1}{2}$ for each additional fraction bit.
 
-\section{Code composability through type-flexibility}
+\section{Code composability through type flexibility}
 
 The various number formats of the previous sections have to be emulated in software to use them in simulations, as only
 Float32 and Float64 are widely supported on hardware. Float16 is an exception as it is emulated in all chapters but
 chapter \ref{chap:hardware}, which explicitly describes the usage of hardware-accelerated Float16. We therefore
 describe in the following the necessary programming paradigms to efficiently implement algorithms in a way
-that any (custom) number format can be used, whether hardware-accelerated or not. This type-flexibility can also
+that any (custom) number format can be used, whether hardware-accelerated or not. This type flexibility can also
 be exploited for number formats that analyse the code during execution, which is described in section \ref{sec:analysis_number_formats}.
 
 \subsection{A type-flexible programming paradigm}
@@ -1026,15 +1026,14 @@ format. The function \texttt{harmonic\_sum} is type-stable as all types inside t
 compiler.}]
 function harmonic_sum(::Type{T},steps::Int=2000) where T
 
-    s = zero(T)    # partial sum, start with zero-element of type T
-    o = one(T)    # numerator of every fraction, one-element of type T
+    s = zero(T)     # partial sum, start with zero-element of type T
+    oone = one(T)   # numerator of every fraction, one-element of type T
 
     for i in 1:steps
-
         s_old = s
-        s += o/convert(T,i)
+        s += oone/convert(T,i)  # s = s + 1/i, harmonic sum
 
-        if s == s_old    # check for convergence
+        if s == s_old           # check for convergence
             print((Float64(s),i))
             break
         end
@@ -1058,12 +1057,12 @@ The function is \texttt{harmonic\_sum} is type-stable, as the types of all varia
 Therefore, writing abstractly \texttt{s = zero(T)} to obtain the zero-element of type \texttt{T} instead of \texttt{s = 0}
 is important to avoid implicit conversions between types. The function is \texttt{harmonic\_sum} is also type-flexible,
 as it can be executed with every type \texttt{T} that has the following functions defined: \texttt{zero(T), one(T)}, addition,
-division, comparison (\texttt{==} in line 11) conversion from integer (\texttt{convert(T,i)} in line 9) and to Float64.
+division, comparison (\texttt{==} in line 10) conversion from integer (\texttt{convert(T,i)} in line 8) and to Float64.
 For example, \texttt{zero(::Type\{Posit8\}) = reinterpret(Posit8,0x00)} to define the zero-element for 8-bit posits, or
 \texttt{+(x::LogFixPoint16,y::LogFixPoint16) = ...} to define the addition between LogFixPoint16s.
 
 These features of Julia allow for \emph{code composability}. As the function \texttt{harmonic\_sum} is abstractly written
-to allow for type-flexibility it does not know about any (possibly custom) number format, such as posits or logfixs.
+to allow for type flexibility it does not know about any (possibly custom) number format, such as posits or logfixs.
 On the other hand, we can define a custom number format including its arithmetic and other functions
 (e.g. \texttt{zero(T)}) that does not know about the function \texttt{harmonic\_sum}. In essence, while both codes
 are completely independent (and possible defined in separate packages), they are composable, meaning they can
@@ -1072,7 +1071,9 @@ to be  changed or rewritten for other formats.
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:harmonic_sum2, caption={\textbf{Executing \texttt{harmonic\_sum} with different
-number formats in the Julia shell.}ABC}]
+number formats in the Julia shell.} The number format is passed on as an argument, causing the function \texttt{harmonic\_sum}
+to be compiled and executed with that format. Depending on the precision of the number format, the harmonic sum converges
+after 65 (BFloat16) to 1024 elements (Posit16).}]
 julia> using SoftPosit, BFloat16s, LogFixPoint16s   # load number formats
 julia> LogFixPoint16s.set_nfrac(10)                 # set to 10 fraction bits
 julia> harmonic_sum(Float16)
@@ -1099,8 +1100,78 @@ converges after 432 elements.
 \subsection{Analysis number formats}
 \label{sec:analysis_number_formats}
 
+The type flexibility and code composability in Julia can be further extended by designing a custom number format that executes
+additional code than just returning the result when an arithmetic operations is called. If we are interested to understand why and
+how the harmonic sum converges with low precision number formats, we could alter \texttt{harmonic\_sum} directly, however,
+for many larger algorithms, nested in a large amount of functions, this might be unfeasible or inefficient. Julia's code
+composability offers another high-level way that is illustrated in the following.
+
+We create a new custom number format by defining a new type Float16print (Listing \ref{lst:float16print}, line 1-3), which behaves as Float16
+but we explicitly alter the definition of the addition for two Float16print values to execute additional code that helps to analyse the
+function \texttt{harmonic\_sum}. Here, we add a print statement to obtain information on the numbers that are calculated within 
+\texttt{harmonic\_sum}, without changing \texttt{harmonic\_sum} itself. In general, the arithmetic operations can be altered in many ways,
+and more specific implementations of analysis number formats are presented in section \ref{sec:scale_sherlogs}.
+
+\begin{figure}[tbhp]
+\begin{lstlisting}[language=JuliaLocal, label=lst:float16print, caption={\textbf{Minimal example of the definition of a new custom analysis
+number format \texttt{Float16print} in Julia.} The number format behaves like Float16 and defines all operations needed for \texttt{harmonic\_sum}
+but the addition is extended with a \texttt{print} statement that helps to analyse code without changing \texttt{harmonic\_sum} itself.}]
+struct Float16print      # define a custom type called Float16print
+    float16::Float16     # that contains only a Float16
+end
+
+# extend the zero and one functions for Float16print (same as for Float16)
+Base.zero(::Type{Float16print}) = Float16print(zero(Float16))
+Base.one(::Type{Float16print}) = Float16print(one(Float16))
+
+# define division (/) for Float16print as for Float16
+Base.:(/)(x::Float16print,y::Float16print) =
+					Float16print(x.float16 / y.float16)
+
+# define addition (+) for Float16print as for Float16 but also print result
+function Base.:(+)(x::Float16print,y::Float16print)
+     z = x.float16 + y.float16     # unpack into float16, perform addition
+     println(z)                    # add any aditional analysis code here
+     return Float16print(z)
+end
+
+# define conversion from Integer and to Float64 as for Float16
+Base.convert(::Type{Float16print},i::Int64) = Float16print(Float16(i))
+Base.Float64(x::Float16print) = Float64(x.float16)
+\end{lstlisting}
+\end{figure}
+
+While the application here is rather simple, it shows how custom analysis number format will change the compilation of a function. Here,
+Julia's compiler will create an compiled version of \texttt{harmonic\_sum} that contains a \texttt{print} statement after
+every addition, by doing so the two codes of Listing \ref{lst:harmonic_sum} and \ref{lst:float16print} are composed allowing the user
+to interfere with pre-existing algorithms on a high-level basis, e.g. no compiler knowledge is necessary.
+
+\begin{figure}[tbhp]
+\begin{lstlisting}[language=JuliaLocal, label=lst:harmonic_sum_float16print, caption={\textbf{Analysing the function \texttt{harmonic\_sum} with the
+new custom number format \texttt{Float16print}.} Executing \texttt{harmonic\_sum} with \texttt{Float16print} triggers a \texttt{print} statement
+on every addition, i.e. after every term of the harmonic sum, but any other additional code can be executed too. Analysis number formats can
+be used to investigate even complicated algorithms without explicitly changing them.}]
+julia> harmonic_sum(Float16print)
+1.0
+1.5
+1.833
+...
+7.082
+7.086
+7.086
+(7.0859375, 513)
+\end{lstlisting}
+\end{figure}
+
+As a result, Listing \ref{lst:harmonic_sum_float16print} shows how the first elements of the harmonic sum $1 + \tfrac{1}{2} + \tfrac{1}{3} + ...$ are added,
+and how the sum stagnates at $7.086$. The next term $\tfrac{1}{514}$ cannot be added as it is less than half the distance to the next representable number,
+and therefore round back to $7.086$.
+
 \section{Information theory}
 \label{sec:information}
+
+The following sections introduce fundamental ideas of information theory and how they can be applied to analyse the information contained in the bits
+of binary numbers that are used for weather and climate computing.
 
 \subsection{Entropy}
 \label{sec:entropy}
