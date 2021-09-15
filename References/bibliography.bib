@@ -835,6 +835,22 @@
   language = {en}
 }
 
+@article{Chan1994,
+  title = {Domain Decomposition Algorithms},
+  author = {Chan, Tony F. and Mathew, Tarek P.},
+  year = {1994},
+  month = jan,
+  journal = {Acta Numerica},
+  volume = {3},
+  pages = {61--143},
+  publisher = {{Cambridge University Press}},
+  issn = {1474-0508, 0962-4929},
+  doi = {10.1017/S0962492900002427},
+  abstract = {Domain decomposition refers to divide and conquer techniques for solving partial differential equations by iteratively solving subproblems defined on smaller subdomains. The principal advantages include enhancement of parallelism and localized treatment of complex and irregular geometries, singularities and anomalous regions. Additionally, domain decomposition can sometimes reduce the computational complexity of the underlying solution method.In this article, we survey iterative domain decomposition techniques that have been developed in recent years for solving several kinds of partial differential equations, including elliptic, parabolic, and differential systems such as the Stokes problem and mixed formulations of elliptic problems. We focus on describing the salient features of the algorithms and describe them using easy to understand matrix notation. In the case of elliptic problems, we also provide an introduction to the convergence theory, which requires some knowledge of finite element spaces and elementary functional analysis.},
+  language = {en},
+  file = {/Users/milan/Zotero/storage/RTHYJ9RG/8A7CB0017AE3BB60E53C9A9763EBC544.html}
+}
+
 @article{Chandler2013,
   title = {Invariant Recurrent Solutions Embedded in a Turbulent Two-Dimensional {{Kolmogorov}} Flow},
   author = {Chandler, Gary J. and Kerswell, Rich R.},
@@ -2330,6 +2346,22 @@
   file = {/Users/milan/Zotero/storage/A3TEFP9I/Hadjimichael et al. - 2013 - Strong Stability Preserving Explicit Runge--Kutta .pdf}
 }
 
+@inproceedings{Haidar2018,
+  title = {Harnessing {{GPU}} Tensor Cores for Fast {{FP16}} Arithmetic to Speed up Mixed-Precision Iterative Refinement Solvers},
+  booktitle = {Proceedings of the {{International Conference}} for {{High Performance Computing}}, {{Networking}}, {{Storage}}, and {{Analysis}}},
+  author = {Haidar, Azzam and Tomov, Stanimire and Dongarra, Jack and Higham, Nicholas J.},
+  year = {2018},
+  month = nov,
+  series = {{{SC}} '18},
+  pages = {1--11},
+  publisher = {{IEEE Press}},
+  address = {{Dallas, Texas}},
+  doi = {10.1109/SC.2018.00050},
+  abstract = {Low-precision floating-point arithmetic is a powerful tool for accelerating scientific computing applications, especially those in artificial intelligence. Here, we present an investigation showing that other high-performance computing (HPC) applications can also harness this power. Specifically, we use the general HPC problem, Ax = b, where A is a large dense matrix, and a double precision (FP64) solution is needed for accuracy. Our approach is based on mixed-precision (FP16\textrightarrow FP64) iterative refinement, and we generalize and extend prior advances into a framework, for which we develop architecture-specific algorithms and highly tuned implementations. These new methods show how using half-precision Tensor Cores (FP16-TC) for the arithmetic can provide up to 4X speedup. This is due to the performance boost that the FP16-TC provide as well as to the improved accuracy over the classical FP16 arithmetic that is obtained because the GEMM accumulation occurs in FP32 arithmetic.},
+  keywords = {FP16 arithmetic,GPU computing,half precision,iterative refinement computation,linear algebra,mixed precision solvers},
+  file = {/Users/milan/Zotero/storage/GAUY7GNX/Haidar et al. - 2018 - Harnessing GPU tensor cores for fast FP16 arithmet.pdf}
+}
+
 @misc{Haiden2019,
   title = {Evaluation of {{ECMWF}} Forecasts, Including the 2019 Upgrade},
   author = {Haiden, Thomas and Janousek, Martin and Vitart, Fr{\'e}d{\'e}ric and Ferranti, Laura and Prates, Fernando and Prates, Fernando},
@@ -3546,6 +3578,33 @@
   file = {/Users/milan/Zotero/storage/UZC97DPD/Kraskov et al. - 2004 - Estimating mutual information.pdf;/Users/milan/Zotero/storage/WFKHLYLW/PhysRevE.69.html}
 }
 
+@inproceedings{Kudo2020,
+  title = {Prompt {{Report}} on {{Exa}}-{{Scale HPL}}-{{AI Benchmark}}},
+  booktitle = {2020 {{IEEE International Conference}} on {{Cluster Computing}} ({{CLUSTER}})},
+  author = {Kudo, Shuhei and Nitadori, Keigo and Ina, Takuya and Imamura, Toshiyuki},
+  year = {2020},
+  month = sep,
+  pages = {418--419},
+  issn = {2168-9253},
+  doi = {10.1109/CLUSTER49012.2020.00058},
+  abstract = {Our performance benchmark of HPL-AI on the supercomputer Fugaku was awarded in the 55th top500 at ISC20. The effective performance was 1.42 EFlop/s, and the world's first achievement to exceed the wall of exascale in a floating-point arithmetic benchmark. Due to the novelty of HPL-AI, there are few guidelines for large systems and several drawbacks to the large-scale benchmark. It is not enough to replace FP64 operations solely to those on FP32 or FP16. At the least, we need thoughtful numerical analysis for lower-precision arithmetic and introduction of optimization techniques on extensive computing such as on Fugaku. In the poster, we give some comments on the accuracy, implementation, performance improvement, and report on the Exa-scale benchmark on Fugaku.},
+  keywords = {Benchmark testing,Conferences,Exa flop/s,Floating-point arithmetic,Fugaku,Guidelines,HPL-AI,mixed-precision,Numerical analysis,Optimization,Supercomputers},
+  file = {/Users/milan/Zotero/storage/ICGQD4FQ/Kudo et al. - 2020 - Prompt Report on Exa-Scale HPL-AI Benchmark.pdf;/Users/milan/Zotero/storage/LPTXT9EB/9229634.html}
+}
+
+@inproceedings{Kudo2020a,
+  title = {Implementation and {{Numerical Techniques}} for {{One EFlop}}/s {{HPL}}-{{AI Benchmark}} on {{Fugaku}}},
+  booktitle = {2020 {{IEEE}}/{{ACM}} 11th {{Workshop}} on {{Latest Advances}} in {{Scalable Algorithms}} for {{Large}}-{{Scale Systems}} ({{ScalA}})},
+  author = {Kudo, Shuhei and Nitadori, Keigo and Ina, Takuya and Imamura, Toshiyuki},
+  year = {2020},
+  month = nov,
+  pages = {69--76},
+  doi = {10.1109/ScalA51936.2020.00014},
+  abstract = {Our performance benchmark of HPL-AI on the supercomputer Fugaku was awarded the 55th Top500. The effective performance was 1.42 EFlop/s, and the world's first achievement to exceed the wall of Exa-scale in a floating-point arithmetic benchmark. Because HPL-AI is brand new and has no reference code for large systems, several challenges exists in the large-scale benchmark from a low-precision numerical viewpoint. It is not sufficient to replace FP64 operations solely with those of FP32 or FP16. At the least, we need thoughtful numerical analysis for lower-precision arithmetic and the introduction of optimization techniques on extensive computing such as on Fugaku. This study presents some technical analysis and insights on the accuracy issues, implementation, performance improvement, and report on the Exa-scale benchmark on Fugaku.},
+  keywords = {Artificial intelligence,Benchmark testing,Computer architecture,ExaFlop/s,FP32\&fp16,Fugaku,HPL-AI,Iterative methods,Jacobian matrices,Matrix decomposition,mixed-precision,Supercomputers},
+  file = {/Users/milan/Zotero/storage/JTIPEQ9H/Kudo et al. - 2020 - Implementation and Numerical Techniques for One EF.pdf;/Users/milan/Zotero/storage/42AK3HRZ/9308691.html}
+}
+
 @article{Kuhn2016,
   title = {Data Compression for Climate Data},
   author = {Kuhn, Michael and Kunkel, Julian M. and Ludwig, Thomas},
@@ -4062,6 +4121,19 @@
   author = {Madec, Gurvan},
   pages = {399},
   language = {en}
+}
+
+@techreport{Madec2017,
+  type = {Report},
+  title = {{{NEMO}} Ocean Engine},
+  author = {Madec, Gurvan and {Bourdall{\'e}-Badie}, Romain and Bouttier, Pierre-Antoine and Bricaud, Clement and Bruciaferri, Diego and Calvert, Daley and Chanut, J{\'e}r{\^o}me and Clementi, Emanuela and Coward, Andrew and Delrosso, Damiano and Eth{\'e}, Christian and Flavoni, Simona and Graham, Tim and Harle, James and Iovino, Doroteaciro and Lea, Dan and L{\'e}vy, Claire and Lovato, Tomas and Martin, Nicolas and Masson, S{\'e}bastien and Mocavero, Silvia and Paul, Julien and Rousset, Cl{\'e}ment and Storkey, Dave and Storto, Andrea and Vancoppenolle, Martin},
+  year = {2017},
+  month = oct,
+  doi = {10.5281/zenodo.3248739},
+  abstract = {The ocean engine of NEMO is a primitive equation model adapted to regional and global ocean circulation problems. It is intended to be a flexible tool for studying the ocean and its interactions with the others components of the earth climate system over a wide range of space and time scales.},
+  language = {English},
+  annotation = {Accepted: 2020-02-27T08:10:54Z},
+  file = {/Users/milan/Zotero/storage/VYQKQ5KA/Madec et al. - 2017 - NEMO ocean engine.pdf;/Users/milan/Zotero/storage/345VF8B4/13309.html}
 }
 
 @article{Maiocchi2021,
@@ -5877,6 +5949,19 @@
   abstract = {{$<$}p{$><$}strong{$>$}Abstract.{$<$}/strong{$>$} Mixed-precision approaches can provide substantial speed-ups for both computing- and memory-bound codes with little effort. Most scientific codes have overengineered the numerical precision, leading to a situation in which models are using more resources than required without knowing where they are required and where they are not. Consequently, it is possible to improve computational performance by establishing a more appropriate choice of precision. The only input that is needed is a method to determine which real variables can be represented with fewer bits without affecting the accuracy of the results. This paper presents a novel method that enables modern and legacy codes to benefit from a reduction of the precision of certain variables without sacrificing accuracy. It consists of a simple idea: we reduce the precision of a group of variables and measure how it affects the outputs. Then we can evaluate the level of precision that they truly need. Modifying and recompiling the code for each case that has to be evaluated would require a prohibitive amount of effort. Instead, the method presented in this paper relies on the use of a tool called a reduced-precision emulator (RPE) that can significantly streamline the process. Using the RPE and a list of parameters containing the precisions that will be used for each real variable in the code, it is possible within a single binary to emulate the effect on the outputs of a specific choice of precision. When we are able to emulate the effects of reduced precision, we can proceed with the design of the tests that will give us knowledge of the sensitivity of the model variables regarding their numerical precision. The number of possible combinations is prohibitively large and therefore impossible to explore. The alternative of performing a screening of the variables individually can provide certain insight about the required precision of variables, but, on the other hand, other complex interactions that involve several variables may remain hidden. Instead, we use a divide-and-conquer algorithm that identifies the parts that require high precision and establishes a set of variables that can handle reduced precision. This method has been tested using two state-of-the-art ocean models, the Nucleus for European Modelling of the Ocean (NEMO) and the Regional Ocean Modeling System (ROMS), with very promising results. Obtaining this information is crucial to build an actual mixed-precision version of the code in the next phase that will bring the promised performance benefits.{$<$}/p{$>$}},
   language = {English},
   file = {/Users/milan/Zotero/storage/ZLMJCFIP/Tintó Prims et al. - 2019 - How to use mixed precision in ocean models explor.pdf;/Users/milan/Zotero/storage/3XNIE5KW/2019.html}
+}
+
+@book{Toselli2004,
+  title = {Domain {{Decomposition Methods}} - {{Algorithms}} and {{Theory}}},
+  author = {Toselli, Andrea and Widlund, Olof},
+  year = {2004},
+  month = oct,
+  publisher = {{Springer Science \& Business Media}},
+  abstract = {This book offers a comprehensive presentation of some of the most successful and popular domain decomposition preconditioners for finite and spectral element approximations of partial differential equations. It places strong emphasis on both algorithmic and mathematical aspects. It covers in detail important methods such as FETI and balancing Neumann-Neumann methods and algorithms for spectral element methods.},
+  googlebooks = {tpSPx68R3KwC},
+  isbn = {978-3-540-20696-5},
+  language = {en},
+  keywords = {Computers / Computer Science,Computers / Software Development \& Engineering / General,Computers / Systems Architecture / General,Mathematics / Applied,Mathematics / Calculus,Mathematics / Counting \& Numeration,Mathematics / Mathematical Analysis,Mathematics / Number Systems,Mathematics / Numerical Analysis,Mathematics / Probability \& Statistics / Stochastic Processes}
 }
 
 @article{Treguier1997,
