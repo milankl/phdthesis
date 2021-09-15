@@ -1,4 +1,4 @@
-\chapter{Periodic orbits in chaotic systems}
+\chapter{Bitwise periodic orbits in chaotic systems}
 \label{chap:orbits}
 
 %% CONTRIBUTION
@@ -8,45 +8,123 @@ MK. Writing – review and editing: MK, PVC, EAP, TNP. The contributions of Pete
 
 \vspace{\baselineskip}
 \indent M Klöwer, PV Coveney, EA Paxton, and TN Palmer, 2021.
-\emph{On periodic orbits in chaotic systems simulated at low precision}, in preparation.
+\emph{Bitwise periodic orbits in chaotic systems simulated at low precision}, in preparation.
 \vspace{\baselineskip}
 \normalsize
 
 \section{Introduction}
 
-Many natural systems exhibit chaotic dynamics.
+Many natural systems exhibit chaotic dynamics. The chaos in weather prevents reliable forecasts beyond
+one or two weeks \citep{Bauer2015,Palmer2019}. The turbulent flow of air or water around vehicles requires
+complex numerical simulations to optimize the drag \citep{Cummings2015,Moran2003}. Similarly, chaos is present
+in models of many-body problems from astrophysics \citep{Cornish2001,Springel2005}, chemical reaction networks
+\citep{Coveney2016} or plasma in fusion reactors
+\citep{DIppolito2011,Ricci2012,ITERPhysicsExpertGrouponConfinementandTransport1999}. As chaotic dynamics often
+prevent analytical solutions, numerical simulations with finite-precision floating-point numbers \citep{IEEE1985}
+are used to approximate a system’s state and predict its future.
+
+However, simulating a deterministic, yet chaotic system with deterministic finite-precision numbers always results in
+bitwise periodic orbits due to a finite set of possible states \citep{Boghosian2019}. Such orbits are distinct from the
+unstable periodic orbits that describe the recurrence of a very similar, but not bitwise identical, state \cite{Cvitanović2013}.
+Eternal periodicity in the simulation of chaotic systems violates a fundamental property of chaos, but periods are very
+long with the high precision of 64-bit floating-point numbers (Float64).
+
+Computed dynamics have errors relative to analytical solutions. Model errors arise from the difference between the
+mathematical equations and the natural systems they represent, including unresolved processes and heuristic parameters.
+Errors in the initial or boundary conditions are a result of imperfect observations being assimilated into the numerical model
+\citep{Ghil1991}. Discretization errors occur when a continuous system is discretized into a number of variables that is
+often limited by available computational resources \citep{Butcher2016}. In addition, there are rounding errors as a result
+of using finite-precision numbers to approximate real numbers \citep{Higham2002}. In a chaotic system, all of these errors
+grow exponentially, but the largest sources of error mask smaller ones. Due to often negligible rounding errors, simulations
+are increasingly accelerating with low-precision calculations in exchange for computational performance \citep{Fuhrer2018,
+Nakano2018,Vana2017}. The performance gain is then reinvested into a higher resolution with more independent variables,
+reducing the model and or discretization error.
+
+16-bit low-precision computations are increasingly supported on modern processors, such as graphics processing units
+(GPU, \cite{Markidis2018}), tensor processing units (TPU, \cite{Jouppi2018}) and also central processing units (CPU,
+\cite{Odajima2020,Sato2020}). While the standard and only widely available number format are floats, several alternatives
+have been proposed: Posits \citep{Gustafson2017a}), logarithmic fixed-point numbers \citep{Johnson2020}, and
+floats with stochastic rounding \citep{Hopkins2020}. Currently lacking hardware support, these number formats are
+emulated in software for precision tests. In comparison to floats they provide a better understanding how the numerical
+precision affects the simulated dynamics. 
+
+Unstable periodic orbits are the skeleton of chaos \citep{Cvitanovic1991} and have been intensively studied to better
+understand the dynamical structure of chaotic systems \citep{Lasagna2020,Leboeuf2004,Ruelle1971}. Chaotic trajectories
+follow a given periodic orbit in its vicinity but eventually diverge due to the orbit’s instability and approach another orbit until
+diverging again \citep{Maiocchi2021}. The spectrum of the periodic orbits is a decomposition of the attractor \citep{Eckmann2004}.
+As numerical simulations are based on finite-precision arithmetic, the spectrum of periodic orbits is degraded, but to which extent
+is generally unclear. While very low arithmetic precision truncates chaotic attractors to simple loops or fixed points, the degradation
+can be between less obvious but substantial and irrelevant for sufficiently high precision.
+
+Here, we compare the invariant measures as the statistical properties of two chaotic dynamical systems when simulated with
+different binary number formats and at various levels of precision. The methodology for finding bitwise periodic orbits is presented
+in section \ref{sec:orbits_methods}. We revisit the simulation of the generalised Bernoulli map with floats,
+posits, logfix and stochastic rounding in section \ref{sec:revisit_bernoulli} to better understand the effect of numerical precision
+in a system where the analytical invariant measure is known. In section \ref{sec:orbits_lorenz96} we turn to the $N$-variable Lorenz
+1996 system to investigate the bitwise periodic orbit spectrum with an increasing number of variables. Section \ref{sec:orbits_discussion}
+summarizes and discusses the results. 
 
 \section{Methods}
+\label{sec:orbits_methods}
 
 Floating-point numbers are standardized following IEEE, 1985, 2008. Another number format used here are posits
 (\cite{Gustafson2017a}, and section \ref{sec:posits}), which have a slightly higher precision within the powers of 2
 around $\pm1$, yet a wide dynamic range at the cost of a gradually lower precision away from $\pm1$. While posits
 have been proposed as a drop-in replacement for floats, they currently lack widely available hardware support.
-Logarithmic fixed-point numbers have received little attention apart from research implementations on custom hardware
-\citep{Johnson2020} and are described in section \ref{sec:logfixs} with our design choices in more detail.
-Stochastic rounding has recently emerged as an alternative rounding mode to the widely used deterministic round-to-nearest
-(section \ref{sec:roundnearest}, \cite{IEEE1985}), beneficial for scientific computing
-\citep{Croci2020,Fasi2021,Hopkins2020,Paxton2021} and is described in section \ref{sec:stochastic_rounding}. An improved
-pseudo random number generator for floats is presented in \ref{sec:randfloat} which is used for Monte Carlo-based
-search for periodic orbits (section \ref{sec:orbit_search}). Especially for systems of several variables, the search for
-periodic orbits becomes computationally very demanding and we outline our approach using distributed computing
-in section \ref{sec:distributed_orbit_search}. The agreement between invariant measures is analysed with the
-Wasserstein distance, which is briefly described in section \ref{sec:wasserstein}.
+Additionally, there are Logarithmic fixed-point numbers, which have received little attention apart from research
+implementations on custom hardware \citep{Johnson2020} and are described in section \ref{sec:logfixs} with our
+design choices in more detail. Stochastic rounding has recently emerged as an alternative rounding mode to the
+widely used deterministic round-to-nearest (section \ref{sec:roundnearest}, \cite{IEEE1985}), beneficial for scientific computing
+\citep{Croci2020,Fasi2021,Hopkins2020,Paxton2021} and is described in section \ref{sec:stochastic_rounding}.
+An improved pseudo random number generator for floats is presented in \ref{sec:randfloat} which is used for Monte
+Carlo-based search for periodic orbits (section \ref{sec:orbit_search}). Especially for systems of several variables,
+the search for periodic orbits becomes computationally very demanding and we outline our approach using
+distributed computing in section \ref{sec:distributed_orbit_search}. The agreement between invariant measures
+is analysed with the Wasserstein distance, which is briefly described in section \ref{sec:wasserstein}.
 
 \subsection{An improved random number generator for uniformly distributed floats}
 \label{sec:randfloat}
 
 Conventional random number generation for a float $f$ from a uniform distribution $U(0,1)$
 in $[0,1)$ uses the following technique: First, 10, 23, or 52 random bits (for Float16, Float32, or Float64, respectively)
-from an unsigned integer are used to set the mantissa bits of floating-point one. This creates a floating-point
+from an unsigned integer are used to set the mantissa bits of floating-point 1. This creates a floating-point
 number that is uniformly distributed in $[1,2)$ as all float formats are uniformly distributed in that range. Second,
 $1$ is subtracted to obtain a float in $[0,1)$, i.e. $f \sim U(1,2) - 1$. While this approach is fast, it is statistically
-imperfect as the resulting distribution does not contain all floats in $[0,1)$ due to the rounding error introduced
-by the subtraction. This technique only samples from every second float in $[\tfrac{1}{2},1)$, every fourth in
+imperfect as the resulting distribution does not contain all floats in $[0,1)$. There are $2^{23}$ Float32s in $[1,2)$
+but the subtraction maps those only to a subset of all $1065353216 \approx 2^{30}$ Float32s in $[0,1)$.
+This technique only samples from every second float in $[\tfrac{1}{2},1)$, every fourth in
 $[\tfrac{1}{4},\tfrac{1}{2})$ and so every $2n$-th float in $[2^{-n-1},2^{-n})$. Furthermore, the smallest positive
 number that can be obtained is about $10^{-7}$ for Float32 and $10^{-16}$ for Float64. This is many orders of
-magnitude larger than minpos, the smallest representable positive float, which is about $10^{-45}$, $10^{-324}$ for
-Float32, Float64, respectively.
+magnitude larger than $minpos$, the smallest representable positive float, which is about $10^{-45}$, $10^{-324}$
+for Float32, Float64, respectively (Table \ref{tab:formats}).
+
+\begin{figure}[tbhp]
+\begin{lstlisting}[language=JuliaLocal,label=lst:randfloat,caption={\textbf{An improved random number generator (RNG) for uniformly
+distributed floats.} The Julia function \texttt{randfloat} takes \texttt{rng} as an argument for an RNG for 64-bit unsigned integers \texttt{UInt64}.
+\texttt{\%} is the remainder after division, for unsigned integers effectively converting between unsigned integers by adding leading
+zeros or discarding leading bits. \texttt{?} indicates a one-line if-clause. \texttt{\&} is the bitwise logical and-operation. \texttt{$\vert$}
+is the bitwise logical or-operation.}]
+function randfloat(::Type{Float32})
+
+    ui = rand(UInt64)         # 64 random bits with generator rng
+    lz = leading_zeros(ui)    # count leading zeros of random UInt64
+
+    # then convert leading zeros to exponent bits of Float32
+    # e.g. 01111110, and bitshift to the right position via <<23
+    e = ((126 - lz) % UInt32) << 23
+
+    # reuse the last bits of ui for the 23 mantissa bits
+    # unless the leading zeros reach into those for lz > 40
+    ui = lz > 40 ? rand(UInt64) : ui
+
+    # ui % UInt32 drops the first 32 bits
+    # & 0x007f_ffff sets non-mantissa bits to 0
+    # e | then combines exponent and mantissa
+    # and reinterpret the UInt32 as Float32
+    return reinterpret(Float32,e | ((ui % UInt32) & 0x007f_ffff))
+end
+\end{lstlisting}
+\end{figure}
 
 We therefore developed a statistically improved conversion from a random unsigned integer to a uniformly distributed
 float in $[0,1)$. Counting the number of leading zeros $l$ of a random unsigned integer yields $l = 0$ at probability
@@ -59,38 +137,7 @@ and Float64. It is therefore practically impossible to sample a zero with this t
 zero in $[0,1)$ is effectively 0 for floats with 32 or 64 bit. For Float32, for example, we implement this technique as shown
 in Listing \ref{lst:randfloat}, the implementations for Float16 and Float64 are similar. See our implementation in the Julia-package
 \href{https://github.com/JuliaRandom/RandomNumbers.jl}{RandomNumbers.jl} for further details. The random number generation
-for uniformly distributed floats is used throughout this study.
-
-\begin{figure}[tbhp]
-\begin{lstlisting}[language=JuliaLocal,label=lst:randfloat,caption={\textbf{An improved random number generator (RNG) for uniformly
-distributed floats.} The Julia function \texttt{randfloat} takes \texttt{rng} as an argument for an RNG for 64-bit unsigned integers \texttt{UInt64}.
-\texttt{\%} is the remainder after division, for unsigned integers effectively converting between unsigned integers by adding leading
-zeros or discarding leading bits. \texttt{?} indicates a one-line if-clause. \texttt{\&} is the bitwise logical and-operation. \texttt{$\vert$}
-is the bitwise logical or-operation.}]
-function randfloat(rng::Random.AbstractRNG,::Type{Float32})
-
-    # 64 random bits with generator rng
-    ui = rand(rng,UInt64)
-
-    # count leading zeros of random UInt64
-    lz = leading_zeros(ui)
-
-    # then convert leading zeros to exponent bits of Float32
-    # e.g. 01111110, and bitshift to the right position via <<23
-    e = ((126 - lz) % UInt32) << 23
-
-    # reuse the last bits of ui for the 23 mantissa bits
-    # unless the leading zeros reach into those for lz > 40
-    ui = lz > 40 ? rand(rng,UInt64) : ui
-
-    # ui % UInt32 drops the first 32 bits
-    # & 0x007f_ffff sets non-mantissa bits to 0
-    # e | then combines exponent and mantissa
-    # and reinterpret the UInt32 as Float32
-    return reinterpret(Float32,e | ((ui % UInt32) & 0x007f_ffff))
-end
-\end{lstlisting}
-\end{figure}
+for uniformly distributed floats as described here is used throughout this study.
 
 \subsection{Monte Carlo orbit search}
 \label{sec:orbit_search}
@@ -105,7 +152,11 @@ reoccurs at a later time step $t_1 > t_0$
 Bitwise equality is hereby required with an exception for floats where $-0 = 0$, which arithmetically does not impact on the
 dynamical system. While $\tfrac{1}{-0} = -\infty \neq \infty = \tfrac{1}{0}$ in float arithmetic, we consider finite solutions only.
 The bitwise periodicity is in contrast to other studies investigating quasi-periodic orbits \citep{Urminsky2010,Yalniz2021},
-which usually only require $X^{t_0}, X^{t_1}$ to be close, but not bitwise identical.
+which require $X^{t_0}, X^{t_1}$ to be close, but not bitwise identical. Bitwise periodic orbits are found in long simulations
+when Eq. \ref{eq:periodic_orbit} holds exactly and are very sensitive to the choice of the number format and numerical
+precision. This is distinct from unstable periodic orbits, numerically found via an iterative Newton method when
+Eq. \ref{eq:periodic_orbit} holds up to a numerical error \citep{Viswanath2007}. Although there is an infinite number of unstable
+periodic orbits in the Lorenz 63 system \citep{Capinski2018,Lorenz1963}, the number of bitwise periodic orbits is always finite.
 
 The invariant measure of a chaotic system describes its attractor independent of the initial conditions. A deterministic chaotic
 system simulated with finite-precision arithmetic (also deterministic as opposed to stochastic rounding, for example) will converge
@@ -160,6 +211,36 @@ the given number format then yields a point that is either on or close to the lo
 \subsection{Efficient orbit search with distributed computing}
 \label{sec:distributed_orbit_search}
 
+To find an orbit in a simulation, Eq. \ref{eq:periodic_orbit} is used after every time step to check for equality with the
+system's state at a previous time step. However, before an orbit is found, it is unknown whether a given initial condition $X^{t_0}$
+is already part of the orbit or still part of the trajectory that is yet to converge onto the orbit. It is possible to use the last time step
+of a very long spin-up simulation as initial condition. This strategy limits the chance that $X^{t_0}$ is not yet part of the orbit,
+but does not provide a guarantee, nor is it efficient. Instead we successfully implemented a strategy whereby $X^{t_0}$ is updated
+during simulation and slowly moves forward in time: Updates like $t_0 = \mathrm{round}(\sqrt{t_1})$ or $t_0 = \mathrm{round}(\log(t_1))$,
+with $t_0,t_1$  integers, indicating the time steps, are used. In particular, we use several past time steps of the simulation as $X^{t_0}$
+to check for periodicity. Checking for periodicity with \emph{all} past time steps is inefficient as they would have to be stored and
+$\tfrac{1}{2}(t_1-t_0)^2$ checks, which therefore scale with $t_1^2$, have to be performed in total for all time steps from $t_0$ to $t_1$.
+In contrast, for a constant number of checks per time step, the total number of checks increases linearly with the simulation time.
+
+Finding $n$ orbits from $n$ different initial conditions is a problem that is parallelizable into $n$  independent processes calculated
+on $n_p \leq n$  processors. We follow ideas of the MapReduce framework: Each worker process starts with a different initial condition
+and simulates the dynamical system independently of other processes until an orbit is found. This orbit is passed to the main process,
+which reduces successively all $n$ orbits found into a list of unique orbits, as several initial conditions can yield the same orbit.
+Instead of defining an orbit by all of the points on it, which would be computationally inefficient for very long orbits, we describe
+an orbit by its period length and minimum. The minimum of an orbit is the point for which the $L^2$ norm is minimised.  While it is
+theoretically possible that an orbit has several minima with identical norms, this case was practically negligible in our applications.
+In other applications two such falsely-identified unique orbits can still be merged in post-processing.
+A uniqueness check between two orbits (or one orbit and a list of orbits, in which case the uniqueness check is pairwise against every
+orbit in the list) is unsuccessful and yields a single orbit only if all of the three following criteria are fulfilled
+
+\begin{enumerate}
+\item \textbf{Length.} The two orbits must have the same period length.
+\item \textbf{Minimum norm.} The norms of the orbits’ minima have to be identical.
+\item \textbf{Minimum.} The orbits’ minima, including possible rotation of the variables for spatially periodic solutions, have to be bitwise identical.
+\end{enumerate}
+
+While criterion 3 is sufficient to identify the uniqueness of two orbits, it is computationally more efficient to check for criterion 3
+only if criterion 2 is fulfilled, which is only checked if criterion 1 is fulfilled, hence the proposed order of the criteria.
 \subsection{Wasserstein distance}
 \label{sec:wasserstein}
 
@@ -181,7 +262,7 @@ at time iteration $i=0$ with the parameter $\beta > 1$ defined as
 	x_{i+1} = f_\beta(x_i) = \beta x_i \mod 1
 	\label{eq:bernoulli}
 \end{equation}
-The modulo-operator $\mod$ satisfies that $x \in [0,1)$ in all future iterations. Simulating this system was found to not represent
+The modulo-operator $\mathrm{mod}$ satisfies that $x \in [0,1)$ in all future iterations. Simulating this system was found to not represent
 well the periodic orbit spectrum \citep{Boghosian2019}, which is closely related to the simulated invariant measure. For the
 generalised Bernoulli map the analytical invariant measure is known \citep{Hofbauer1978}
 \begin{equation}
@@ -218,14 +299,14 @@ supported on hardware.
 
 \cite{Boghosian2019} highlight that the Bernoulli map with $\beta = 2$, and similarly for every even integer, will collapse to $x=0$
 after $n$ iterations with any float format at arbitrary high precision, where $n$ is smaller than the number of bits in the format.
-The multiplication with $\beta = 2$ acts as a bitshift in base-2 format towards more significant bits, pushing zero bits in the mantissa
-and subsequently also into the exponent, eventually setting $x$ to 0 (Figure \ref{fig:orbits_beta2}a, b and c). This phenomenon occurs
+The subtraction with 1 acts as a bitshift in base-2 format towards more significant bits, pushing zero bits in the mantissa until $x=1$
+and the modulo returns $x = 0$ (Figure \ref{fig:orbits_beta2}a, b and c). This phenomenon occurs
 as the Bernoulli map with $beta=2$ (and similarly for larger even integers) does not introduce any arithmetic rounding error: Both the
 multiplication with $\beta$ and subtraction with 1 are exact with floats (and also with posits) in $[1,2)$. The multiplication with $\beta=2$
-is exact as the base-2 exponent is simply increased by 1. The subtraction with 1 is exact as every finite positive float (subnormals excluded)
+is exact as the base-2 exponent is simply increased by 1. The subtraction with 1 is exact as every finite positive float
 or posit can be written as $2^e(1+f)$ (see Eq. \ref{eq:float}) for some integer exponent $e$ and a sum $f \in [0,1)$ of powers of two
-with negative exponents. Constraining the range to $[1,2)$, where the subtraction is applied, yields $e=0$ and so the subtraction of $1+f$
-with 1 is $f$, again a sum of powers of two, which is exactly representable with floats or posits.
+with negative exponents. Constraining the range to $[1,2)$, where the subtraction is applied, yields $e=0$ and so subtracting 1 from 
+the mantissa $1+f$ returns $f$, again a sum of powers of two, which is exactly representable with floats or posits.
 
 The only occurring rounding error is in the initial conditions. While a randomly chosen $x \in [0,1)$ will have infinitely many non-zero
 mantissa bits at infinite precision, at finite precision those beyond the resolved mantissa bits will be rounded to 0. Therefore, the least
@@ -265,7 +346,7 @@ or whether a pathology persists at any precision level for some $\beta < 2$.
 
 The analytical invariant measure of the generalised Bernoulli map consists of many step functions taking values on a discrete set
 of points (Fig. \ref{fig:orbits_inv_measures}), which bifurcate with increasing (Fig. \ref{fig:orbits_bifurcation}a). These \emph{quantization levels}
-cannot be exactly represented with Float16 or Float32 arithmetic (Fig. \ref{fig:orbits_inv_measures}),, such that their bifurcation is visually
+cannot be exactly represented with Float16 or Float32 arithmetic (Fig. \ref{fig:orbits_inv_measures}), such that their bifurcation is visually
 blurred (Fig. \ref{fig:orbits_bifurcation}c). However, the visually sharp representation of this bifurcation of the quantization levels with Float64
 indicates a much more accurate approximation to the analytical invariant measure. Due to the higher precision of 32-bit posit arithmetic
 (Posit32) around $\pm1$, the bifurcation is slightly improved with Posit32 over Float32 (Fig. \ref{fig:orbits_bifurcation}d). Given the
@@ -399,11 +480,12 @@ such as Float16 (Figure \ref{fig:orbits_hovmoeller}). For more details and a sof
 \subsection{Longer orbits with more variables}
 
 Using $N=4$ variables in the Lorenz 1996 system simulated with Float16, the longest periodic orbit we find is 6756 time steps long
-(Figure \ref{fig:L96_orbits}). The basin of attraction is about 0.82, meaning that more than 80\% of the randomly chosen initial
+(Figure \ref{fig:L96_orbits} and Table \ref{tab:orbits}). The basin of attraction is about 0.82, meaning that more than 80\% of the randomly chosen initial
 conditions converge onto this orbit. Increasing the number of variables to $N=5$, the longest periodic orbit found increased
 to a length of 294,995 time steps at a similarly large basin of attraction. For $N>9$ the orbit search becomes computationally
 very demanding and requires more than several days on sizable compute clusters of 100 cores. For $N=9$ though, the longest
-periodic orbit we were able to find has a period of 32,930,252,532 time steps. 
+periodic orbit we were able to find has a period of 32,930,252,532 time steps. For a list of all bitwise periodic orbits found see Table
+\ref{tab:orbits}.
 
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/orbits/L96_orbits.pdf}
@@ -458,20 +540,85 @@ availability of computational resources a better invariant measure is therefore 
 performance gain into more variables.
 
 \section{Discussion}
+\label{sec:orbits_discussion}
 
-Non-periodic solutions are an essential property of chaotic dynamical systems. Simulations with deterministic
-finite precision numbers, however, always yield periodic orbits. At the high precision of 64-bit floating-point numbers
-such orbits are usually negligible due to very long periods. The emerging trend to accelerate simulations with
-low-precision numbers, such as 16-bit half precision floats, raises questions on the fidelity of such simulations
-of chaotic systems. Here, we revisit the 1-variable chaotic generalised Bernoulli map with floats, posits and
-logarithmic fixed-point numbers at various levels of precision using deterministic and stochastic rounding.
-The simulations represent the analytical Bernoulli map generally better the higher the precision of the number format.
-Stochastic rounding is especially beneficial as it prevents periodic orbits even at low precision. For the simulation
-of continuous systems the performance gain from low-precision arithmetic will often be reinvested in higher resolution,
-increasing the number of variables. Using the Lorenz 1996 system we provide evidence that the periodic orbit
-length increases exponentially with the number of variables. Moreover, invariant measures are often better
-approximated, indicating an overall improved simulation, with an increased number of variables than with
-increased precision. Extrapolating to complex simulations of natural systems, such as climate models with
-millions of variables, periodic orbit lengths are far beyond reach of present-day computers. Periodic orbits from
-low-precision simulations are therefore not expected to be problematic for any system larger than the simplest
+We analysed bitwise periodic orbits in the generalised Bernoulli map with different number formats and levels of arithmetic precision. 
+While there are very special cases (such as $\beta = 2$) in which the system’s simulation is greatly degenerated at any precision,
+in all other cases simulations were found to improve with higher precision. 16 and 32-bit arithmetic result in short bitwise periodic
+orbits in the Bernoulli map, but a sufficiently high precision reduces the error in the invariant measure to a minimum. 
+
+Stochastic rounding is found to be especially beneficial for 32-bit floats, as it prevents bitwise periodic orbits. A chaotic trajectory is
+regularly pushed off any periodic orbit due to the stochastic perturbation in rounding. Trajectories travel thereby through otherwise
+unreachable state space, improving the simulated invariant measures. However, in the Bernoulli map stochastic rounding also
+causes a non-zero chance that the system collapses on the fixed point. But for any precision higher than Float16 and in systems
+with more variables this chance quickly vanishes. In many complex natural systems the fixed points are not close to the attractor,
+further limiting the relevance of this issue in practice.
+
+Increasing the number of variables in the Lorenz 1996 system, we find that more variables improve the simulated invariant measure
+much more than increased precision with fewer variables does: Doubling the amount of variables yields a more accurate invariant
+measure compared to a high-resolution and high-precision reference than doubling the precision. This provides evidence that
+computational resources should be invested in higher resolution rather than higher precision for the simulation of continuous
 chaotic systems.
+
+From a rigorous mathematical perspective, we would like to know how the period of the largest bitwise periodic orbit increases
+with the number of variables and precision. Experimentally, we find orbits that exponentially increase in length with the number
+of independent variables in the Lorenz 1996 system. Every variable is found to add between 4 and 7 maximum entropy bits that
+extend orbits by a factor of $2^4$ to $2^7$. Assuming similarly a maximum entropy for additional mantissa bits beyond a
+sufficiently high precision, the expected length of bitwise periodic orbits doubles with every additional mantissa bit in precision.
+
+For more complex simulations of natural systems such as million-variable climate models, the expected bitwise periodic orbits
+extrapolate to lengths beyond $10^{100,000}$ time steps even in 16-bit precision. Bitwise periodic orbits are therefore not in reach
+on future generations of supercomputers, especially when the gained performance from low-precision simulations is reinvested
+into higher resolution. In the context of climate models, this supports a vision of low-precision but high-resolution simulations
+with added stochasticity to accelerate and improve climate predictions in decades to come.
+
+\newpage
+\section{Appendix}
+\label{sec:orbits_appendix}
+
+\begin{table}[htbp]
+	\center
+	\footnotesize
+	\begin{tabular}{l | l | l}
+	\textbf{Period length} & \textbf{basin} & \textbf{minimum} \\
+	\hline
+	\multicolumn{3}{l}{\textbf{Float16, N=4}}  \\
+64 & 0.148301 & Float16[8.4, -1.172, 1.208, 1.527] \\
+64 & 0.025185 & Float16[1.217, 1.563, 8.38, -1.199] \\
+277 & 0.011029 & Float16[1.031, 1.361, 8.43, -1.286] \\
+6756 & 0.815485 & Float16[8.47, -1.344, 0.783, 1.106] \\
+	\multicolumn{3}{l}{\textbf{Float16, N=5}}  \\
+1205 & 0.0005 & Float16[-4.465, 2.676, 1.983, 3.566, 4.45] \\
+2415 & 0.0003 & Float16[0.794, 7.3, -0.1984, -1.412, 0.09503] \\
+4485 & 0.0019 & Float16[2.105, 3.656, 4.258, -4.375, 2.752] \\
+14925 & 0.0032 & Float16[-0.2502, 0.8438, 7.652, -0.1371, -1.393] \\
+53995 & 0.0047 & Float16[-0.14, -1.364, -0.1969, 0.7847, 7.605] \\
+59945 & 0.0612 & Float16[7.586, -0.1426, -1.432, -0.198, 0.8076] \\
+88110 & 0.0275 & Float16[1.212, 7.62, -0.5586, -0.641, 0.1917] \\
+91980 & 0.0792 & Float16[1.065, 7.64, -0.4578, -0.8286, 0.09595] \\
+97215 & 0.0112 & Float16[1.34, 7.562, -0.6274, -0.4536, 0.3428] \\
+294995 & 0.8103 & Float16[-1.157, -0.03723, 0.952, 7.598, -0.3352] \\
+	\multicolumn{3}{l}{\textbf{Float16, N=6}}  \\
+4405392 & 0.001 & Float16[-3.361, 0.6084, 1.09, 3.375, 4.805, -0.4067] \\
+7820184 & 0.002 & Float16[1.955, 3.916, 3.021, -4.24, 0.5537, 0.701] \\
+12688470 & 0.181 & Float16[1.222, 1.088, 1.614, 3.6, 3.574, -4.023] \\
+78874782 & 0.816 & Float16[3.219, 4.9, -0.2283, -3.436, 0.3677, 0.713] \\
+	\multicolumn{3}{l}{\textbf{Float16, N=7}}  \\
+17531430 & 0.03 & Float16[-0.4985, 2.64, 5.97, -2.188, 0.1743, 0.2306, 0.103] \\
+33926067 & 0.18 & Float16[-0.4238, -0.704, 2.56, 5.92, -1.828, -0.795, 0.8286] \\
+2355085796 & 0.79 & Float16[6.113, -1.858, -0.6133, 0.7876, -0.1544, -0.707, 1.994] \\
+	\multicolumn{3}{l}{\textbf{Float16, N=8}}  \\
+569018386 & 0.1875 & Float16[-1.604, 1.616, 2.139, 2.68, -2.373, -0.6445, 0.5273, 3.215] \\
+1449659326 & 0.8125 & Float16[1.264, 1.165, 3.008, -2.305, -1.467, 0.797, 2.666, -2.35] \\
+	\multicolumn{3}{l}{\textbf{Float16, N=9}} \\
+681602535 & 0.15625 & Float16[-3.072, -2.104, -0.4575, -0.08777, 1.392, 0.8486, 1.859, 4.867, 5.086] \\
+13428881973 & 0.59375 & Float16[1.604, 4.234, 4.36, -4.59, -0.2253, 0.362, 1.207, 1.533, 0.793] \\
+32930252532 & 0.25 & Float16[0.769, 1.876, -1.593, -0.4277, -0.3481, 3.348, 6.816, -1.179, -1.096]
+        \end{tabular}
+	\caption{\textbf{Bitwise periodic orbits in the Lorenz 1996 system simulated with Float16 and N variables.}
+	The period length is given as the number of time steps. The basin is the fraction of initial conditions ending
+	up on a given orbit. The minimum is one point on the orbit for which the  norm is minimized. Simulations
+	performed with \href{https://github.com/milankl/Lorenz96.jl}{Lorenz96.jl}.}
+	\label{tab:orbits}
+\end{table}
+

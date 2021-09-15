@@ -473,7 +473,7 @@ time with a small number of processors in parallel.
 	\includegraphics[width=1\textwidth]{Figures/compression/histograms.pdf}
 	\caption{\textbf{Statistical distributions of all variables in CAMS.}
 	Histograms use a logarithmic binning and are staggered vertically for clarity.
-	The variable abbreviations are explained in Table \ref{tab:variable_abbreviations}.}
+	The variable abbreviations are explained in Table \ref{tab:cams_abbreviations}.}
 	\label{fig:cams_histograms}
 \end{figure}
 
@@ -527,7 +527,7 @@ weather or climate model and post-processing.
 	retained to preserve 99\% of real information are enclosed in orange. Bits without any real
 	information are shaded in grey-blue. The sum of the real information across bit positions
 	per variable is the total information per value. Variable abbreviations are explained in Table
-	\ref{tab:variable_abbreviations}.}
+	\ref{tab:cams_abbreviations}.}
 	\label{fig:bitinformation}
 \end{figure}
 
@@ -776,7 +776,7 @@ occurs for individual locations or globally at 99\% and 97\% preserved informati
 forecast is therefore unaltered at these levels of preserved information in the compression. Contrarily, with an information loss larger than
 5\% the CRPS forecast error starts to increase, while large compression factors beyond 150x are achieved.
 
-\subsection{A data compression Turing test}
+\subsection{A Turing test for data compression}
 
 In numerical weather predictions, progress in the development of global weather forecasts is often assessed using a set of error metrics,
 summarised in so-called \emph{score cards}. These scores cover important variables in various large scale regions, such as 2m-temperature
@@ -833,4 +833,54 @@ can be reduced without losing information, we revisit this trade-off and propose
 archives likely use large capacities to store random bits, the analysis of the bitwise real information content is essential towards
 efficient climate data compression.
 
+\newpage
+\section{Appendix}
+\begin{table}[htbp]
+	\center
+	\footnotesize
+	\begin{tabular}{l | l | l | l | l | l}
+	\textbf{Name} & \textbf{Code} & \textbf{Unit} & \textbf{Name} & \textbf{Code} & \textbf{Unit} \\
+	\hline
+	\multicolumn{3}{l}{\textbf{Aerosols}} & \multicolumn{3}{l}{\textbf{Carbon oxides}}  \\
+	Aerosol optical thickness 532nm & aott532 & 1 & Carbon dioxide & co2 & kg/kg \\
+	Anthropogenic aot532 & aaot532 & 1 & Carbon monoxide & co & kg/kg \\
+	Natural aot532 & naot532 & 1 &  \multicolumn{3}{l}{\textbf{Clouds and water}} \\
+	Backscatter from ground at 1064nm & aergnd1064 & m\textsuperscript{-1}sr\textsuperscript{-1} & Fraction of cloud cover & cc &1 \\
+Backscatter from ground at 355nm & aergnd355 & m\textsuperscript{-1}sr\textsuperscript{-1} & Cloud ice water & ciwc & kg/kg \\
+Backscatter from ground at 532nm & aergnd532 & m\textsuperscript{-1}sr\textsuperscript{-1} & Cloud liquid water & clwc & kg/kg \\
+Backscatter from top of atm at 1064nm & aertoa1064 & m\textsuperscript{-1}sr\textsuperscript{-1} & Specific rain water & crwc & kg/kg \\
+Backscatter from top of atm at 532nm & aertoa355 & m\textsuperscript{-1}sr\textsuperscript{-1} & Specific snow water & cswc & kg/kg \\
+Backscatter from top of atm at 532nm  & aertoa532 & m\textsuperscript{-1}sr\textsuperscript{-1} & Specific humidity & q & kg/kg \\
+Aerosol extinction coefficient at 1064nm & aerext1064 & m\textsuperscript{-1} &  \multicolumn{3}{l}{\textbf{Methane}} \\
+Aerosol extinction coefficient at 355nm & aerext355 & m\textsuperscript{-1} & Methane & ch4 & kg/kg \\
+Aerosol extinction coefficient at 532nm & aerext532 & m\textsuperscript{-1} & Methane (chemistry) & ch4\_c & kg/kg \\
+Aerosol type 2 source/gain accum. & aergn02 & kg/m\textsuperscript{2} & Methane loss rate & kch4 & s\textsuperscript{-1} \\
+Aerosol type 7 source/gain accum. & aergn07 & kg/m\textsuperscript{2} & \multicolumn{3}{l}{\textbf{Alkanes or alcohols}} \\
+Aerosol type 9 source/gain accum. & aergn09 & kg/m\textsuperscript{2} & Ethene & c2h4 & kg/kg \\
+Aerosol type 10 source/gain accum. & aergn10 & kg/m\textsuperscript{2} & Ethanol & c2h5oh & kg/kg \\
+Aerosol type 11 source/gain accum. & aergn11 & kg/m\textsuperscript{2} & Ethane & c2h6 & kg/kg \\
+Aerosol large mode mixing ratio & aerlg & kg/kg & Propane & c3h8 & kg/kg \\
+Sea salt (0.03-0.5\textmu m) & aermr01 & kg/kg & Isoprene & c5h8 & kg/kg \\
+Sea salt (0.5-5\textmu m) & aermr02 & kg/kg & Acetone & ch3coch3 & kg/kg \\
+Sea salt (5-20\textmu m) & aermr03 & kg/kg & Methanol & ch3oh & kg/kg \\
+Dust aerosol (0.03-0.55\textmu m) & aermr04 & kg/kg & Methyl peroxide & ch3ooh & kg/kg \\
+Dust aerosol (0.55-0.9\textmu m) & aermr05 & kg/kg & Hydrogen peroxide & h2o2 & kg/kg \\
+Dust aerosol (0.9-20\textmu m) & aermr06 & kg/kg & Formaldehyde & hcho & kg/kg \\
+Hydrophilic organic matter & aermr07 & kg/kg & Formic acid & hcooh & kg/kg \\
+Hydrophobic organic matter & aermr08 & kg/kg & Nitric acid & hno3 & kg/kg \\
+Hydrophilic black carbon & aermr09 & kg/kg & Hydroperoxy radical & ho2 & kg/kg \\
+Hydrophobic black carbon & aermr10 & kg/kg & Hydroxyl radical & oh & kg/kg \\
+Sulphate aerosol & aermr11 & kg/kg & Aldehyde & ald2 & kg/kg \\
+Nitrate fine mode & aermr16 & kg/kg &  \multicolumn{3}{l}{\textbf{Nitrogen and sulfur oxides}} \\
+Nitrate coarse mode & aermr17 & kg/kg & Nitrogen dioxide & no2 & kg/kg \\
+Ammonium aerosol & aermr18 & kg/kg & Nitrogen monoxide & no & kg/kg \\
+ \multicolumn{3}{l}{\textbf{Others}}  & Sulphur dioxide & so2 & kg/kg \\
+Olefins & ole & kg/kg &  \multicolumn{3}{l}{\textbf{Ozone}}  \\
+Organic nitrates & onit & kg/kg & Ozone mixing ratio 2 & go3 & kg/kg \\
+Peroxyacetyl nitrate & pan & kg/kg & Ozone mixing ratio 1 & o3 & kg/kg \\
+Paraffins & par & kg/kg & Stratospheric ozone & o3s & kg/kg
+        \end{tabular}
+	\caption{\textbf{Variables, their codes and units in the Copernicus Atmospheric Monitoring Service.}}
+	\label{tab:cams_abbreviations}
+\end{table}
 

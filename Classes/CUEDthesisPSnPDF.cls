@@ -48,7 +48,7 @@
 \usepackage{ifthen}
 \usepackage{ifpdf}
 \usepackage[dvipsnames]{xcolor}
-\definecolor{newblue}{rgb}{0,.6,.5}
+\definecolor{newblue}{rgb}{0,.5,.5}
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
