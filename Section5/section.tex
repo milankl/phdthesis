@@ -18,23 +18,23 @@ Earth Systems}, in review. Preprint \href{https://doi.org/10.1002/essoar.1050747
 The first numerical weather prediction models have recently moved away from 64-bit double precision floating-point numbers
 for higher computational efficiency in lower precision \citep{Govett2017,Nakano2018,Rudisuhli2013,Vana2017}. While both Float32
 and Float64 formats are widely available for high-performance computing, support for 16-bit arithmetic is only available on mainstream
-hardware for a few years, due to the demand for low precision by the deep learning community. The transition for an existing application
-towards 16 bit is challenging: Rounding errors from low precision have to be controlled and a limited range of representable numbers
+hardware for a few years, due to the demand for low precision by the deep learning community. The transition towards 16 bit is challenging
+for an existing application: Rounding errors from low precision have to be controlled and a limited range of representable numbers
 cannot be exceeded without causing often catastrophic under and overflows. But the potential performance gains are promising,
 with 4x speedups compared to 64-bit calculations, not to mention the reduced energy consumption.
 
 The current boom in machine learning applications is supported by advances in microprocessors. Instead of conventional central
 processing units (CPU), graphic and tensor processing units GPU, TPU \citep{Jouppi2018,Jouppi2018a,Jouppi2017,Steinkraus2005}
-are used, which are better suited for the workloads of machine learning. While most supercomputers are based on Intel CPUs with
-the x86-64 architecture \citep{Dongarra2011}, many new installations transition towards GPUs or alternative microprocessor architectures
-\citep{Zheng2020}. The trend is towards heterogeneous computing with specialised hardware, which is both a challenge and an
-opportunity for weather and climate models \citep{Bauer2021,Bauer2021a}. Fugaku, the world’s fastest supercomputer as of 2020,
-is based on Fujitsu’s A64FX processors with ARM architecture \citep{Odajima2020,Sato2020}. The A64FX also implements the
-Float16 format (1 sign, 5 exponent and 10 mantissa bits) and Fujitsu promises a four-fold increase in the number of floating-point
+are used, which are better suited for the workloads of machine learning. While most supercomputers from \href{https://top500.org}{TOP500.org}
+are based on Intel CPUs with the x86-64 architecture \citep{Dongarra2011}, many new installations transition towards GPUs or alternative
+microprocessor architectures \citep{Zheng2020}. The trend is towards heterogeneous computing with specialised hardware, which is
+both a challenge and an opportunity for weather and climate models \citep{Bauer2021,Bauer2021a}. Fugaku, the world’s fastest supercomputer
+as of 2020, is based on Fujitsu’s A64FX processors with ARM architecture \citep{Odajima2020,Sato2020}. The A64FX also implements the
+Float16 format (1 sign, 5 exponent and 10 mantissa bits) and Fujitsu promises a 4x increase in the number of floating-point
 operations per second. 
 
 Float16 is the 16-bit variant of Float32 and Float64 and is defined in the 2008 revision of the IEEE-754 standard on floating-point arithmetic
-\citep{IEEE1985,IEEE2008}. Alternatives such as bfloat16 \citep{Burgess2019, Kalamkar2019}, minifloats \citep{Fox2020}, logarithmic
+\citep{IEEE1985,IEEE2008}. Alternatives such as BFloat16 \citep{Burgess2019, Kalamkar2019}, minifloats \citep{Fox2020}, logarithmic
 fixed-point numbers \citep{Johnson2020,Johnson2018,Sun2020}, posits
 \citep{Gustafson2017a,Chaurasiya2018,Klower2019a,Klower2020a,Langroudi2019,Zhang2020} and stochastic rounding
 \citep{Croci2020,Hopkins2020,Mikaitis2020,Paxton2021} have been investigated, but most of these are not available on
@@ -82,6 +82,12 @@ benchmarks the performance compared to Float64. Section \ref{sec:hardware_discus
 \section{Methods}
 \label{sec:hardware_methods}
 
+ The following methods describe in section \ref{sec:swm_scaling} the scaling of the shallow water equations, which is extended from 
+ the dimensionless gradients introduced in section \ref{sec:swm_scale}. The shallow water model presented here is an updated
+ version from the one presented in chapter \ref{chap:shallow_water}. Section \ref{sec:scale_sherlogs} describes how to choose a scale
+ guided by an analysis number format, a concept introduced in section \ref{sec:analysis_number_formats}. To reduce rounding errors
+ in the time integration we describe the compensated time integration in section \ref{sec:compensated_time_integration}.
+
 \subsection{Scaling the shallow water equations}
 \label{sec:swm_scaling}
 
@@ -100,14 +106,14 @@ $L_y  = 4000\op{km}$, respectively. The domain is a zonal channel with boundary 
 The channel setup is motivated by zonal flows like the Antarctic Circumpolar Current but highly idealised \citep{Jansen2015,Jansen2015a}.
 
 The non-linear momentum advection is $\mathbf{u} \cdot \nabla\mathbf{u}$. The Coriolis force is
-$f\hat{z} \times \mathbf{u} = (-fv,fu)$ with the Coriolis parameter $f$ using a $\beta$-plane approximation at 45\textdegree{}N.
+$f\mathbf{\hat{z}} \times \mathbf{u} = (-fv,fu)$ with the Coriolis parameter $f$ using a $\beta$-plane approximation at 45\textdegree{}N.
 The pressure gradient $-g\nabla \eta$ scales with a reduced gravitational acceleration $g = 0.01\op{ms}^{-2}$ to represent
-baroclinic ocean/atmosphere dynamics \citep{Gill1982}. The zonal wind forcing $\mathbf{F} = (F_x,0)$ is a meridional shear
-$F_x = F_0\sin(\omega t) \tanh(2\pi(L_y^{-1} - \tfrac{1}{2}))$ which reverses seasonally ($\omega^{-1} = 365\op{days}$).
-Lateral diffusion of momentum is described by $\nu_B\nabla^4\mathbf{u}$, with biharmonic viscosity coefficient $\nu_B$.
-Linear bottom friction is represented by $-r\mathbf{u}$ which decelerates the flow at a time scale of $r^{-1} = 300\op{days}$.
-The equation for interface height $\eta$ is the shallow water-variant of the continuity equation, ensuring conservation of volume
-(and mass as the density $\rho$ is constant). The layer thickness is $h = \eta + H$ of a fluid with depth $H$ at rest.
+baroclinic ocean/atmosphere dynamics \citep{Gill1982}, which is in contrast to the barotropic model setup in chapter \ref{chap:shallow_water}.
+The zonal wind forcing $\mathbf{F} = (F_x,0)$ is a meridional shear $F_x = F_0\sin(\omega t) \tanh(2\pi(L_y^{-1} - \tfrac{1}{2}))$ which
+reverses seasonally ($\omega^{-1} = 365\op{days}$). Lateral diffusion of momentum is described by $\nu_B\nabla^4\mathbf{u}$, with
+biharmonic viscosity coefficient $\nu_B$. Linear bottom friction is represented by $-r\mathbf{u}$ which decelerates the flow at a time
+scale of $r^{-1} = 300\op{days}$. The equation for interface height $\eta$ is the shallow water-variant of the continuity equation, ensuring
+conservation of volume (and mass as the density $\rho$ is constant). The layer thickness is $h = \eta + H$ of a fluid with depth $H$ at rest.
 Several meridional ridges on the seafloor trigger instabilities in the zonal flow, but they are small compared to the fluid depth.
 The shallow water equations are complemented with an advection for the passive tracer $q$ , which is stirred by the flow
 through $\mathbf{u} \cdot \nabla q$ and slowly ($\tau^{-1} = 100\op{days}$) relaxed back to a reference $q_0$.
@@ -146,15 +152,15 @@ and enstrophy-conserving scheme of \cite{Arakawa1990}. The tracer advection equa
 with a semi-Lagrangian advection scheme \citep{Diamantakis2013,Smolarkiewicz1992}. This scheme calculates
 a departure point for every arrival grid point one time step ago. The tracer field is then interpolated onto the departure point,
 which is used as the tracer concentration at the arrival point for the next time step. More details on the implementation of
-the semi-Lagrangian advection scheme is described in \citep{Klower2020a}. The time integration of ShallowWaters.jl is
-discussed in section \ref{sec:compensated_time_integration}.
+the semi-Lagrangian advection scheme is described in section \ref{sec:swm_semilagrange}. The time integration of
+ShallowWaters.jl is discussed in section \ref{sec:compensated_time_integration}.
 
 \subsection{Choosing a scale with Sherlogs}
 \label{sec:scale_sherlogs}
 
 The scaling of equations has to be implemented carefully when using number formats with a limited dynamic range,
 such as Float16 (Fig. \ref{fig:a64fx_decprec}). Subnormals for Float16 are in the range of $6 \cdot 10^{-8}$ to
-$6 \cdot 10^{-5}$ (see section \ref{}) and are inefficiently supported on some hardware, such that their occurrence
+$6 \cdot 10^{-5}$ (see section \ref{sec:floats}) and are inefficiently supported on some hardware, such that their occurrence
 causes large performance penalties. This reduces the available range of Float16 even further and a simulation
 has to fit as best as possible in the remaining 9 orders of magnitude between $6.104 \cdot 10^{-5}$ and $65504$.
 A single overflow, i.e. a result above $65504$, will abort the simulation. Understanding the range of numbers
@@ -188,7 +194,8 @@ time_integration(...) at time_integration.jl:82 # called from here
 \end{lstlisting}
 \end{figure}
 
-We therefore developed the analysis-number format Sherlogs. Sherlog16, for example, uses Float16 to compute,
+We therefore developed the analysis number format Sherlogs. See section \ref{sec:analysis_number_formats} for a general
+description of code composability and analysis number formats. Sherlog16, for example, uses Float16 to compute,
 but after every arithmetic operation the result is also logged into a bitpattern histogram. Running a simulation with
 Sherlogs will take considerably longer due to the overhead from logging the arithmetic results, which can be obtained
 in the form of a bitpattern histogram upon completion. The bitpattern histogram will reveal information such as the
@@ -265,7 +272,6 @@ The first version of compensated summation was used by \cite{Gill1951} in a Rung
 fixed-point arithmetic, and the idea was subsequently extended to floating-point arithmetic by \cite{Kahan1965},
 \cite{Moller1965} and others \citep{Vitasek1969,Linnainmaa1974,Higham1993}. That we are aware of, our paper
 is the first work in which compensated summation is used in a fluid circulation model with 16-bit arithmetic.
-
 To understand compensated summation, consider the following naïve algorithm for the summation of all the
 entries of a length-$n$ vector $a$ with elements $a_i, i = 1,...,n$
 
@@ -311,7 +317,7 @@ With compensated summation the rounding errors will stay $\mathcal{O}(\varepsilo
 
 ShallowWaters.jl uses the 4th-order Runge-Kutta scheme \citep{Butcher2008} to integrate the non-dissipative terms in time:
 The momentum advection $\mathbf{u} \cdot \nabla \mathbf{u}$;
-the Coriolis force $f\hat{z} \times \mathbf{u}$;
+the Coriolis force $f\mathbf{\hat{z}} \times \mathbf{u}$;
 the pressure gradient $-g\nabla \eta$;
 the wind forcing $\mathbf{F}$;
 and the conservation of volume $-\nabla \cdot (\mathbf{u} h)$ are summarised as the right-hand side function $\op{rhs}$.
@@ -471,14 +477,14 @@ While the first weather forecast models are moving towards Float32, 16-bit arith
 support on future supercomputers. We present, to our knowledge, the first fluid simulation that runs entirely in
 hardware-accelerated 16 bit with minimal rounding errors but at almost 4x the speed. The simulations were
 performed on A64FX, the microprocessor that is used in Fugaku, the fastest supercomputer as of November
-2020 (TOP500, \cite{Dongarra2011}).
+2020 (\href{https://top500.org}{TOP500.org}, \cite{Dongarra2011}).
 
 The complex partial differential equations underlying weather and climate simulations are difficult to fit into the
 limited range of Float16, but here we have presented a method to do this more systematically. We present 
 Sherlogs.jl to analyse number formats. Sherlogs.jl allows to assess any changes to the scaling of the equations
 to minimise underflows while making the most of the available representable numbers. In our case,
 subnormal floating-point numbers had to be avoided and scaling of the equations dropped the amount of
-subnormals occurring below 0.2\%.
+subnormals occurring from 10 to below 0.2\%.
 
 Using 16-bit floats will likely cause precision issues in fluid simulations. While mixed-precision has been
 used to minimise rounding errors in precision-critical calculations, we have presented here an approach
