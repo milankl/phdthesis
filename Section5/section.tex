@@ -63,7 +63,7 @@ based on interval arithmetic, providing rigid rounding error bounds, or on stoch
 While these can be useful to identify the minimal decimal precision for simulating chaotic systems, analysing the limited dynamic range
 of low precision number formats is largely unaddressed in these tools.
 
-Here, we present, to our knowledge, the first fluid circulation model that runs entirely in hardware-accelerated 16-bit floats on the
+In this chapter, we present, to our knowledge, the first fluid circulation model that runs entirely in hardware-accelerated 16-bit floats on the
 ARM architecture-based microprocessor A64FX. Strategies are presented to solve precision and range issues with 16-bit arithmetic:
 In section \ref{sec:hardware_methods} we scale the shallow water equations, and an appropriate scale is found with the
 newly-developed analysis-number format Sherlogs.jl. Additionally, a compensated time integration is presented to minimise
@@ -73,9 +73,10 @@ benchmarks the performance compared to Float64. Section \ref{sec:hardware_discus
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/a64fx/float32_16_decprec.pdf}
 	\caption{\textbf{Decimal precision of Float16 and Float32 over the range of representable numbers.}
-	The decimal precision is worst-case, i.e. given in terms of decimal places that are at least correct after rounding (see section \ref{}).
-	The smallest representable number (minpos, see section \ref{}), the smallest normal number (floatmin) and the largest representable number
-	(maxpos) are denoted with vertical dashed lines. The subnormal range is between minpos and floatmin.}
+	The decimal precision is worst-case, i.e. given in terms of decimal places that are at least correct after rounding (see section
+	\ref{sec:decimal_precision}). The smallest representable number ($minpos$, see section \ref{sec:floats}), the smallest normal
+	number ($floatmin$) and the largest representable number ($maxpos$) are denoted with vertical dashed lines. The subnormal
+	range is between $minpos$ and $floatmin$.}
 	\label{fig:a64fx_decprec}
 \end{figure}
 
@@ -239,7 +240,7 @@ The smallest representable number is therefore $6.104 \cdot 10^{-5}$.
 Using the DrWatson number format from Sherlogs.jl identifies the addition of the tendencies to the
 prognostic variables $u,v,\eta$ as prone to produce subnormals (Listing \ref{lst:sherlogs}). We therefore
 increase the scales  to scale up the prognostic variables and consequently their tendencies. Choosing
-$s = s^6, s_\eta = 1$ reduces the amount of subnormals to 0.04\%, while leaving about a factor two
+$s = 2^6, s_\eta = 1$ reduces the amount of subnormals to 0.04\%, while leaving about a factor two
 headspace between the largest occurring numbers (about $30000$) to avoid overflows beyond $65504$
 (Fig. \ref{fig:a64fx_bitpatternhist}b). The compensated time integration (see section
 \ref{sec:compensated_time_integration}) increases this share to about 0.2\%.
@@ -247,7 +248,7 @@ headspace between the largest occurring numbers (about $30000$) to avoid overflo
 The idealised tracer in ShallowWaters.jl takes values in (-1,1), so we scale this variable by $s_q = 2^{15}$
 in order to use most of the Float16 range. This is to allow as many bitpatterns as possible for the interpolation
 in the semi-Lagrangian advection scheme, which uses non-dimensional departure points on a locally relative
-grid for 16-bit arithmetic, as described in \cite{Klower2020a}.
+grid for 16-bit arithmetic, as described in section \ref{sec:swm_semilagrange}.
 
 Consequently, the fully scaled shallow water equations are squeezed well into Float16, making near-optimal
 use of the available bitpatterns, of which only 3\% are unused (NaNs excluded). In contrast, a simulation with
@@ -255,13 +256,13 @@ Float32 does not make use of at least 81\% of available bitpatterns (Fig. \ref{f
 that for a simulation run long enough all bitpatterns within the used range occur eventually. Extrapolating this
 to Float64 with a representable range of $5 \cdot 10^{-324}$ to $2 \cdot 10^{308}$ the share of unused bitpatterns
 is at least 97.5\%. This computational inefficiency can be overcome with 16-bit number formats and systematic
-scaling as presented here. However, scaling leaves the precision issues with low-precision formats unaddressed,
-for which we present a technique in the next section.
+scaling as presented in this chapter. However, scaling leaves the precision issues with low-precision formats
+unaddressed, for which we present the compensated time integration in the next section.
 
 \subsection{A compensated time integration}
 \label{sec:compensated_time_integration}
 
-To minimize the precision loss in the time-integration, we adopt compensated summation as an alternative approach
+To minimise the precision loss in the time-integration, we adopt compensated summation as an alternative approach
 to mixing precision. Compensated summation is a simple, yet powerful technique that prevents the accumulation of
 rounding errors in the computation of large sums. Since the addition of multiple terms is ubiquitous in scientific computing,
 compensated summation can be used to improve the accuracy of many algorithms such as numerical linear algebra
@@ -426,9 +427,9 @@ We will now assess the speedups with Float16 compared to Float64 on A64FX.
 
 \subsection{Approaching 4x speedup on A64FX}
 The A64FX is a microprocessor developed by Fujitsu based on the ARM-architecture. It powers not just the fastest
-supercomputer in the world as of June 2021 (measured by TOP500.org, \cite{Dongarra2011}), Fugaku, but
-also a number of smaller systems around the world, including Isambard 2 which we use here. The A64FX has a
-number of features intended to accelerate machine learning applications. Notably, it allows not just Float32 and
+supercomputer in the world as of June 2021 (measured by \href{https://top500.org}{TOP500}, \cite{Dongarra2011}),
+Fugaku, but also a number of smaller systems around the world, including Isambard 2 which we use here. The A64FX
+has a number of features intended to accelerate machine learning applications. Notably, it allows not just Float32 and
 Float64 arithmetic but also Float16. Official benchmarks of the A64FX demonstrate a cost increase which is linear
 with the number of bits. In that sense, Float32 can be twice as fast in applications than Float64, while Float16 can
 be four times as fast, when optimized well. In practice, speedups in complex applications are due to a mix of factors:
@@ -460,10 +461,10 @@ there is a clear improvement from using Float32 instead of Float64 which approac
 While larger grids usually experience more acceleration on A64FX in Float16, there are ranges where the speedup
 drops to 3-3.25x. This is likely due to peculiarities in the memory and cache hierarchy of the
 A64FX, such that the performance benefit of Float16 cannot always be fully realised. A detailed assessment of these
-peculiarities is beyond the scope of this study, but it is nevertheless reassuring that, even in the worst case, Float16
+peculiarities is beyond the scope of this chapter, but it is nevertheless reassuring that, even in the worst case, Float16
 is still at least three times faster than Float64 for these large grids. 
 
-As discussed in previous sections, using a compensated time integration can be used to minimize the rounding errors,
+As discussed in previous sections, using a compensated time integration can be used to minimise the rounding errors,
 which comes with a small additional computational cost: Using the compensated time integration the speedups drop to
 about 3.6x for large grids. Nevertheless, a compensated time integration yields higher performances than mixing the
 precision of Float16 and Float32, which approaches only 2.75x here. Consequently, a compensated time integration
@@ -477,7 +478,7 @@ While the first weather forecast models are moving towards Float32, 16-bit arith
 support on future supercomputers. We present, to our knowledge, the first fluid simulation that runs entirely in
 hardware-accelerated 16 bit with minimal rounding errors but at almost 4x the speed. The simulations were
 performed on A64FX, the microprocessor that is used in Fugaku, the fastest supercomputer as of November
-2020 (\href{https://top500.org}{TOP500.org}, \cite{Dongarra2011}).
+2020 (\href{https://top500.org}{TOP500}, \cite{Dongarra2011}).
 
 The complex partial differential equations underlying weather and climate simulations are difficult to fit into the
 limited range of Float16, but here we have presented a method to do this more systematically. We present 
@@ -499,7 +500,7 @@ posits is smaller than using mixed-precision and therefore also smaller than the
 In that sense, algorithms that are low-precision resilient are far more important than the actual choice of the
 number format, especially given that only floats are widely hardware-supported.
 
-The work here shows that a naive translation of the mathematical equations into code will likely fail with 16-bit arithmetic.
+The work in this chapter shows that a naive translation of the mathematical equations into code will likely fail with 16-bit arithmetic.
 However, this does not mean that 16-bit arithmetic is unsuited for the numerical solution of complex partial differential
 equations such as the shallow water equations. But it means that both precision and range issues have to be addressed
 in the design of the algorithms used. A compensated time integration is a low-precision resilient algorithm,

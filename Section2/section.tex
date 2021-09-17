@@ -31,9 +31,9 @@ exploited for climate data compression, although multidimensional compressors ar
 
 Floating-point numbers are the standard to represent real numbers in binary form. 64-bit double precision floating-point
 numbers (Float64) consist of a sign bit, 11 exponent bits representing a power of two, and 52 mantissa bits allowing for
-16 decimal places of precision across more than 600 orders of magnitude \citep{IEEE1985}. Most weather and climate
-models are based on Float64 arithmetics, which has been questioned as the transition to 32-bit single precision floats
-(Float32) does not necessarily decrease the quality of forecasts \citep{Vana2017,TintoPrims2019}. Many bits in Float32
+16 decimal places of precision across more than 600 orders of magnitude (\cite{IEEE1985} and section \ref{sec:floats}).
+Most weather and climate models are based on Float64 arithmetics, which has been questioned as the transition to 32-bit single
+precision floats (Float32) does not necessarily decrease the quality of forecasts \citep{Vana2017,TintoPrims2019}. Many bits in Float32
 only contain a limited amount of information as even 16-bit arithmetic has been shown to be sufficient for parts of weather
 and climate applications \citep{Hatfield2019,Klower2020a,Ackmann2021,Dawson2018,Fan2019}.
 The information, as defined by Shannon information theory \citep{Shannon1948,MacKay2003,Kleeman2011},
@@ -227,16 +227,6 @@ We consider real information below $H_f$ as insignificantly different from 0 and
 	\label{fig:information_resolution}
 \end{figure}
 
-\begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/correlation_ar1.pdf}
-	\caption{\textbf{Dependency of the bitwise real information and compressibility on correlation. a}
-	The bitwise real information content of a first-order autoregressive process (AR(1) with Gaussian distribution N(0,1),
-	i.e. with zero mean and unit variance) with varying lag-1 autocorrelation. The bits that have to be retained to preserve
-	99\% of information are enclosed with a solid line. \text{b} as \textbf{a} but the AR(1) process follows a Gaussian distribution with
-	a mean of 10. \textbf{c,d} Compression factors for \textbf{a,b} when preserving 99\% of information. Shading denotes the interdecile range.}
-	\label{fig:information_correlation}
-\end{figure}
-
 \section{Methods: Properties of real information}
 \label{sec:compression_methods_properties}
 
@@ -257,6 +247,16 @@ constant (Fig. \ref{fig:information_correlation}c and d). Once an additional man
 99\% of real information, compression factors jump back down again, resulting in a sawtooth wave. Over a wide
 range of typical correlation coefficients (0.5 - 0.9999) the compression factors are otherwise constant and no higher
 compressibility is found with increased correlation. 
+
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/correlation_ar1.pdf}
+	\caption{\textbf{Dependency of the bitwise real information and compressibility on correlation. a}
+	The bitwise real information content of a first-order autoregressive process (AR(1) with Gaussian distribution N(0,1),
+	i.e. with zero mean and unit variance) with varying lag-1 autocorrelation. The bits that have to be retained to preserve
+	99\% of information are enclosed with a solid line. \text{b} as \textbf{a} but the AR(1) process follows a Gaussian distribution with
+	a mean of 10. \textbf{c,d} Compression factors for \textbf{a,b} when preserving 99\% of information. Shading denotes the interdecile range.}
+	\label{fig:information_correlation}
+\end{figure}
 
 The compression factors can, however, depend on the range of values represented in binary: A shift in the mean to have
 positive or negative values only means that the sign bit is unused, which increases compression factors
@@ -328,6 +328,20 @@ points is insignificantly different from each other and therefore the gradient z
 Weak gradients are better preserved with Zfp compression at similar compression factors, but its block structure becomes
 visible (Fig. \ref{fig:compression_gradients}f). 
 
+\subsection{Structural similarity}
+
+A metric to assess the quality of lossy compression in image processing is the structural similarity index measure (SSIM, \cite{Wang2004}).
+For images it is based on comparisons of luminance, contrast and structure. For floating-point arrays the luminance contributions
+to SSIM can be interpreted as the preservation of the mean; the contrast compares the variances and the structure compares the
+correlation. The SSIM of two arrays $A,B$ of same size is defined as
+	\begin{equation}
+	\op{SSIM}(A,B) = \frac{(2\mu_A\mu_B + c_1)(2\sigma_{AB} + c_2)}{(\mu_A^2 + \mu_B^2 + c_1)(\sigma^2_A + \sigma^2_B + c_2)}
+	\end{equation}
+With $\mu_A,\mu_B$ the respective means, $\sigma^2_A,\sigma^2_B$ the respective variances and $\sigma_{AB}$ the covariance.
+$c_1 = (k_1L)^2$ and $c_2 = (k_2L)^2$  are introduced to increase stability with a small denominator and $k_1 = 0.01, k_2 = 0.03$.
+The dynamic range is $L = \max(\max(A),\max(B)) - \min(\min(A),\min(B))$. The SSIM is a value in $[0,1]$ where the best possible
+similarity $\op{SSIM}=1$ is only achieved for identical arrays.
+
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/information_error_ssim.pdf}
 	\caption{\textbf{The relationships between preserved information, decimal error and structural similarity for rounding within
@@ -342,20 +356,6 @@ visible (Fig. \ref{fig:compression_gradients}f).
 	for binary rounding within the information-preserving compression}
 	\label{fig:information_error_ssim}
 \end{figure}
-
-\subsection{Structural similarity}
-
-A metric to assess the quality of lossy compression in image processing is the structural similarity index measure (SSIM, \cite{Wang2004}).
-For images it is based on comparisons of luminance, contrast and structure. For floating-point arrays the luminance contributions
-to SSIM can be interpreted as the preservation of the mean; the contrast compares the variances and the structure compares the
-correlation. The SSIM of two arrays $A,B$ of same size is defined as
-	\begin{equation}
-	\op{SSIM}(A,B) = \frac{(2\mu_A\mu_B + c_1)(2\sigma_{AB} + c_2)}{(\mu_A^2 + \mu_B^2 + c_1)(\sigma^2_A + \sigma^2_B + c_2)}
-	\end{equation}
-With $\mu_A,\mu_B$ the respective means, $\sigma^2_A,\sigma^2_B$ the respective variances and $\sigma_{AB}$ the covariance.
-$c_1 = (k_1L)^2$ and $c_2 = (k_2L)^2$  are introduced to increase stability with a small denominator and $k_1 = 0.01, k_2 = 0.03$.
-The dynamic range is $L = \max(\max(A),\max(B)) - \min(\min(A),\min(B))$. The SSIM is a value in $[0,1]$ where the best possible
-similarity $\op{SSIM}=1$ is only achieved for identical arrays.
 
 For rounded floating-point arrays the decimal error is proportional to the square root of the dissimilarity $1-\op{SSIM}$
 (Fig. \ref{fig:information_error_ssim}c). The SSIM in this case is approximately equal to the correlation, as round-to-nearest is
@@ -394,7 +394,8 @@ which reserves the bit pattern zero to encode 0. The logarithmic spacing is
 	\end{equation}
 The constant $c = 1/2 - \Delta^{-1}\log(\text{min}^+(A)(\exp(\Delta)+1)/2)$ is chosen to implement round-to-nearest in linear space
 instead of in logarithmic space, for which $c=-\Delta^{-1}\log(\text{min}^+(A))$. The function $\min^+(A)$  is the minimum of all
-positive elements in $A$.
+positive elements in $A$. For a more general discussion on round-to-nearest for logarithmic numbers formats see section
+\ref{sec:roundnearest_logfix}.
 
 \subsection{Lossless compression}
 
@@ -406,7 +407,7 @@ applications and is also found to be among the best in the lzbench compression b
 have focused on comparisons \citep{Delaunay2019}. Lossless compressors
 are often combined with reversible transformations that preprocess the data. The so-called bitshuffle transposes an array on the
 bit-level, such that bit positions (e.g. the sign bit) of floating-point numbers are stored next to each other in memory. Another example
-is the bitwise XOR-operation \citep{Pelkonen2015a} with the preceding floating-point value, which sets subsequent bits that are identical
+is the bitwise XOR-operation \citep{Pelkonen2015} with the preceding floating-point value, which sets subsequent bits that are identical
 to 0. Neither bitshuffle nor XOR significantly increased the compression factors in our applications.
 
 \begin{figure}[tbhp]
@@ -453,7 +454,7 @@ log-preprocessed data bounds these maximum errors well (Fig. \ref{fig:compressio
 
 \subsection{Compressor performances}
 
-Although different compressors and their performance are not within the central focus of this study, we analyse
+Although different compressors and their performance are not within the central focus of this chapter, we analyse
 the compression and decompression speeds as a sanity check (Fig. \ref{fig:compression_speed}). In order to
 find a data compression method that can be used operationally, a certain minimum data throughput should be achieved.
 The current 24-bit linear quantization method reaches compression speeds of almost 800 MB/s single-threaded on an
@@ -464,7 +465,7 @@ and the compression factor (highest for level 22). Compression speed reduces fro
 to 2 MB/s at level 22 (Fig. \ref{fig:compression_speed}b), such that for high compression factors about a thousand cores
 would be required in parallel to compress in real time the 2GB/s data production at ECMWF. For Zstandard at compression
 level 10 speeds of at least 100MB/s are achieved, but at the cost of about 50\% larger file sizes. We use compression level
-10 throughout this study as a compromise. The decompression speed is independent of the level (Fig. \ref{fig:compression_speed}c).
+10 throughout this chapter as a compromise. The decompression speed is independent of the level (Fig. \ref{fig:compression_speed}c).
 The additional performance cost of binary rounding is with 2 GB/s negligible. Zfp reaches compression speeds of about 200 MB/s
 (single-threaded, including the log-preprocessing) in our application, enough to compress ECMWF’s data production in real
 time with a small number of processors in parallel.
@@ -475,16 +476,6 @@ time with a small number of processors in parallel.
 	Histograms use a logarithmic binning and are staggered vertically for clarity.
 	The variable abbreviations are explained in Table \ref{tab:cams_abbreviations}.}
 	\label{fig:cams_histograms}
-\end{figure}
-
-\begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/bitpattern_hist.png}
-	\caption{\textbf{Bitpattern histogram for linear and logarithmic quantization. a}
-	Linear 24-bit quantization and \textbf{b} 24-bit logarithmic quantization of nitrogen dioxide NO\textsubscript{2} mixing ratio [kg/kg].
-	All grid points and all vertical levels are used, consisting of $5.6 \cdot 10^7$ values with a range of $2 \cdot 10^{-14}$ to
-	$2 \cdot 10^{-7}$ kg/kg. Bitpatterns are denoted in 24-bit hexadecimal. The free entropy is the difference between the
-	available 24 bit and the bitpattern entropy and quantifies the number of effectively unused bits.}
-	\label{fig:compression_bitpattern_hist}
 \end{figure}
 
 \section{Results}
@@ -506,6 +497,16 @@ some of the trailing mantissa bits are discarded in quantization. Choosing the n
 determines the file size, but the precision follows implicitly, leaving the required precision or amount of preserved
 information unassessed.
 
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/bitpattern_hist.png}
+	\caption{\textbf{Bitpattern histogram for linear and logarithmic quantization. a}
+	Linear 24-bit quantization and \textbf{b} 24-bit logarithmic quantization of nitrogen dioxide NO\textsubscript{2} mixing ratio [kg/kg].
+	All grid points and all vertical levels are used, consisting of $5.6 \cdot 10^7$ values with a range of $2 \cdot 10^{-14}$ to
+	$2 \cdot 10^{-7}$ kg/kg. Bitpatterns are denoted in 24-bit hexadecimal. The free entropy is the difference between the
+	available 24 bit and the bitpattern entropy and quantifies the number of effectively unused bits.}
+	\label{fig:compression_bitpattern_hist}
+\end{figure}
+
 Although linear quantization bounds the absolute error, its linear distribution is unsuited for most variables in CAMS:
 Many of the available 24 bits are effectively unused as the distribution of the data and the quantized values match
 poorly (Fig. \ref{fig:compression_bitpattern_hist}). Alternatively, placing the quantized values logarithmically in the
@@ -513,35 +514,23 @@ min-max range better resolves the data distribution. As floating-point numbers a
 distributed, this motivates compression directly within the floating-point format, which is also used for calculations in a
 weather or climate model and post-processing.
 
+\subsection{Bitwise real information content}
+
+Many of the trailing mantissa bits in floating-point numbers occur independently and at similar probability,
+i.e. with high information entropy \citep{Kleeman2011,Jeffress2017}. These seemingly random bits are
+incompressible \citep{MacKay2003,Ziv1977,Huffman1952}, reducing
+the efficiency of compression algorithms. However, they probably also contain a vanishing amount of real
+information, which has to be analysed to identify bits with and without real information. The former should
+be conserved while the latter should be discarded to increase compression efficiency.
+
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/infograph_cut.pdf}
 	\caption{\textbf{The bitwise real information content explained schematically.}}
 	\label{fig:infograph}
 \end{figure}
 
-\begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/bitinformation.pdf}
-	\caption{\textbf{Bitwise real information content for all variables in CAMS.} 
-	The real information is calculated in all three spatial dimensions, revealing false information
-	and unused bits, using the 32-bit encoding of single-precision floats. The bits that should be
-	retained to preserve 99\% of real information are enclosed in orange. Bits without any real
-	information are shaded in grey-blue. The sum of the real information across bit positions
-	per variable is the total information per value. Variable abbreviations are explained in Table
-	\ref{tab:cams_abbreviations}.}
-	\label{fig:bitinformation}
-\end{figure}
-
-\subsection{Bitwise real information content}
-
-Many of the trailing mantissa bits in floating-point numbers occur independently and at similar probability,
-i.e. with high information entropy \citep{Kleeman2011,Jeffress2017}. These seemingly random bits are
-incompressible \citep{MacKay2003a,Ziv1977,Huffman1952}, reducing
-the efficiency of compression algorithms. However, they probably also contain a vanishing amount of real
-information, which has to be analysed to identify bits with and without real information. The former should
-be conserved while the latter should be discarded to increase compression efficiency.
-
 We define the bitwise real information content as the mutual information
-\citep{Shannon1948,MacKay2003a,Schreiber2000,Kraskov2004,Pothapakula2019,DelSole2004} of bits in
+\citep{Shannon1948,MacKay2003,Schreiber2000,Kraskov2004,Pothapakula2019,DelSole2004} of bits in
 adjacent grid points (Fig. \ref{fig:infograph}). A bit contains more real information the stronger the statistical
 dependence to the adjacent bits is. Bits without real information are identified when this dependence is
 insignificantly different from zero and we regard the remaining entropy in these bits as false information.
@@ -564,6 +553,18 @@ representation is used as an uncertainty, such that no additional assumption on 
 data has to be made. While most data compression techniques leave the choice of the retained precision to the user,
 the analysis here automatically determines a precision from the data itself based on the separation of real and
 false information bits.     
+
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/bitinformation.pdf}
+	\caption{\textbf{Bitwise real information content for all variables in CAMS.} 
+	The real information is calculated in all three spatial dimensions, revealing false information
+	and unused bits, using the 32-bit encoding of single-precision floats. The bits that should be
+	retained to preserve 99\% of real information are enclosed in orange. Bits without any real
+	information are shaded in grey-blue. The sum of the real information across bit positions
+	per variable is the total information per value. Variable abbreviations are explained in Table
+	\ref{tab:cams_abbreviations}.}
+	\label{fig:bitinformation}
+\end{figure}
 
 Many exponent bits of the variables in CAMS have a high information content (Fig. \ref{fig:bitinformation}),
 but information content decreases to zero within the first mantissa bits for most variables.
@@ -630,7 +631,7 @@ a 15-fold storage efficiency increase is achieved compared to the current method
 
 Compressing all variables in CAMS and comparing error norms reveals the advantages of the 1D round+lossless method
 compared to the 24-bit linear quantization technique currently in use (Fig. \ref{fig:compression_error}). The maximum decimal
-errors (see section \ref{sec:error_norms}) are smaller for many variables due to the logarithmic distribution of floating-point numbers.
+errors (see section \ref{sec:decimal_precision}) are smaller for many variables due to the logarithmic distribution of floating-point numbers.
 Some variables are very compressible (>60x) due to many zeros in the data, which is automatically made use of in the lossless compression.
 Compression factors are between 3x and 60x for most variables, with a geometric mean of 6x when preserving 100\% of information.
 Accepting a 1\% information loss the geometric mean reaches 17x, which is the overall compression factor for the entire CAMS data
@@ -649,28 +650,6 @@ are comparable. The decimal errors are often even lower and naturally bound in a
 	\label{fig:precipitation}
 \end{figure}
 
-\begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/brightness_temp.png}
-	\caption{\textbf{Compression of satellite-based observations of brightness temperature over the
-	Black Sea and Turkey. a} Brightness temperature measured by the 3.74\textmu m (I4) channel of
-	the VIIRS sensor on board the Suomi-NPP satellite at about 300m horizontal resolution on
-	the 13 May 2021. \textbf{b} as \textbf{a} but the data was compressed preserving 99\% of
-	real information with the round+lossless method achieving compression factors of 14x
-	relative to 64 bit.}
-	\label{fig:brightness_temp}
-\end{figure}
-
-\begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/methane_no2_surface.png}
-	\caption{\textbf{Compression of nitrogen dioxide (NO\textsubscript{2}) and methane (CH\textsubscript{4}) at the surface. a}
-	Surface NO\textsubscript{2} concentrations preliminary result from fossil fuel combustion. \textbf{b} Surface CH\textsubscript{4}
-	concentrations often include point sources, such as here in East China, East India and East Borneo. 
-	\textbf{b,d} as \textbf{a,c} but compressed preserving 99\% of information achieving a compression factor of 13x, 11x,
-	respectively.}
-	\label{fig:methane_no2}
-\end{figure}
-
-
 A broad applicability of the bitwise real information content analysis for compression is tested with further data sets:
 Radar-based observations of precipitation over Great Britain are similarly compressible using the same method
 (Fig. \ref{fig:precipitation}) and so are satellite measurements of brightness temperature with a very high resolution
@@ -688,6 +667,50 @@ should be done offline, meaning once in advance of a data-producing simulation. 
 online, meaning every time data is archived. 
 
 \begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/brightness_temp.png}
+	\caption{\textbf{Compression of satellite-based observations of brightness temperature over the
+	Black Sea and Turkey. a} Brightness temperature measured by the 3.74\textmu m (I4) channel of
+	the VIIRS sensor on board the Suomi-NPP satellite at about 300m horizontal resolution on
+	the 13 May 2021. \textbf{b} as \textbf{a} but the data was compressed preserving 99\% of
+	real information with the round+lossless method achieving compression factors of 14x
+	relative to 64 bit.}
+	\label{fig:brightness_temp}
+\end{figure}
+
+The presented round+lossless compression technique separates the lossy removal of false information and the actual lossless
+compression. This provides additional flexibilities as any lossless compressor can be used and application-specific choices can
+be made regarding availability, speed and resulting file sizes. However, most general-purpose lossless compression algorithms
+operate on bitstreams and require multidimensional data to be unravelled into a single dimension. Multidimensional correlation
+is therefore not fully exploited in this approach.
+
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/methane_no2_surface.png}
+	\caption{\textbf{Compression of nitrogen dioxide (NO\textsubscript{2}) and methane (CH\textsubscript{4}) at the surface. a}
+	Surface NO\textsubscript{2} concentrations preliminary result from fossil fuel combustion. \textbf{b} Surface CH\textsubscript{4}
+	concentrations often include point sources, such as here in East China, East India and East Borneo. 
+	\textbf{b,d} as \textbf{a,c} but compressed preserving 99\% of information achieving a compression factor of 13x, 11x,
+	respectively.}
+	\label{fig:methane_no2}
+\end{figure}
+
+We extend the ideas of information-preserving compression to modern multidimensional compressors. The analysis of the bitwise
+real information content leads naturally to the removal of false information via rounding in the round+lossless method. For other
+lossy compressors, however, the separation of real and false information has to be translated to the precision options of such
+compressors. While such a translation is challenging in general, we present results from combining the bitwise real information
+analysis with one modern multidimensional compressor in the next section.
+
+\subsection{Multidimensional climate data compression}
+
+Modern compressors have been developed for multidimensional floating-point arrays
+\citep{Lindstrom2006,Di2016,Ballester-Ripoll2020,Zhao2020,vonLarcher2019}, which compress in
+several dimensions simultaneously. We will compare the 1D round+lossless compression to Zfp, a modern compression
+algorithm for two to four dimensions \citep{Lindstrom2014,Pinard2020,Poppick2020,Hammerling2019}.
+Zfp divides a $d$-dimensional array into blocks of $4^d$  values (i.e. the edge length is 4), which allows to
+exploit the correlation of climate data in up to 4 dimensions. To extend the concept of information-preserving
+compression to modern compressors like Zfp, the bitwise real information is translated to the precision options of Zfp
+(more details in section \ref{sec:compression_methods_compression}).
+
+\begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/compressfac_comparison.pdf}
 	\caption{\textbf{Multidimensional compression allows for higher compression factors.}
 	\mbox{1-dimensional} compression (round+lossless) of temperature reaches at most 25x when preserving 99\% 
@@ -697,41 +720,6 @@ online, meaning every time data is archived.
 	applied to various data samples.}
 	\label{fig:compressfac_comparison}
 \end{figure}
-
-The presented round+lossless compression technique separates the lossy removal of false information and the actual lossless
-compression. This provides additional flexibilities as any lossless compressor can be used and application-specific choices can
-be made regarding availability, speed and resulting file sizes. However, most general-purpose lossless compression algorithms
-operate on bitstreams and require multidimensional data to be unravelled into a single dimension. Multidimensional correlation
-is therefore not fully exploited in this approach.
-
-We extend the ideas of information-preserving compression to modern multidimensional compressors. The analysis of the bitwise
-real information content leads naturally to the removal of false information via rounding in the round+lossless method. For other
-lossy compressors, however, the separation of real and false information has to be translated to the precision options of such
-compressors. While such a translation is challenging in general, we present results from combining the bitwise real information
-analysis with one modern multidimensional compressor in the next section.
-
-\begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/ensemble_forecast.pdf}
-	\caption{\textbf{Verification of an ensemble forecast with the probabilistic forecast error based on ensemble data
-	with and without compression. a} 25-member uncompressed ensemble forecast (lines) of surface temperature
-	in London, UK from 24 Sept 2020 up to 15 days ahead. \textbf{b} as a but the data was compressed in 4-dimensional
-	(4D) space-time with Zfp, preserving 99\% of real information. \textbf{c} as \textbf{b} but only preserving 93\% of real
-	information. \textbf{d} Probabilistic forecast error (continuous ranked probability score, CRPS) for various levels of
-	preserved information in the compression. The CRPS does not increases relative to the uncompressed reference for
-	more than 93\% of preserved information.}
-	\label{fig:ensemble_forecast}
-\end{figure}
-
-\subsection{Multidimensional climate data compression}
-
-Modern compressors have been developed for multidimensional floating-point arrays
-\citep{Lindstrom2006,Di2016,Ballester-Ripoll2020,Zhao2020,vonLarcher2019}, which compress in
-several dimensions simultaneously. We will compare the 1D round+lossless compression to Zfp, a modern compression
-algorithm for two to four dimensions \citep{Lindstrom2014,Pinard2020a,Poppick2020,Hammerling2019}.
-Zfp divides a $d$-dimensional array into blocks of $4^d$  values (i.e. the edge length is 4), which allows to
-exploit the correlation of climate data in up to 4 dimensions. To extend the concept of information-preserving
-compression to modern compressors like Zfp, the bitwise real information is translated to the precision options of Zfp
-(more details in section \ref{sec:compression_methods_compression}).
 
 Multidimensional compression imposes additional inflexibilities for data retrieval: Data is compressed and decompressed
 in larger chunks, which can increase the load on the data archive. For example, if the data is compressed across the time
@@ -752,13 +740,15 @@ higher compression factors. 4D space-time compression is the most efficient, rea
 For temperature this is equivalent to a median absolute error of 0.1\textdegree{}C (Fig. \ref{fig:map_roundlossless_zfp}b).
 
 \begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/ensemble_information.pdf}
-	\caption{\textbf{Bitwise real information content for temperature in various dimensions. a} ensemble, \textbf{b} longitude,
-	\textbf{c} latitude, \textbf{d} vertical and \textbf{e} forecast lead time. The ensemble information effectively encodes the
-	ensemble mean, which is less information than in most other dimensions. Longitude, latitude and forecast lead time
-	have the highest total information which should be preserved in compression. The ensemble information decreases
-	over time as the ensemble spread increases (Fig. \ref{fig:ensemble_forecast}).}
-	\label{fig:ensemble_information}
+	\includegraphics[width=1\textwidth]{Figures/compression/ensemble_forecast.pdf}
+	\caption{\textbf{Verification of an ensemble forecast with the probabilistic forecast error based on ensemble data
+	with and without compression. a} 25-member uncompressed ensemble forecast (lines) of surface temperature
+	in London, UK from 24 Sept 2020 up to 15 days ahead. \textbf{b} as a but the data was compressed in 4-dimensional
+	(4D) space-time with Zfp, preserving 99\% of real information. \textbf{c} as \textbf{b} but only preserving 93\% of real
+	information. \textbf{d} Probabilistic forecast error (continuous ranked probability score, CRPS) for various levels of
+	preserved information in the compression. The CRPS does not increases relative to the uncompressed reference for
+	more than 93\% of preserved information.}
+	\label{fig:ensemble_forecast}
 \end{figure}
 
 Compressing the entire CAMS dataset in the three spatial dimensions with Zfp while preserving 99\% of the information yields
@@ -776,21 +766,55 @@ occurs for individual locations or globally at 99\% and 97\% preserved informati
 forecast is therefore unaltered at these levels of preserved information in the compression. Contrarily, with an information loss larger than
 5\% the CRPS forecast error starts to increase, while large compression factors beyond 150x are achieved.
 
+\begin{figure}[tbhp]
+	\includegraphics[width=1\textwidth]{Figures/compression/ensemble_information.pdf}
+	\caption{\textbf{Bitwise real information content for temperature in various dimensions. a} ensemble, \textbf{b} longitude,
+	\textbf{c} latitude, \textbf{d} vertical and \textbf{e} forecast lead time. The ensemble information effectively encodes the
+	ensemble mean, which is less information than in most other dimensions. Longitude, latitude and forecast lead time
+	have the highest total information which should be preserved in compression. The ensemble information decreases
+	over time as the ensemble spread increases (Fig. \ref{fig:ensemble_forecast}).}
+	\label{fig:ensemble_information}
+\end{figure}
+
 \subsection{A Turing test for data compression}
 
 In numerical weather predictions, progress in the development of global weather forecasts is often assessed using a set of error metrics,
-summarised in so-called \emph{score cards}. These scores cover important variables in various large scale regions, such as 2m-temperature
-over Europe or horizontal wind speed at different vertical levels in the Southern Hemisphere. With a similar motivation as in \cite{Baker2019},
-we suggest assessing the efficiency of climate data compression using similar scores, which have to be passed similar to a Turing test
-\citep{Baker2016,Turing1950}.
-The compressed forecast data should be indistinguishable from the uncompressed data in all of these score tests, or at least indistinguishable
-from the current compression method while allowing higher compression factors. 
+summarised in so-called \emph{score cards}. These scores cover important variables in various large scale regions, such as the temperature
+2m above the surface over Europe or horizontal wind speed at different vertical levels in the Southern Hemisphere. With a similar motivation
+as in \cite{Baker2019}, we suggest assessing the efficiency of climate data compression using similar scores, which have to be passed similar
+to a Turing test \citep{Baker2016,Turing1950}. The compressed forecast data should be indistinguishable from the uncompressed data in all
+of these score tests, or at least indistinguishable from the current compression method while allowing higher compression factors.  Many score
+tests currently in use represent area-averages (such as Fig. \ref{fig:ensemble_forecast}d), which would also be passed with coarse-grained data
+-- reducing the horizontal resolution from 10km to 20km, for example, yields a compression factor of 4x. It is therefore
+important to include resolution-sensitive score tests such as the maximum error in a region. 
 
-Many score tests currently in use represent area-averages (such as Fig. \ref{fig:ensemble_forecast}d), which would also be passed with
-coarse-grained data — reducing the horizontal resolution from 10km to 20km, for example, yields a compression factor of 4x. It is therefore
-important to include resolution-sensitive score tests such as the maximum error in a region. While a compression method either passes or
-fails such a data compression Turing test, there is additional value in conducting such a test. Evaluating the failures will highlight problems
-and evaluating the passes may identify further compression potential.
+A Turing test for data compression could be used iteratively to optimise the level of preserved information in compression. Such an iteration could be 
+formulated as follows
+
+\begin{enumerate}
+	\item Create 4 seemingly identical data sets with
+		\begin{itemize} 
+			\item[\texttt{FULL}] Full precision, i.e. no lossy compression was applied
+			\item[\texttt{CURR}] Current compression method
+			\item[\texttt{INF0}] Conservative information-preserving compression, e.g 99\%
+			\item[\texttt{INF1}] Progressive information-preserving compression, e.g. 98\%
+		\end{itemize}
+	\item Disseminate \texttt{FULL}, \texttt{CURR}, \texttt{INF0}, and \texttt{INF1}  to users, then
+		\begin{enumerate}[i]
+			\item if \texttt{FULL}, \texttt{CURR}, \texttt{INF0}, and \texttt{INF1} are indistinguishable,
+			define \texttt{INF1} as the new \texttt{INF0} and preserve less information in \texttt{INF1}, e.g. 97\% instead of 98\%
+			\item if \texttt{CURR} is identified as least useful, conclude that information-preserving should be considered as
+			the new default compression method and continue to i
+			\item if \texttt{INF1} or \texttt{INF0} are identified as least useful, define \texttt{INF0} as the new \texttt{INF1} and
+			preserve more information in \texttt{INF0}, e.g . 99.5\% instead of 99\%
+		\end{enumerate}
+	\item Reiterate from 1.
+\end{enumerate}
+
+While a compression method either passes or fails a conventional Turing test, there is additional value in conducting such a test.
+Evaluating the failures will highlight problems and evaluating the passes may identify further compression potential. An iterative Turing test
+as presented here can be used to translate an abstract property of data such as usefulness to users into a compression level (here \% of
+preserved information).
 
 \section{Discussion}
 \label{sec:compression_discussion}

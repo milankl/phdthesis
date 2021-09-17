@@ -13,9 +13,9 @@ MK. Writing – review and editing: MK, PDD, TNP. The contributions of Peter and
 \vspace{\baselineskip}
 \normalsize
 
-This chapter presents the methods that are used in several of the following chapters. We introduce various binary number formats and
+This chapter presents the methods that are used in several of the following chapters. We introduce various binary number formats,
 their rounding modes, and present error norms to quantify the resulting rounding errors. It follows a section focusing on
-programming aspects around type flexibility and composability to illustrate how custom number formats can be used within
+programming aspects around type flexibility and code composability to illustrate how custom number formats can be used within
 the Julia programming language. The chapter closes with an introduction to information theory to explain the essential concepts
 to quantify information in binary number formats.
 
@@ -23,10 +23,8 @@ to quantify information in binary number formats.
 \label{sec:numbers}
 
 This section describes encodings for binary integers (section \ref{sec:integers}), and different formats that approximate real numbers:
-Fixed-point numbers (section \ref{sec:fixpoints}),
-floating-point numbers (section \ref{sec:floats}),
-logarithmic fixed-point numbers (section \ref{sec:logfixs}),
-posits (section \ref{sec:posits}) and the self-organising numbers sonums (section \ref{sec:sonums}).
+Fixed-point numbers (section \ref{sec:fixpoints}), floating-point numbers (section \ref{sec:floats}), logarithmic fixed-point numbers
+(section \ref{sec:logfixs}), and posits (section \ref{sec:posits}). A summary on the number formats is given in section \ref{sec:summary_formats}.
 
 \subsection{Integers}
 \label{sec:integers}
@@ -176,8 +174,8 @@ smallest subnormal number encoded as \texttt{0x00$\dots$01}, $minpos = 2^{2-2^{n
 \emph{floatmax} or \emph{maxpos} which occurs for $e=2^{n_e}-2$ (the exponent bits are \texttt{0x11...10}) and 
 $f=2-2^{-n_m}$ (the mantissa bits are \texttt{0x11...11}), hence $maxpos = 2^{2^{n_e}-1}\left(1-2^{-n_m-1}\right)$. For an illustration 
 of the dynamic range covered by some common floating-point formats see Fig. \ref{fig:methods_decprec_floats}. More exponent
-bits allow for a wider dynamic range as both minpos and maxpos effectively scale with $2^{\pm2^{n_e}}$ (positive sign for maxpos,
-negative sign for minpos). However, more exponent bits also mean less mantissa bits which reduces the precision. Consequently,
+bits allow for a wider dynamic range as both $minpos$ and $maxpos$ effectively scale with $2^{\pm2^{n_e}}$ (positive sign for $maxpos$,
+negative sign for $minpos$). However, more exponent bits also mean less mantissa bits which reduces the precision. Consequently,
 for a given number of total bits per float there is a trade-off between range and precision, similar to the trade-off for fixed-point numbers.
 For more details on the precision of floats see section \ref{sec:decimal_precision}.
 
@@ -402,12 +400,19 @@ $10^{15}$ bitpatterns reserved for NaN. Although they only make up $< 0.05\%$ of
 bitpatterns for NaN increases for floats with fewer exponent bits (Table \ref{tab:formats}), and only poses a noticeable issue for Float16
 and Float8.
 
-The smallest representable number $minpos$ for posits occurs for the bitpattern \texttt{{\color{psign}0}{\color{pregime}00...0}{\color{pregimet}1}}
+The smallest representable number $minpos$ for posits is encoded in the bitpattern \texttt{{\color{psign}0}{\color{pregime}00...0}{\color{pregimet}1}}
 (Fig. \ref{fig:posit_circle}b), with $n-2$ regime bits, such that $k = -(n-2)$ and $minpos = useed^k = 2^{-2^{n_e}(n-2)}$. Posits are symmetric with respect
 to the multiplicative inverse around 1 and therefore the largest representable number $maxpos =  \tfrac{1}{minpos}$, which occurs for 
 the bitpattern \texttt{{\color{psign}0}{\color{pregime}11...1}}, with $n-1$ regime bits, such that $k=n-2$ and $maxpos = useed^k = 2^{2^{n_e}(n-2)}$,
 as required for symmetry. Posits also come with a no-overflow rounding mode, which will be discussed in more detail
 in section \ref{sec:roundnearest}.
+
+The proposed posit standard defines several posit number formats as a drop-in replacement for floats. Posit8 is the 8-bit posit format with 0
+exponent bits (hence also called Posit(8,0)). Although 8-bit floats are not officially defined, the Float8 format presented in Table \ref{tab:formats}
+has 3 exponent bits and has a similar range-precision trade-off as Posit8. Posit16 is the 16-bit format with 1 exponent bit, hence also called
+Posit(16,1) and is thought to be the alternative to Float16. Posit32 is the 32-bit posit format with 2 exponent bits, hence shortened from
+Posit(32,2), which is proposed to be the alternative to Float32. The following chapters will mostly investigate Posit8,Posit16 and Posit32,
+as in the proposed posit standard, but chapter \ref{chap:shallow_water} will additionally discuss Posit(16,2).
 
 The posit number framework also highly recommends \emph{quires}, an additional register on hardware to store intermediate results.
 Dot-product operations are fused with quire arithmetic and can therefore be executed with a single rounding error, which is only applied
@@ -446,7 +451,7 @@ emulator \emph{SoftPosit.jl} \citep{Klower2019}, which is a wrapper for the C-ba
         \end{tabular}
         \vspace{10pt}
 	\caption{\textbf{Some characteristics of various number formats.} The number of exponent bits is for logfixs the number of
-	integer bits in the exponent (see section \ref{sec:logfixs}. $minpos$ is the smallest representable positive number,
+	integer bits in the exponent (see section \ref{sec:logfixs}). $minpos$ is the smallest representable positive number,
 	$maxpos$ the largest. The dynamic range is $\log_{10}(\tfrac{maxpos}{minpos})$. The machine precision $\epsilon$ is the decimal
 	precision at $1$ (see section \ref{sec:decimal_precision}), equivalent to the decimal places at least correct after rounding.
 	\% NaR denotes the percentage of bit patterns that represent Not-A-Number (NaN), infinity or Not-A-Real (NaR).}
@@ -752,22 +757,22 @@ following.
 The rounding modes from section \ref{sec:bitshave}, \ref{sec:roundnearest} and \ref{sec:stochastic_rounding} are 
 implemented in binary using bitwise operations. The bitwise logical operations used are logical and (\&), or (|), and
 exclusive or (xor, $\veebar$). Additionally, we will use the \emph{logical} bitshift operators $<< n$ and $>> n$ that shift the
-bits by $n$ bit positions, push in \texttt{0}s and the bits pushed out are lost. For example, \texttt{01001011 $>$$>$ 3 = 00001001}
-and \texttt{11011010 $<$$<$ 1 = 10110100}. These are the default bitshift operations for unsigned integers, however,
+bits by $n$ bit positions, push in \texttt{0}s and the bits pushed out are lost. For example, $\mathtt{01001011 >> 3 = 00001001}$
+and $\mathtt{11011010 << 1 = 10110100}$. These are the default bitshift operations for unsigned integers, however,
 for signed integers the right-bitshift operation $>>$ is an \emph{arithmetic} bitshift, which pushes in bits according to the
-bit in the first bit position. For example, $\mathtt{1000} >> \mathtt{1} = \mathtt{1100}$ and
-$\mathtt{0111} >> \mathtt{1} = \mathtt{0011}$. This is motivated to preserve the sign of negative integers (see section \ref{sec:int},
-e.g. -8 $>>$ 1 = -4 and 8 $>>$ 1 = 4) and will be made use of for the bitwise implementation of stochastic rounding. The algorithms
-presented here are implemented in a more general form in the open-source packages \href{https://github.com/milankl/BitInformation.jl}{BitInformation.jl}
+bit in the first bit position. For example, $\mathtt{1000 >> 1 = 1100}$ and $\mathtt{0111 >> 1 = 0011}$. This is motivated to
+preserve the sign of negative integers (see section \ref{sec:int}, e.g. -8 $>>$ 1 = -4 and 8 $>>$ 1 = 4) and will be made use
+of for the bitwise implementation of stochastic rounding. The algorithms presented here are implemented in a more general
+form in the open-source packages \href{https://github.com/milankl/BitInformation.jl}{BitInformation.jl}
 and \href{https://github.com/milankl/StochasticRounding.jl}{StochasticRounding.jl}.
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:bitshave, caption={\textbf{Bitwise implementation of bitshave, bitset and halfshave for
 rounding to 7 mantissa bits.} Bitshave rounds a Float32 $x$ to $n_m = 7$ mantissa bits (equivalent to a BFloat16, but the tailing
-bits remain stored) to \texttt{0} using the bitwise logical-and operation \&. For other number of mantissa bits to be retained the mask
+bits remain stored) using the bitwise logical-and operation \&. For other number of mantissa bits to be retained the mask
 \texttt{0xffff\_0000} has to be changed, e.g. \texttt{0xffff\_e000} will round to $n_m = 10$ mantissa bits. The function \texttt{reinterpret}
-leaves the bits unchanged but changes the associated type. Bitset similar to bitshave but with the logical-or operation $\vert$ which
-sets the tailing bits to \texttt{1}. Halfshave similar to bitshave but the tailing bits are replaced by \texttt{100$...$0}.}]
+leaves the bits unchanged but changes the associated type. Bitset is implemented similar to bitshave but with the logical-or operation
+$\vert$ which sets the tailing bits to \texttt{1}. Halfshave is similar to bitshave but the tailing bits are replaced by \texttt{100$...$0}.}]
 function bitshave(x::Float32)
 	ui = reinterpret(UInt32,x)
 	ui &= 0xffff_0000	    # set last 16 bits to 0
@@ -783,7 +788,7 @@ end
 function halfshave(x::Float32)
 	ui = reinterpret(UInt32,x)
 	ui &= 0xffff_0000    	# 1. shave last 16 bits to 1
-	ui |= 0x0000_8000        # 2. set most significant tailbit to 1
+	ui |= 0x0000_8000       # 2. set most significant tailbit to 1
 	return reinterpret(Float32,ui)
 end
 \end{lstlisting}
@@ -908,9 +913,9 @@ the decimal error, which is discussed next.
 	\includegraphics[width=1\textwidth]{Figures/methods/float32_16_bfloat_decprec.pdf}
 	\caption{\textbf{Decimal precision of Float16, BFloat16 and Float32 over the range of representable numbers.}
 	The decimal precision is worst-case, i.e. given in terms of decimal places that are at least correct after rounding
-	(see section \ref{sec:decimal_precision}). The smallest representable number (minpos), the smallest normal number
-	(floatmin) and the largest representable number (maxpos) are denoted with vertical dashed lines (see section \ref{sec:floats}).
-	The subnormal range is between minpos and floatmin.}
+	(see section \ref{sec:decimal_precision}). The smallest representable number ($minpos$), the smallest normal number
+	($floatmin$) and the largest representable number ($maxpos$) are denoted with vertical dashed lines (see section \ref{sec:floats}).
+	The subnormal range is between $minpos$ and $floatmin$.}
 	\label{fig:methods_decprec_floats}
 \end{figure}
 
@@ -1094,7 +1099,7 @@ julia> harmonic_sum(LogFixPoint16)
 The harmonic sum converges after 513 elements when using Float16 (Listing \ref{lst:harmonic_sum2}). The precision of BFloat16
 is so low that the sum already converges after 65 elements, as the addition of the next term $\tfrac{1}{66}$ is rounded back to
 $5.0625$. The addition of small terms to values of size $\mathcal{O}(1)$ is one of the major challenges with low-precision arithmetic,
-(section \ref{sec:swm_mixed} and \ref{sec:compensated_summation}). Using Posit16, the sum converges only after 1024 terms,
+(section \ref{sec:swm_mixed} and \ref{sec:compensated_time_integration}). Using Posit16, the sum converges only after 1024 terms,
 due to the higher decimal precision of posits between 1 and 8. The precision of LogFixPoint16 is similar to Float16, and the sum
 converges after 432 elements.
 
