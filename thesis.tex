@@ -16,6 +16,7 @@
 \usepackage{titlesec}
 \usepackage{sfmath}
 \usepackage{verbatim}
+\usepackage{totcount}
 
 % FIGURE CAPTION OPTIONS
 \usepackage{caption}
@@ -172,7 +173,13 @@
 \addcontentsline{toc}{chapter}{Funding}
 \include{Funding/funding}
 
+\newtotcounter{citnum}
+\def\oldbibitem{} \let\oldbibitem=\bibitem
+\def\bibitem{\stepcounter{citnum}\oldbibitem}
+
 \renewcommand{\bibname}{References} % changes default name Bibliography to References
 \bibliography{References/bibliography} % References file
 
+\vspace{10pt}
+\noindent \total{citnum} references in total.
 \end{document}

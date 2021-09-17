@@ -25,7 +25,7 @@ are used to approximate a system’s state and predict its future.
 
 However, simulating a deterministic, yet chaotic system with deterministic finite-precision numbers always results in
 bitwise periodic orbits due to a finite set of possible states \citep{Boghosian2019}. Such orbits are distinct from the
-unstable periodic orbits that describe the recurrence of a very similar, but not bitwise identical, state \cite{Cvitanović2013}.
+unstable periodic orbits that describe the recurrence of a very similar, but not bitwise identical, state \citep{Cvitanovic2013}.
 Eternal periodicity in the simulation of chaotic systems violates a fundamental property of chaos, but periods are very
 long with the high precision of 64-bit floating-point numbers (Float64).
 
@@ -67,7 +67,7 @@ summarizes and discusses the results.
 \section{Methods}
 \label{sec:orbits_methods}
 
-Floating-point numbers are standardized following IEEE, 1985, 2008. Another number format used here are posits
+Floating-point numbers are standardized following IEEE, 1985, 2008. Another number format used in this chapter are posits
 (\cite{Gustafson2017a}, and section \ref{sec:posits}), which have a slightly higher precision within the powers of 2
 around $\pm1$, yet a wide dynamic range at the cost of a gradually lower precision away from $\pm1$. While posits
 have been proposed as a drop-in replacement for floats, they currently lack widely available hardware support.
@@ -100,7 +100,7 @@ for Float32, Float64, respectively (Table \ref{tab:formats}).
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal,label=lst:randfloat,caption={\textbf{An improved random number generator (RNG) for uniformly
-distributed floats.} The Julia function \texttt{randfloat} takes \texttt{rng} as an argument for an RNG for 64-bit unsigned integers \texttt{UInt64}.
+distributed floats.} The Julia function \texttt{randfloat} takes a number format as argument (here only the version for Float32 is presented).
 \texttt{\%} is the remainder after division, for unsigned integers effectively converting between unsigned integers by adding leading
 zeros or discarding leading bits. \texttt{?} indicates a one-line if-clause. \texttt{\&} is the bitwise logical and-operation. \texttt{$\vert$}
 is the bitwise logical or-operation.}]
@@ -137,7 +137,7 @@ and Float64. It is therefore practically impossible to sample a zero with this t
 zero in $[0,1)$ is effectively 0 for floats with 32 or 64 bit. For Float32, for example, we implement this technique as shown
 in Listing \ref{lst:randfloat}, the implementations for Float16 and Float64 are similar. See our implementation in the Julia-package
 \href{https://github.com/JuliaRandom/RandomNumbers.jl}{RandomNumbers.jl} for further details. The random number generation
-for uniformly distributed floats as described here is used throughout this study.
+for uniformly distributed floats as described here is used throughout this chapter.
 
 \subsection{Monte Carlo orbit search}
 \label{sec:orbit_search}
@@ -344,15 +344,6 @@ more pronounced with Float16 arithmetic (Figure \ref{fig:orbits_inv_measures}), 
 comparably accurate. The question therefore arises whether the discrepancy of the invariant measures vanishes with higher precision,
 or whether a pathology persists at any precision level for some $\beta < 2$.
 
-The analytical invariant measure of the generalised Bernoulli map consists of many step functions taking values on a discrete set
-of points (Fig. \ref{fig:orbits_inv_measures}), which bifurcate with increasing (Fig. \ref{fig:orbits_bifurcation}a). These \emph{quantization levels}
-cannot be exactly represented with Float16 or Float32 arithmetic (Fig. \ref{fig:orbits_inv_measures}), such that their bifurcation is visually
-blurred (Fig. \ref{fig:orbits_bifurcation}c). However, the visually sharp representation of this bifurcation of the quantization levels with Float64
-indicates a much more accurate approximation to the analytical invariant measure. Due to the higher precision of 32-bit posit arithmetic
-(Posit32) around $\pm1$, the bifurcation is slightly improved with Posit32 over Float32 (Fig. \ref{fig:orbits_bifurcation}d). Given the
-inaccurate representation of the invariant measure with Float16 (Fig. \ref{fig:orbits_inv_measures}), its bifurcation has little resemblance
-to the analytical bifurcation (Fig. \ref{fig:orbits_bifurcation}f).
-
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/orbits/bifurcation.png}
 	\caption{\textbf{Bifurcation of the quantization levels corresponding to the invariant measures in
@@ -362,6 +353,15 @@ to the analytical bifurcation (Fig. \ref{fig:orbits_bifurcation}f).
 	\textbf{d} Posit32, \textbf{e} Float32 and stochastic rounding, and \textbf{f} Float16.}
 	\label{fig:orbits_bifurcation}
 \end{figure}
+
+The analytical invariant measure of the generalised Bernoulli map consists of many step functions taking values on a discrete set
+of points (Fig. \ref{fig:orbits_inv_measures}), which bifurcate with increasing (Fig. \ref{fig:orbits_bifurcation}a). These \emph{quantization levels}
+cannot be exactly represented with Float16 or Float32 arithmetic (Fig. \ref{fig:orbits_inv_measures}), such that their bifurcation is visually
+blurred (Fig. \ref{fig:orbits_bifurcation}c). However, the visually sharp representation of this bifurcation of the quantization levels with Float64
+indicates a much more accurate approximation to the analytical invariant measure. Due to the higher precision of 32-bit posit arithmetic
+(Posit32) around $\pm1$, the bifurcation is slightly improved with Posit32 over Float32 (Fig. \ref{fig:orbits_bifurcation}d). Given the
+inaccurate representation of the invariant measure with Float16 (Fig. \ref{fig:orbits_inv_measures}), its bifurcation has little resemblance
+to the analytical bifurcation (Fig. \ref{fig:orbits_bifurcation}f).
 
 \subsection{Effects of stochastic rounding}
 \label{sec:orbits_stochastic_rounding}
@@ -410,7 +410,7 @@ For $1<\beta<2$  the Wasserstein distance is always reduced going to higher prec
 generalised Bernoulli map (Fig. \ref{fig:orbits_wasserstein}). The Wasserstein distances of Float32 with stochastic rounding are similarly low
 to Float64, but Float64 yields slightly lower distances in most cases.
 
-However, using stochastic rounding with Float16 is worse than deterministic rounding as here the stochasticity makes it possible that the
+However, using stochastic rounding with Float16 is worse than deterministic rounding as in this case the stochasticity makes it possible that the
 invariant measure of the generalised Bernoulli map collapses to 0, which is a fixed point (Figure \ref{fig:orbits_stochastic_collapse}).
 While for Float32 the probability of such an occurrence is low and is not observed here, with Float16 most simulations collapse within
 a few thousand iterations transforming their invariant measures into Dirac distributions. Whether this problem generalises to other
@@ -516,12 +516,12 @@ systems would eventually be periodic, a periodic solution will never be reached.
 	\includegraphics[width=1\textwidth]{Figures/orbits/L96_invmeasures.pdf}
 	\caption{\textbf{Improvement of the simulated Lorenz 1996 invariant measure with increasing
 	number of variables. a} The invariant measure of Lorenz 1996 simulated with 4 variables. Using
-	Float16 or Float64 arithmetic yields a virtually identical invariant measure. b-e as a but with an
-	increasing number of variables. f The reference invariant measure obtained from 500 variables
-	using Float64 arithmetic. g The Wasserstein distance of the simulated Lorenz 1996 system with
+	Float16 or Float64 arithmetic yields a virtually identical invariant measure. \textbf{b-e} as \textbf{a} but with an
+	increasing number of variables. \textbf{f} The reference invariant measure obtained from 500 variables
+	using Float64 arithmetic. \textbf{g} The Wasserstein distance of the simulated Lorenz 1996 system with
 	respect to the reference. Invariant measures are taken from all available variables, which are
-	invariant due to periodic boundary conditions and spatially-independent forcing (see Eq. \ref{eq:L96}).
-	Shadings in g represent the 5-95\% confidence interval and solid lines the median obtained from
+	invariant due to periodic boundary conditions and spatially-independent forcing (see Eq. \ref{eq:lorenz96}).
+	Shadings in \textbf{g} represent the 5-95\% confidence interval and solid lines the median obtained from
 	an ensemble simulation with 51 members starting from slightly perturbed random initial conditions.}
 	\label{fig:L96_invmeasures}
 \end{figure}
