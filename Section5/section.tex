@@ -2,7 +2,7 @@
 \label{chap:hardware}
 
 %% CONTRIBUTION
-{\small
+\small
 \paragraph{Contributions} This chapter is largely based on the following publication\footnote{with the following author contributions.
 Conceptualisation: MK, SH, MC. Data curation: MK. Formal Analysis: MK. Methodology: MK. Visualisation: MK. Writing – original draft:
 MK. Writing – review \& editing: MK, SH, MC, PDD, TNP. The contributions of Sam, Matteo, Peter, and Tim are highly appreciated.}
@@ -11,7 +11,24 @@ MK. Writing – review \& editing: MK, SH, MC, PDD, TNP. The contributions of Sa
 \indent M Klöwer, S Hatfield, M Croci, PD Düben and TN Palmer, 2021. \emph{Fluid simulations accelerated with 16 bit:
 Approaching 4x speedup on A64FX by squeezing ShallowWaters.jl into Float16}, \textbf{Journal of Advances in Modeling
 Earth Systems}, in review. Preprint \href{https://doi.org/10.1002/essoar.10507472.2}{10.1002/essoar.10507472.2}
-\vspace{\baselineskip}}
+\vspace{\baselineskip}
+\hrule
+\vspace{\baselineskip}
+\normalsize
+
+\paragraph{Abstract.} Most Earth-system simulations run on conventional CPUs in 64-bit double precision floating-point numbers
+Float64, although the need for high-precision calculations in the presence of large uncertainties has been questioned. Fugaku,
+currently the world’s fastest supercomputer, is based on A64FX microprocessors, which also support the 16-bit low-precision format
+Float16. We investigate the Float16 performance on A64FX with ShallowWaters.jl, the first fluid circulation model that runs entirely
+with 16-bit arithmetic. The model implements techniques that address precision and dynamic range issues in 16 bit. The precision-critical
+time integration is augmented to include compensated summation to minimize rounding errors. Such a compensated time integration is
+as precise but faster than mixed-precision with 16 and 32-bit floats. As subnormals are inefficiently supported on A64FX the very
+limited range available in Float16 is $6 \cdot 10^{-5}$ to $65504$. We develop the analysis-number format Sherlogs.jl to log the arithmetic results
+during the simulation. The equations in ShallowWaters.jl are then systematically rescaled to fit into Float16, using 97\% of the available
+representable numbers. Consequently, we benchmark speedups of 3.8x on A64FX with Float16. Adding a compensated time integration
+the speedup is 3.6x. Although ShallowWaters.jl is simplified compared to large Earth-system models, it shares essential algorithms and
+therefore shows that 16-bit calculations are indeed a competitive way to accelerate Earth-system simulations on available hardware.
+
 
 \section{Introduction}
 

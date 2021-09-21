@@ -10,7 +10,25 @@ MK. Writing – review and editing: MK, PVC, EAP, TNP. The contributions of Pete
 \indent M Klöwer, PV Coveney, EA Paxton, and TN Palmer, 2021.
 \emph{Bitwise periodic orbits in chaotic systems simulated at low precision}, in preparation.
 \vspace{\baselineskip}
+\hrule
+\vspace{\baselineskip}
 \normalsize
+
+\paragraph{Abstract.} Non-periodic solutions are an essential property of chaotic dynamical systems. Simulations with
+deterministic finite-precision numbers, however, always yield bitwise periodic orbits. At the high precision of 64-bit
+floating-point numbers such orbits are usually negligible due to very long periods. The emerging trend to accelerate
+simulations with low-precision numbers, such as 16-bit half precision floats, raises questions on the fidelity of such
+simulations of chaotic systems. Here, we revisit the 1-variable chaotic generalised Bernoulli map with floats, posits
+and logarithmic fixed-point numbers at various levels of precision using deterministic and stochastic rounding. The
+simulations represent the analytical Bernoulli map generally better the higher the precision of the number format.
+Stochastic rounding is especially beneficial as it prevents bitwise periodic orbits even at low precision. For the simulation
+of continuous systems the performance gain from low-precision arithmetic will often be reinvested in higher resolution,
+increasing the number of variables. Using the Lorenz 1996 system we provide evidence that the period length increases
+exponentially with the number of variables. Moreover, invariant measures are better approximated, indicating an overall
+improved simulation, with an increased number of variables than with increased precision. Extrapolating to complex
+simulations of natural systems, such as climate models with millions of variables, periodic orbit lengths are far beyond
+reach of present-day computers. Bitwise periodic orbits from low-precision simulations are therefore not expected to
+be problematic for any system larger than the simplest chaotic systems.
 
 \section{Introduction}
 

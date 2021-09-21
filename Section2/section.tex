@@ -9,9 +9,21 @@ appreciated.}
 
 \vspace{\baselineskip}
 \indent M Klöwer, M Razinger, JJ Dominguez, PD Düben and TN Palmer, 2021. \emph{Compressing atmospheric data into its real
-information content}, \textbf{Nature Computational Science}, in review. Preprint \href{https://doi.org/10.21203/rs.3.rs-590601/v1}{10.21203/rs.3.rs-590601/v1}
+information content}, \textbf{Nature Computational Science}, accepted. Preprint \href{https://doi.org/10.21203/rs.3.rs-590601/v1}{10.21203/rs.3.rs-590601/v1}
+\vspace{\baselineskip}
+\hrule
 \vspace{\baselineskip}
 \normalsize
+
+\paragraph{Abstract.} Hundreds of petabytes of data are produced annually at weather and climate forecast centres worldwide.
+Compression is inevitable to reduce storage and to facilitate data sharing. Current techniques do not distinguish the real from
+the false information in data. We define the bitwise real information content from information theory for data from the Copernicus
+Atmospheric Monitoring Service (CAMS). Most variables contain less than 7 bits of real information per value, which are also highly
+compressible due to spatio-temporal correlation. Rounding bits without real information to zero facilitates lossless compression
+algorithms and encodes the uncertainty within the data itself. The entire CAMS data is compressed by a factor of 17x, relative to
+64-bit floats, while preserving 99\% of real information. Combined with 4-dimensional compression to exploit the spatio-temporal
+correlation, factors beyond 60x are achieved without an increase in forecast errors. A data compression Turing test is proposed to
+optimize compressibility while minimising information loss for the end use of weather and climate forecast data. 
 
 \section{Introduction}
 \label{sec:compression_introduction}
@@ -90,15 +102,6 @@ the matrix of sign bits across all grid points.
 
 \section{Methods: Information content}
 \label{sec:compression_methods_information_content}
-\subsection{Bitpattern entropy}
-
-An $n$-bit number format has $2^n$ bitpatterns available to encode a real number.
-For most data arrays, not all bitpatterns are used at uniform probability. The bitpattern entropy is the Shannon information entropy $H$,
-in units of bits \citep{Shannon1948}, calculated from the probability of each bitpattern 
-	\begin{equation}
-	H = - \sum_{i=1}^{2^n} p_i \log_2(p_i)
-	\end{equation}
-The bitpattern entropy is $H \leq n$  and maximised to $n$ bits for a uniform distribution. The free entropy is the difference $n-H$.
 
 \subsection{Real information content}
 
@@ -108,7 +111,7 @@ of bits of length $l$, the form
 	H = -p_0\log_2(p_0) - p_1\log_2(p_1)
 	\label{eq:bit_unconditional_entropy}
 	\end{equation}
-with $p_0,p_1$ being the probability of a bit $b_k$ in $b$ being $0$ or $1$.
+with $p_0,p_1$ being the probability of a bit $b_k$ in $b$ being $0$ or $1$ (see section \ref{sec:entropy}).
 The entropy is maximised to 1 bit for equal probabilities $p_0 = p_1 = \tfrac{1}{2}$ in $b$. We derive the mutual information
 \citep{Schreiber2000,Kraskov2004,Pothapakula2019}
 of two bitstreams $r = r_1r_2...r_k...r_l$ and $s = s_1s_2...s_k...s_l$. The mutual information is defined via the joint probability
