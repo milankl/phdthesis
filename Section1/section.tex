@@ -1150,7 +1150,7 @@ Base.Float64(x::Float16print) = Float64(x.float16)
 While the application here is rather simple, it shows how custom analysis number format will change the compilation of a function. Here,
 Julia's compiler will create an compiled version of \texttt{harmonic\_sum} that contains a \texttt{print} statement after
 every addition, by doing so the two codes of Listing \ref{lst:harmonic_sum} and \ref{lst:float16print} are composed allowing the user
-to interfere with pre-existing algorithms on a high-level basis, e.g. no compiler knowledge is necessary.
+to interfere with pre-existing algorithms on a high-level basis, e.g. no compiler knowledge is necessary.a
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:harmonic_sum_float16print, caption={\textbf{Analysing the function \texttt{harmonic\_sum} with the
@@ -1177,15 +1177,82 @@ and therefore round back to $7.086$.
 \label{sec:information}
 
 The following sections introduce fundamental ideas of information theory and how they can be applied to analyse the information contained in the bits
-of binary numbers that are used for weather and climate computing.
+of binary numbers that are used for weather and climate computing. A more specific discussion on the bitwise real information content analysed for
+atmospheric data in chapter \ref{chap:compression} is found in section \ref{sec:compression_methods_information_content}.
 
 \subsection{Entropy}
 \label{sec:entropy}
 
+Information entropy is a quantity that measures the amount of information contained in a random variables \citep{Shannon1948,MacKay2003}.
+A random variable with $n$ discrete outcomes at chances $p_i \geq 0, i = 1,...,n$ has a probability mass function determined by $p_i$ for which
+the information entropy $H$ is calculated as
+\begin{equation}
+	H = - \sum_i^n p_i \log_b(p_i)
+	\label{eq:entropy}
+\end{equation}
+The base $b$ of the logarithm defines the unit of entropy. In the following chapters we will exclusively use $b=2$ such that the unit of information
+is given in bits.
+
+Considering the flip of a coin with equal probabilities $p_1=p_2=\tfrac{1}{2}$ (e.g. for $i=1$ the outcome is \emph{tail}, and for $i=2$ it is \emph{head})
+as a first example how to interpret information entropy. Before the coin is flipped, it is known that the outcome is equally likely tail or head. After flipping the
+coin the outcome is observed and we are equally surprised about either outcome. Given our knowledge of the probabilities we had an equal expectation
+for tail or head and so the uncertainty of the outcome is maximised. Applying Eq. \ref{eq:entropy} yields an entropy of 1 bit, which corresponds to
+representing head and tail with \texttt{0} and \texttt{1} such that a sequence of 8 coin flips can be recorded as, for example, \texttt{10110100}.
+The observation of the outcome of every coin flip adds another bit to the sequence.
+
+Assume now that the coin is bent, such that its probabilities change to $p_1 = \tfrac{1}{10}$ and $p_2 = \tfrac{9}{10}$. Now we should expect the outcome
+of a flip to be head, as it is much more likely than tail. Hence, we would be surprised if the outcome was indeed tail given its probability. In this sense
+the information entropy can be interpreted as the average surprise when observing outcomes. In 9 out of 10 cases we would not be surprised as the
+outcome is head as we should expect, but in 1 out of 10 cases we would be surprised --- the rarer the event the larger the surprise. The entropy of such
+a bent coin flip is calculated to be about $0.47$ bit, hence less than half of the coin flip with equal probabilities. Observing the coin flip conveys here
+less information as in most cases we already know what the outcome will be. Recording several coin flips with \texttt{0} and \texttt{1} as before
+will yield a sequence, for example, like \texttt{0000100000000100...} which consists mostly of \texttt{0}s.
+
+The entropy of a random variable is maximised for a uniform distribution, i.e. all outcomes are equally likely (see Eq. \ref{eq:entropy}). For $n$
+possible outcomes the maximum entropy is then $\log_2(n)$ in units of bits. The coin flip with equal probabilities therefore has maximum
+entropy, meaning that the prior knowledge of its probabilities does not provide a mean to predict the next outcome. In that sense, observing
+the next outcome provides exactly 1 bit of information. In contrast, the flip of a bent coin does not have maximum entropy. Shannon's source
+coding theorem \citep{Shannon1948} therefore says that there is a way to encode a sequence like \texttt{0000100000000100...} (as
+observed for the bent coin) with less than 1 bit per coin flip. In fact, its entropy of 0.47 bit is a lower limit on the average number of bits needed
+to encode such a sequence. Intuitively, one may think of an encoding which only stores the number of flips until the next \texttt{1} (i.e. head)
+is observed, here $5,9,...$. Finding an encoding that requires less storage is the subject of lossless compression algorithms, which
+aim to remove redundancies (here long sequences of \texttt{0}s) until an encoding is found that itself approaches maximum entropy.
+
+\subsection{Bitpattern entropy}
+\label{sec:bitpattern_entropy}
+
+An $n$-bit number format has $2^n$ bitpatterns available to encode a real number. The bitpattern entropy is the
+Shannon information entropy $H$, in units of bits \citep{Shannon1948}, calculated from the probability of each bitpattern 
+	\begin{equation}
+	H = - \sum_{i=1}^{2^n} p_i \log_2(p_i)
+	\end{equation}
+For most data arrays, not all bitpatterns are used at uniform probability for which $p_i = 2^{-n}$, which maximises the entropy
+to $H = \log_2(2^n) = n$. The difference $n-H$ between maximum entropy $n$ and the actual entropy $H$ is denoted as free
+entropy and can be interpreted as the number of bits that are effectively unused in the encoding of a data array into the
+respective number format. For example, a data array of signed integers that is uniform in the positive range, but does not
+contain negative integers will have a free entropy of 1 bit, as the sign bit is unused.
+
+Floating-point numbers can never have a maximum entropy as their encoding is not a bijective function. While one could argue
+that encoding both +0 and -0 with distinct bitpatterns is bijective ($\tfrac{1}{-0} = -\infty \neq \infty = \tfrac{1}{0}$ in float arithmetic),
+many bitpatterns are used to encode NaN (see Eq. \ref{eq:float_all}), violating bijection. In practice, the free entropy resulting
+from this redundancy is negligible. Even for Float8 with 12.5\% of bitpatterns representing NaR (Table \ref{tab:formats}) the 
+resulting free entropy is 0.2 bit, reducing the maximum entropy of 8 bit to 7.8 bit. In contrast, using Float64 to represent 
+numbers in the range of [256,512) (similar to for example air or water temperature on Earth in Kelvin) has an entropy of at 
+most 52 bit compared to the 64 available bits as the sign and exponent bits are unused. Furthermore, such a data array
+would need to have at least $2^{52} \approx 10^{15.6}$ entries to reach maximum entropy in 52 bits. This corresponds to
+a theoretical array size of 36 Petabyte, which is far beyond typical array sizes. From an entropy perspective, using 64-bit number
+formats are therefore a very inefficient way to encode real numbers into bits. Nevertheless, this entropy inefficiency allows
+Float64 calculations to have minimal rounding errors.
+
 \subsection{Mutual information}
 \label{sec:mutual_information}
 
-\subsection{Preserved information}
-\label{sec:preserved_information}
+In the previous section, the 
+
+
+
+
+
+
 
 
