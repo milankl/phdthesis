@@ -1184,14 +1184,14 @@ atmospheric data in chapter \ref{chap:compression} is found in section \ref{sec:
 \label{sec:entropy}
 
 Information entropy is a quantity that measures the amount of information contained in a random variables \citep{Shannon1948,MacKay2003}.
-A random variable with $n$ discrete outcomes at chances $p_i \geq 0, i = 1,...,n$ has a probability mass function determined by $p_i$ for which
-the information entropy $H$ is calculated as
+A random variable $X$ with $n$ discrete outcomes $x_1,x_2,...,x_n$ at chances $p_i \geq 0, i = 1,...,n$ has a probability mass function
+determined by $p_i$ for which the information entropy $H$ is calculated as
 \begin{equation}
 	H = - \sum_i^n p_i \log_b(p_i)
 	\label{eq:entropy}
 \end{equation}
 The base $b$ of the logarithm defines the unit of entropy. In the following chapters we will exclusively use $b=2$ such that the unit of information
-is given in bits.
+is given in bits. Furthermore, the entropy contribution of impossible outcomes is $0$, i.e. for $p_j = 0$ we set $p_j \log_b(p_j) = 0$. 
 
 Considering the flip of a coin with equal probabilities $p_1=p_2=\tfrac{1}{2}$ (e.g. for $i=1$ the outcome is \emph{tail}, and for $i=2$ it is \emph{head})
 as a first example how to interpret information entropy. Before the coin is flipped, it is known that the outcome is equally likely tail or head. After flipping the
@@ -1244,15 +1244,115 @@ a theoretical array size of 36 Petabyte, which is far beyond typical array sizes
 formats are therefore a very inefficient way to encode real numbers into bits. Nevertheless, this entropy inefficiency allows
 Float64 calculations to have minimal rounding errors.
 
+\subsection{Conditional information entropy}
+\label{sec:cond_entropy}
+
+In the previous section, the information entropy is calculated from \emph{unconditional} probabilities, either known or estimated
+from the frequency of occurrences in data. Now, we will extend the concept of entropy to \emph{conditional} probabilities, such
+that the conditional entropy measures a statistical relation between two random variables $X,Y$ with outcomes $x_i,y_j,
+i = 1,...,n, j = 1,...,m$. The conditional entropy $H(Y\vert X)$ of $Y$ conditioned on $X$ is defined as
+\begin{equation}
+	H(Y \vert X) = - \sum_{i,j} p_{i,j} \log_b \left( \frac{p_{i,j}}{p_i} \right)
+	\label{eq:cond_entropy}
+\end{equation}
+with $p_{i,j}$ being an entry from the joint probability matrix $p_{XY}$ of the outcomes in $X,Y$ and $p_i$ the marginal probability of $X$.
+
+Assume the situation of two sport teams in a final where no draw is possible. If team 1 wins then team 2 loses and vice versa,
+but assume that team 1 is twice as likely to win than team 2. Hence, $P(\text{Team 1 wins}) = \tfrac{2}{3}$ and $P(\text{Team 2 wins})
+= \tfrac{1}{3}$, which are the marginal probabilities $p_i,p_j$, but the conditional probabilities are 1
+\begin{equation}
+P(\text{Team 1 wins}\vert \text{Team 2 lost}) = P(\text{Team 2 wins}\vert \text{Team 1 lost}) = 1
+\end{equation}
+The joint probability matrix is then
+\begin{equation}
+	p_{XY} = \bpm 0 & \tfrac{1}{3} \\
+				\tfrac{2}{3} & 0 \epm
+\end{equation}
+Substituting into Eq. \ref{eq:cond_entropy} yields a conditional entropy of $H(\text{Team 2} \vert \text{Team 1}) = 0$ which can be
+interpreted as follows. While it is unclear which team will win, once one team is known to have won no further information is 
+provided when learning that the other team has lost --- this is implicitly given, given the knowledge of whether one team has won or lost.
+However, the unconditional entropy, calculated from the unconditional probabilities of either team winning, $p_i = \tfrac{1}{3},
+p_j = \tfrac{2}{3}$, is $H \approx 0.92\mathrm{bit}$. The (unconditional) information entropy is larger than 0 as it is
+still uncertain which team will win, however, once one team wins, it implicitly follows that the other team has lost, which does not
+provide any further information. 
+
+Consider now the following joint probability that represents the wind direction for $X$ with \emph{East, no wind,} and \emph{West} and
+the number of sailing boats for $Y$ with some \emph{sailing boats} and \emph{no sailing boats}.
+\begin{equation}
+	p_{XY} = \bpm \tfrac{3}{8} & 0 \\
+				0 & \tfrac{1}{4} \\
+				\tfrac{3}{8} & 0 \epm
+\end{equation}
+In 25\% of the cases no wind was observed, $P(\text{no wind}) = \tfrac{1}{4}$. For no wind, no sailing boats were seen,
+$P(\text{no sailing boats} \vert \text{no wind}) = 1$. In 75\% the wind came either from the East or from the West at
+equal probabilities, $P(\text{East}) = P(\text{West}) = \tfrac{3}{8}$. In either of those cases some sailing boats were seen,
+$P(\text{sailing boats} \vert \text{East}) = P(\text{sailing boats} \vert \text{West}) =1$. The conditional entropy $H(Y \vert X)$,
+i.e. the number of sailing boats conditioned on the wind direction, is calculated from $p_{XY}$ as $H(Y \vert X) = 0$. Once
+we know there is wind, either from East or West, we know there are sailing boats. Observing sailing boats therefore does 
+not add any information to the already acquired knowledge that the wind comes either from East or West (but it is certainly not
+no wind).
+
+However, we may not be able to measure the wind directly but are only able to observe the number of sailing boats.
+In that situation we are interested in the conditional entropy of the wind direction $X$ given the number of sailing boats $Y$, i.e.
+$H(X\vert Y$). This interchanges the predictor and predictand from before. Transposing $p_{XY}$ and interchanging the
+marginal probabilities $p_i, p_j$ in Eq. \ref{eq:cond_entropy} we calculate the conditional entropy of the wind direction
+conditioned on the number of sailing boats as $H(X\vert Y) = 0.75~\mathrm{bit}$.
+This can be interpreted as knowing there are sailing boats tells us there is wind too, but we cannot infer the wind direction.
+Hence, there is a remaining uncertainty which yields a non-zero (conditional) entropy.
+
 \subsection{Mutual information}
-\label{sec:mutual_information}
 
-In the previous section, the 
+In general, we may ask about the \emph{mutual information} of two random variables. In the example from before, we would
+like to know the mutual information between wind direction and the number of sailing boats. The mutual information
+$M(X,Y)$ for two random variables $X,Y$ from information theory is defined as
+\begin{equation}
+	M(X, Y) = \sum_{i,j} p_{i,j} \log_b \left( \frac{p_{i,j}}{p_ip_j} \right)
+	\label{eq:mutual_information}
+\end{equation}
+which is therefore a symmetric quantity, $M(X,Y) = M(Y,X)$. The mutual information quantifies the information
+between $X,Y$ that is already known about either $X$ or $Y$ from knowing the other. Two statistically independent
+variables therefore have 0 mutual information, but for fully dependent variables $X,Y$ the mutual information is equal
+the unconditional entropy $H(X) = H(Y)$. This is in contrast to the conditional entropy which quantifies the information
+that is \emph{still gained} from observing $Y$ given that $X$ is already known, not the information that we
+\emph{already have} about $Y$. In that sense, the conditional entropy $H(Y\vert X)$ of two independent variables is
+the unconditional entropy $H(Y)$, but the conditional entropy of two fully dependent variables $X,Y$ is zero.
 
+The mutual information between wind direction and the number of sailing boats is $M \approx 0.81~\mathrm{bit}$.
+Although there is no correlation between the wind direction and the number of sailing boats, there is a nonlinear
+relationship between the two random variables that is quantified by the mutual information. The mutual information
+cannot reveal whether the statistical dependence between two random variables is linear or nonlinear. However, any change
+of the probability distribution of one random variable given the state of another is detected and yields a mutual information
+larger than zero. 
 
-
-
-
-
-
-
+We will now discuss how the mutual information is applied to bits as they occur in binary number formats. The joint probability
+is for two random variables $X,Y$ that both can both take either of two states, \texttt{0} or \texttt{1},
+a 2x2 matrix. In that case we can describe $X,Y$ as bits being either \texttt{0} or \texttt{1} and hence binary.
+Such a joint probability matrix is then in general
+\begin{equation}
+	p_{XY} = \bpm p_{00} & p_{01} \\
+			p_{10} & p_{11} \epm
+\end{equation}
+with $p_{00}$ the probability that both bits $X,Y$ are \texttt{0} and $p_{ij}$ the probability that $X=i$ and $Y=j$ simultaneously.
+In the case of 
+\begin{equation}
+	p_{XY} = \bpm p_{00} & 0 \\
+			0 & p_{11} \epm
+\end{equation}
+the state of $X$ is entirely determined by the state of $Y$ and hence the conditional entropy is zero, while the mutual information
+is $M(X,Y) = H(X) = H(Y)$. The correlation between $X$ and $Y$ is 1 in this case and if the states \texttt{0,1} are also identified
+with their respective numerical values $0,1$ (the latter requires a mapping of outcomes in $X,Y$ to the real numbers, which 
+is not always possible). Similarly, for
+\begin{equation}
+	p_{XY} = \bpm 0 & p_{01} \\
+			p_{10} & 0 \epm
+\end{equation}
+the same conclusions in terms of information hold, but the correlation is -1. Statistically independent $X,Y$ translate in the joint
+probability matrix to
+\begin{equation}
+	p_{XY} = \bpm p_0 & p_0 \\
+			p_1 & p_1 \epm,
+	\quad \text{ or } \quad
+	p_{XY} = \bpm p_0 & p_1 \\
+			p_0 & p_1 \epm
+\end{equation}
+such that the probabilities in $X$ are independent of those in $Y$ and vice versa.

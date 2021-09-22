@@ -1,2 +1,36 @@
 \chapter{Introduction}
 \label{chap:introduction}
+
+Numerical models of weather and climate use binary numbers to calculate and store information.
+Every information in a climate model, or its data output, is encoded into bits. Representing
+real numbers with bits will bisect for every bit the real axis into different sections, similar to a binary tree.
+While there are various ways to encode a real number into bits, some bits will be more others less
+significant to encode a good approximation of a real number. For example, flipping the sign bit will
+generally result in the most significant change of the represented number. Flipping other bits will
+cause a much less significant change. Depending on the encoding and the number of bits used,
+some bits will be more essential than others in a climate model or its data to obtain a meaningful
+simulation. Especially the least significant bits may provide a precision that is more precise than
+necessary to resolve the uncertainty inherent in most numbers in climate data or their computation.
+
+The uncertainty of weather or climate data, whether simulated or measured, depends on many different
+factors and use cases. While it may be crucial to distinguish between 0\textdegree{C} and slightly warmer
+to measure frost on a field, the same exact temperature on that field will have negligible impact on the
+global mean surface temperature averaged over decades. On the other hand, a weather forecast for a
+given location is rarely more than 1\textdegree{C} accurate, but to quantify global warming from year to year,
+a higher precision of $\tfrac{1}{10}$\textdegree{C} or even $\tfrac{1}{100}$\textdegree{C} is needed
+\citep{Haustein2017}. In general every number will come with a different uncertainty, some of which will
+amplify during calculation or cancel out.
+
+While the uncertainty in climate computations and data is variable, the precision of binary number formats
+has been standardised since the 1980s \citep{IEEE1985,IEEE2008}. Consequently, only two levels of precision
+are widely available (single and double precision) for all areas of computing, regardless of the varying levels of
+required precision per application. So-called single-precision floating-point numbers use 32 bits to encode a
+real number, providing at least 7 decimal places of precision in the representable range between $10^{-38}$
+and $10^{38}$. Double-precision floating-point numbers use 64 bits instead, resolving numbers over more
+than 600 orders of magnitude at a precision of more than 16 decimal places. 
+
+64 bit computations are the de facto standard for scientific computing. Most programming languages use
+it as the default precision, which enabled decades of scientific calculations while ignoring the remaining,
+in most cases indeed negligible, rounding errors. Applications where computational performance is not essential,
+or where optimisations for lower precision have not been applied, are generally advised to use 64 bit.
+However, many areas of high-performance computing 
