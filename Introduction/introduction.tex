@@ -4,8 +4,8 @@
 Numerical models of weather and climate use binary numbers to calculate and store information.
 Every information in a climate model, or its data output, is encoded into bits. Representing
 real numbers with bits will bisect for every bit the real axis into different sections, similar to a binary tree.
-While there are various ways to encode a real number into bits, some bits will be more others less
-significant to encode a good approximation of a real number. For example, flipping the sign bit will
+While there are various ways to encode a real number into bits, some bits will be more significant, others
+less, to encode a good approximation of a real number. For example, flipping the sign bit will
 generally result in the most significant change of the represented number. Flipping other bits will
 cause a much less significant change. Depending on the encoding and the number of bits used,
 some bits will be more essential than others in a climate model or its data to obtain a meaningful
@@ -14,7 +14,7 @@ necessary to resolve the uncertainty inherent in most numbers in climate data or
 
 The uncertainty of weather or climate data, whether simulated or measured, depends on many different
 factors and use cases. While it may be crucial to distinguish between 0\textdegree{C} and slightly warmer
-to measure frost on a field, the same exact temperature on that field will have negligible impact on the
+to measure frost on a field, the exact temperature on a single field will have negligible impact on the
 global mean surface temperature averaged over decades. On the other hand, a weather forecast for a
 given location is rarely more than 1\textdegree{C} accurate, but to quantify global warming from year to year,
 a higher precision of $\tfrac{1}{10}$\textdegree{C} or even $\tfrac{1}{100}$\textdegree{C} is needed
@@ -33,4 +33,44 @@ than 600 orders of magnitude at a precision of more than 16 decimal places.
 it as the default precision, which enabled decades of scientific calculations while ignoring the remaining,
 in most cases indeed negligible, rounding errors. Applications where computational performance is not essential,
 or where optimisations for lower precision have not been applied, are generally advised to use 64 bit.
-However, many areas of high-performance computing 
+However, many areas of high-performance computing, including the data compression and storage,
+can benefit from low-precision computations. Requiring the world's largest supercomputers, numerical
+weather prediction and climate projections are such high-performance computing applications.
+
+On many processors two 32-bit computations can be vectorised into a single 64-bit operation, effectively
+making computations with 32 bit twice as fast as with 64 bit. Similarly, the vectorisation of 16 or even 8-bit
+computations, if supported, allow for 4 or 8 times as many operations within the same time. But vectorisation
+is not the only advantage of low-precision computing. The performance bottleneck of many applications is the
+speed at which data can be loaded from memory. Decreasing the time it takes for the computation alone
+will not increase performance if the processor has to wait for data to be loaded from memory. However,
+such a memory-bound application would greatly benefit if every number in memory is stored in only 32, 16 or even 8
+bit instead of 64, which reduces the data volume transferred between memory and processor. An array of 16-bit numbers
+is loaded four times as fast from memory, compared to an array of the same size but with 64 bits per entry.
+
+While most processors only support 32 and 64-bit computations, more freedom is available for data compression and storage:
+In principle, numbers encoded with an arbitrary number of bits can be packed into an array, such that also
+10, 17 or 31 bits per number are possible. Although those bits will need to be unpacked into 32 or 64 bits for 
+post-processing, the data volume would be greatly reduced, lowering storage requirements in data archives.
+Consequently, the bits per number can directly reflect the uncertainty in data, provided such an uncertainty is known.
+Storing more bits to preserve a higher precision therefore corresponds to storing \emph{false information} as the
+uncertainty masks the unnecessarily high precision. In general, it is an open question how to distinguish between
+real and false information in data, as the uncertainties may be unknown. This question directly translates to
+the bits per number, of which only as few as essential should be used to preserve the real information.
+
+Modern hardware has started to support also 16-bit computations next to the traditional 32 and 64 bit,
+adding so-called half precision to the set of available levels of precision for computing.
+The fastest supercomputer as of June 2021, Fugaku, consists of many million processors all of which are capable
+to compute 16-bit numbers four times as fast as 64 bit. However, these 16-bit half-precision floating-point numbers
+have a reduced precision of less than 4 decimal places over a limited range from $6 \cdot 10^{-8}$ to $65504$.
+Numbers with an absolute values smaller or larger cannot be represented. Using 16-bit computations in 
+complex simulations is therefore challenging: The range of numbers occurring in simulation has to be controlled,
+which requires scaling of algorithms to avoid very small and very large numbers outside the representable range.
+Rounding errors arising from computations at lower precision should not exceed other errors, which may require
+some algorithms to be resilient to low precision such that rounding errors do not accumulate over time. 
+For complex simulations it is often difficult to understand in which computations precision and range issues arise
+as most error analysis is based on the model data output and not on intermediate results within a simulation.
+
+[impact of 16bit on chaotic dynamical systems]
+
+[in this thesis]
+
