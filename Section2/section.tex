@@ -4,8 +4,7 @@
 %% CONTRIBUTION
 \small \paragraph{Contributions} This chapter is largely based on the following publication\footnote{with the following author contributions.
 Conceptualisation: MK, MR, JJD. Data curation: MR, JJD, MK. Formal Analysis: MK. Methodology: MK. Visualisation: MK. Writing –
-original draft: MK. Writing – review \& editing: MK, PDD, MR, JJD, TNP. The contributions of Miha, Juanjo, Peter, and Tim are highly
-appreciated.}
+original draft: MK. Writing – review \& editing: MK, PDD, MR, JJD, TNP.}
 
 \vspace{\baselineskip}
 \indent M Klöwer, M Razinger, JJ Dominguez, PD Düben and TN Palmer, 2021. \emph{Compressing atmospheric data into its real
@@ -23,7 +22,7 @@ compressible due to spatio-temporal correlation. Rounding bits without real info
 algorithms and encodes the uncertainty within the data itself. The entire CAMS data is compressed by a factor of 17x, relative to
 64-bit floats, while preserving 99\% of real information. Combined with 4-dimensional compression to exploit the spatio-temporal
 correlation, factors beyond 60x are achieved without an increase in forecast errors. A data compression Turing test is proposed to
-optimize compressibility while minimising information loss for the end use of weather and climate forecast data. 
+optimise compressibility while minimising information loss for the end use of weather and climate forecast data. 
 
 \section{Introduction}
 \label{sec:compression_introduction}
@@ -159,7 +158,7 @@ The real information content $I_m$ for an $m$-dimensional array $A$ is the sum o
 Let $b_j$ be a bitstream obtained by unravelling a given bitposition in $A$ along its $j$-th dimension. 
 Although the unconditional entropy $H$ is unchanged along the $m$-dimensions, the conditional entropies $H_0,H_1$ change as the
 preceding and succeeding bit is found in another dimension, e.g. $b_2$ is obtained by reordering $b_1$. $H_0(b_j)$ and $H_1(b_j)$
-are the respective conditional entropies calculated from bitstream $b_j$. Normalization by $\tfrac{1}{m}$  is applied to $I_m$ such
+are the respective conditional entropies calculated from bitstream $b_j$. Normalisation by $\tfrac{1}{m}$  is applied to $I_m$ such
 that the maximum information is 1 bit in $I_m^*$
 	\begin{equation}
 	I_m^* = H - \frac{p_0}{m} \sum_{j=1}^mH_0(b_j) - \frac{p_1}{m}\sum_{j=1}^mH_1(b_j)
@@ -380,6 +379,7 @@ information as a metric for data compression.
 \label{sec:compression_methods_compression}
 
 \subsection{Linear and logarithmic quantization}
+\label{sec:linlogquantization}
 
 The $n$-bit linear quantization compression for each element $a$ in an array $A$ is
 	\begin{equation}
@@ -401,6 +401,7 @@ positive elements in $A$. For a more general discussion on round-to-nearest for 
 \ref{sec:roundnearest_logfix}.
 
 \subsection{Lossless compression}
+\label{sec:compression_lossless}
 
 We use Zstandard as a default lossless algorithm for the round+lossless method. Zstandard is a modern compression algorithm
 that combines many techniques to form a single compressor with tunable 22 compression levels that allow large trade-offs between

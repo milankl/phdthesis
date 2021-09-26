@@ -4526,6 +4526,24 @@
   language = {en}
 }
 
+@article{Muller2019a,
+  title = {The {{ESCAPE}} Project: {{Energy}}-Efficient {{Scalable Algorithms}} for {{Weather Prediction}} at {{Exascale}}},
+  shorttitle = {The {{ESCAPE}} Project},
+  author = {M{\"u}ller, Andreas and Deconinck, Willem and K{\"u}hnlein, Christian and Mengaldo, Gianmarco and Lange, Michael and Wedi, Nils and Bauer, Peter and Smolarkiewicz, Piotr K. and Diamantakis, Michail and Lock, Sarah-Jane and Hamrud, Mats and Saarinen, Sami and Mozdzynski, George and Thiemert, Daniel and Glinton, Michael and B{\'e}nard, Pierre and Voitus, Fabrice and Colavolpe, Charles and Marguinaud, Philippe and Zheng, Yongjun and Van Bever, Joris and Degrauwe, Daan and Smet, Geert and Termonia, Piet and Nielsen, Kristian P. and Sass, Bent H. and Poulsen, Jacob W. and Berg, Per and Osuna, Carlos and Fuhrer, Oliver and Clement, Valentin and Baldauf, Michael and Gillard, Mike and Szmelter, Joanna and O'Brien, Enda and McKinstry, Alastair and Robinson, Ois{\'i}n and Shukla, Parijat and Lysaght, Michael and Kulczewski, Micha{\l} and Ciznicki, Milosz and Pi{\k{a}}tek, Wojciech and Ciesielski, Sebastian and B{\l}a{\.z}ewicz, Marek and Kurowski, Krzysztof and Procyk, Marcin and Spychala, Pawel and Bosak, Bartosz and Piotrowski, Zbigniew P. and Wyszogrodzki, Andrzej and Raffin, Erwan and Mazauric, Cyril and Guibert, David and Douriez, Louis and Vigouroux, Xavier and Gray, Alan and Messmer, Peter and Macfaden, Alexander J. and New, Nick},
+  year = {2019},
+  month = oct,
+  journal = {Geoscientific Model Development},
+  volume = {12},
+  number = {10},
+  pages = {4425--4441},
+  publisher = {{Copernicus GmbH}},
+  issn = {1991-959X},
+  doi = {10.5194/gmd-12-4425-2019},
+  abstract = {{$<$}p{$><$}strong class="journal-contentHeaderColor"{$>$}Abstract.{$<$}/strong{$>$} In the simulation of complex multi-scale flows arising in weather and climate modelling, one of the biggest challenges is to satisfy strict service requirements in terms of time to solution and to satisfy budgetary constraints in terms of energy to solution, without compromising the accuracy and stability of the application. These simulations require algorithms that minimise the energy footprint along with the time required to produce a solution, maintain the physically required level of accuracy, are numerically stable, and are resilient in case of hardware failure.{$<$}/p{$>$} {$<$}p{$>$}The European Centre for Medium-Range Weather Forecasts (ECMWF) led the ESCAPE (Energy-efficient Scalable Algorithms for Weather Prediction at Exascale) project, funded by Horizon 2020 (H2020) under the FET-HPC (Future and Emerging Technologies in High Performance Computing) initiative. The goal of ESCAPE was to develop a sustainable strategy to evolve weather and climate prediction models to next-generation computing technologies. The project partners incorporate the expertise of leading European regional forecasting consortia, university research, experienced high-performance computing centres, and hardware vendors.{$<$}/p{$>$} {$<$}p{$>$}This paper presents an overview of the ESCAPE strategy: (i) identify domain-specific key algorithmic motifs in weather prediction and climate models (which we term Weather \&amp; Climate Dwarfs), (ii) categorise them in terms of computational and communication patterns while (iii) adapting them to different hardware architectures with alternative programming models, (iv) analyse the challenges in optimising, and (v) find alternative algorithms for the same scheme. The participating weather prediction models are the following: IFS (Integrated Forecasting System); ALARO, a combination of AROME (Application de la Recherche \`a l'Op\'erationnel \`a Meso-Echelle) and ALADIN (Aire Limit\'ee Adaptation Dynamique D\'eveloppement International); and COSMO\textendash EULAG, a combination of COSMO (Consortium for Small-scale Modeling) and EULAG (Eulerian and semi-Lagrangian fluid solver). For many of the weather and climate dwarfs ESCAPE provides prototype implementations on different hardware architectures (mainly Intel Skylake CPUs, NVIDIA GPUs, Intel Xeon Phi, Optalysys optical processor) with different programming models. The spectral transform dwarf represents a detailed example of the co-design cycle of an ESCAPE dwarf.{$<$}/p{$>$} {$<$}p{$>$}The dwarf concept has proven to be extremely useful for the rapid prototyping of alternative algorithms and their interaction with hardware; e.g. the use of a domain-specific language (DSL). Manual adaptations have led to substantial accelerations of key algorithms in numerical weather prediction (NWP) but are not a general recipe for the performance portability of complex NWP models. Existing DSLs are found to require further evolution but are promising tools for achieving the latter. Measurements of energy and time to solution suggest that a future focus needs to be on exploiting the simultaneous use of all available resources in hybrid CPU\textendash GPU arrangements.{$<$}/p{$>$}},
+  language = {English},
+  file = {/Users/milan/Zotero/storage/L8FX3X8K/Müller et al. - 2019 - The ESCAPE project Energy-efficient Scalable Algo.pdf;/Users/milan/Zotero/storage/2C3B3Y3W/2019.html}
+}
+
 @article{Nadiga2008,
   title = {Orientation of Eddy Fluxes in Geostrophic Turbulence},
   author = {Nadiga, B.T},
@@ -4763,6 +4781,23 @@
   chapter = {Comment},
   language = {en},
   file = {/Users/milan/Zotero/storage/G3BB97WN/climate-forecasting-build-high-resolution-global-climate-models-1.html}
+}
+
+@article{Palmer2014b,
+  title = {The Real Butterfly Effect},
+  author = {Palmer, T. N. and D{\"o}ring, A. and Seregin, G.},
+  year = {2014},
+  month = aug,
+  journal = {Nonlinearity},
+  volume = {27},
+  number = {9},
+  pages = {R123--R141},
+  publisher = {{IOP Publishing}},
+  issn = {0951-7715},
+  doi = {10.1088/0951-7715/27/9/R123},
+  abstract = {Historical evidence is reviewed to show that what Ed Lorenz meant by the iconic phrase `the butterfly effect' is not at all captured by the notion of sensitive dependence on initial conditions in low-order chaos. Rather, as presented in his 1969 Tellus paper, Lorenz intended the phrase to describe the existence of an absolute finite-time predicability barrier in certain multi-scale fluid systems, implying a breakdown of continuous dependence on initial conditions for large enough forecast lead times. To distinguish from `mere' sensitive dependence, the effect discussed in Lorenz's Tellus paper is referred to as `the real butterfly effect'. Theoretical evidence for such a predictability barrier in a fluid described by the three-dimensional Navier\textendash Stokes equations is discussed. Whilst it is still an open question whether the Navier\textendash Stokes equation has this property, evidence from both idealized atmospheric simulators and analysis of operational weather forecasts suggests that the real butterfly effect exists in an asymptotic sense, i.e. for initial-time atmospheric perturbations that are small in scale and amplitude compared with (weather) scales of interest, but still large in scale and amplitude compared with variability in the viscous subrange. Despite this, the real butterfly effect is an intermittent phenomenon in the atmosphere, and its presence can be signalled a priori, and hence mitigated, by ensemble forecast methods.},
+  language = {en},
+  file = {/Users/milan/Zotero/storage/9VZGJHGC/Palmer et al. - 2014 - The real butterfly effect.pdf}
 }
 
 @article{Palmer2015,

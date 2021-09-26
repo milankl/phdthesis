@@ -2,14 +2,13 @@
 \label{chap:methods}
 
 %% CONTRIBUTION
-{\onehalfspacing
 \small \paragraph{Contributions} Parts of this chapter are based on the following publication \footnote{with the following author contributions.
 Conceptualisation: MK, PDD. Data curation: MK. Formal Analysis: MK. Methodology: MK. Visualisation: MK. Writing – original draft:
-MK. Writing – review and editing: MK, PDD, TNP. The contributions of Peter and Tim are highly appreciated.}
+MK. Writing – review and editing: MK, PDD, TNP}
 
 \vspace{\baselineskip}
 \indent M Klöwer, PD Düben, and TN Palmer, 2020. \emph{Number Formats, Error Mitigation, and Scope for 16-Bit Arithmetics in Weather and Climate Modeling Analyzed With a Shallow Water Model}, \textbf{Journal of Advances in Modeling Earth Systems}, \href{https://doi.org/10.1029/2020MS002246}{10.1029/2020MS002246}.
-\vspace{\baselineskip}}
+\vspace{\baselineskip}
 \hrule
 \vspace{\baselineskip}
 
@@ -69,7 +68,7 @@ which covers the range $[-2^{n-1}-1,2^{n-1}-1]$ but uses two bitpatterns to enco
 However, to avoid multiple representations of zero and to simplify hardware implementations, the sign and magnitude representation
 is rarely used. The most common representation uses the two's complement, which flips all bits in a sequence (i.e. \texttt{0 $\to$ 1} and \texttt{1 $\to$ 0})
 and adds \texttt{1}. For example, the two's complement of \texttt{0101} is \texttt{1011}. The two's complement representation of negative
-integers, i.e. the sign bit is 1, first flips all magnitude bits and then adds $1$ before using Eq. \ref{eq:int} for decoding. For example,
+integers, i.e. those with a sign bit of 1, first flips all magnitude bits and then adds $1$ before using Eq. \ref{eq:int} for decoding. For example,
 in the 4-bit signed integer format Int4 a value is stored as \texttt{{\color{psign}1}110} (the sign bit is marked in red). The magnitude bits of
 \texttt{{\color{psign}1}110} are then converted using the two's complement to \texttt{{\color{psign}1}010} (\texttt{110} is bit flipped into \texttt{001}
 and then adding \texttt{1} yields \texttt{010}), which is the sign and magnitude representation (SignMag) that can be decoded using Eq. \ref{eq:int}
@@ -84,23 +83,23 @@ arithmetic operations addition, subtraction and multiplication \citep{Choo2003}.
 \label{sec:fixpoints}
 
 Fixed-point numbers extend the integer format with fraction bits in order to better approximate real numbers. 
-An $n$-bit fixed-point number format uses next to $n_i$ signed integer bits also $n_f$ fraction bits to encode 
+Next to $n_i$ signed integer bits, an $n$-bit fixed-point number format also uses $n_f$ fraction bits to encode 
 an additional sum of powers of two with negative exponents $-1,-2,...,-n_f$. Note that $n = n_i + n_f$, so
 every additional fraction bit reduces the number of integer bits. A common notation is, for example,
 Q6.10, which is the 16-bit fixed-point format with 6 signed integer bits and 10 fraction bits.
-A positive fixed-point number is decoded into $x$ as
+With the sign and magnitude representation, a fixed-point number is decoded into $x$ as
 \begin{equation}
-x = (-1)^{b_1}\sum_{i=2}^{n_i} b_i 2^{n-i-1}  + \sum_{i=1}^{n_f} b_{n_i+i} 2^{-i}
+x = (-1)^{b_1} \left( \sum_{i=2}^{n_i} b_i 2^{n-i-1}  + \sum_{i=1}^{n_f} b_{n_i+i} 2^{-i} \right)
 \label{eq:fixpoints}
 \end{equation}
-The first summation is identical to the signed integers (Eq. \ref{eq:int}), and therefore might use the sign and magnitude
-representation as presented here, or the two's complement alternatively. Using $n_f = 1$ can only encode real numbers
-at a distance of $\tfrac{1}{2}$ apart, so the representable numbers are $0,\tfrac{1}{2},1,\tfrac{3}{2},2,...$, but using more fraction
-bits allows a higher precision. For $n_f=10$ fraction bits, numbers with a spacing of $2^{-10} \approx 0.001$ are representable,
+The first summation is identical to the signed integers (Eq. \ref{eq:int}), and therefore one might use the two's complement
+alternatively. Using $n_f = 1$ can only encode real numbers at a distance of $\tfrac{1}{2}$ apart, so the representable
+numbers are $..., -\tfrac{1}{2}, 0,\tfrac{1}{2},1,\tfrac{3}{2},2,...$, but using more fraction bits allows a higher precision.
+For $n_f=10$ fraction bits, numbers with a spacing of $2^{-10} \approx 0.001$ are representable,
 which is also the smallest representable positive number called \emph{minpos}. However, this comes at the cost of a reduced
 largest representable number \emph{maxpos} and therefore a smaller range $maxpos-minpos$ (Table \ref{tab:formats}).
 For the format Q6.10 with 6 integer bits and 10 fraction bits the largest representable number is $maxpos = \mathtt{0x7fff} = 2^5-1 + \sum_1^{10} 2^{-i}
-\approx 31.999$. Results beyond maxpos will trigger in many implementations also a wrap-around behaviour as for integers.
+\approx 31.999$. Results beyond \emph{maxpos} will trigger in many implementations also a wrap-around behaviour as for integers.
 
 In the following we consider the range of a number format to be $maxpos-minpos$, and the dynamic range as
 $\tfrac{maxpos}{minpos}$, usually given in $\log_{10}(\tfrac{maxpos}{minpos})$ orders of magnitude. For a 16-bit fixed-point
@@ -113,17 +112,17 @@ as an integer with the scaling factor $2^{-n_f}$. Flexibility regarding the rang
 integer arithmetic if fixed-point numbers are used \citep{Russell2017}. Unfortunately, the very limited range at the cost of precision 
 is unsuited for many applications. Nevertheless, they provide exact addition, subtraction and multiplication (as with integers) unless an
 overflow or underflow to 0 occurs. They can be suited to represent monetary values for example. However, fixed-point numbers
-are rarely used since standardized floating-point numbers became widely available in the 1980s and 1990s.
+are rarely used since standardised floating-point numbers became widely available in the 1980s and 1990s.
 
 \subsection{Floating-point numbers}
 \label{sec:floats}
 
-While fixed-point numbers have constant accuracy, meaning a fixed number of digits after the decimal point, floating-point
-numbers (or simply floats) were introduced for a \emph{floating} decimal point. In consequence, they have an approximately constant
-number of significant digits across a wide range of representable numbers. Floating-point numbers achieve this by
-encoding an exponent which is multiplied to the significand (also called mantissa).
+While fixed-point numbers have constant spacing, meaning a fixed number of digits \emph{after} the decimal point, floating-point
+numbers (or simply floats) were introduced for a \emph{floating} decimal point. In consequence, floats have an approximately constant
+number of significant digits (before and after the decimal point) across a wide range of representable numbers. Floats
+achieve this by encoding an exponent which is multiplied to the significand (also called mantissa).
 
-The floating-point format is standardized in \cite{IEEE1985,IEEE2008} which defines how the bits $b_1,...,b_n$ of an
+The floating-point format is standardised in \cite{IEEE1985,IEEE2008} which defines how the bits $b_1,...,b_n$ of an
 $n$-bit float are converted into a real number $x$ in terms of a sign bit, $n_e$ exponent and $n_m$ mantissa bits.
 Most floats (hence they are called \emph{normal floats}) are decoded as
 \begin{equation}
@@ -179,8 +178,8 @@ negative sign for $minpos$). However, more exponent bits also mean less mantissa
 for a given number of total bits per float there is a trade-off between range and precision, similar to the trade-off for fixed-point numbers.
 For more details on the precision of floats see section \ref{sec:decimal_precision}.
 
-Due to the exponent bits floats are approximately logarithmically distributed on the real number line with about half of the representable
-numbers packed between -1 and 1. However, due to the mantissa bits being a sum of powers of two with negative exponents floats
+Due to the exponent bits, floats are approximately logarithmically distributed on the real number line with about half of the representable
+numbers packed between -1 and 1. However, as the mantissa bits are a sum of powers of two, floats
 are also piecewise uniformly (or linearly) distributed. Within a given range of two powers of two $[2^i,2^{i+1})$, e.g. $[1,2)$ or
 $[\tfrac{1}{8},\tfrac{1}{4})$ only the mantissa bits change, such that the distance $\delta$ between two subsequent 
 floats is always equal and $\delta = 2^{i-n_m}$. But for the next larger power of two, this distance doubles, whereby
@@ -189,7 +188,7 @@ closely related to the rounding error and discussed in more detail in section \r
 
 The two most common floating-point formats are Float32 and Float64. Float32 is a 32-bit format with $n_e=8$ exponent bits and
 $n_m=23$ mantissa bits. Float64 is a 64-bit format with $n_e=11$ exponent bits and $n_m=52$ mantissa bits. Both have been 
-standardized in \cite{IEEE1985}. Recently more widely available on specialised hardware are the two 16-bit low precision formats
+standardised in \cite{IEEE1985}. Recently more widely available on specialised hardware are the two 16-bit low precision formats
 Float16 (5 exponent bits and 10 mantissa bits) and BFloat16 (8 exponent bits and 7 mantissa bits, a truncated version of Float32).
 The number $\pi = 3.14159...$ is encoded in these formats as (sign bit in red, exponent bits in blue, mantissa bits in black)
 \begin{align}
@@ -329,14 +328,14 @@ Posit numbers were introduced by \cite{Gustafson2017a} as one of the universal n
 and arise from a projection of the real axis onto a circle (Fig. \ref{fig:posit_circle}).
 With only one bitpattern for 0 and one for Not-a-Real (NaR, or complex infinity $\pm \infty$, a replacement for Not-a-Number NaN),
 posits have a bijective mapping between all available bitpatterns and representable numbers. The circle is split into
-\emph{regimes}, determined by a constant $useed$, which always marks the north-west on the posit circle (Fig. \ref{fig:posit_circle}b).
+\emph{regimes}, determined by a constant $useed$, which always marks the north-east on the posit circle (Fig. \ref{fig:posit_circle}b).
 Regimes are defined by $useed^{\pm1}$, $useed^{\pm2}$, $useed^{\pm3}$, etc. To encode these regimes into bits, posit
 numbers extend floating-point arithmetic by introducing regime bits that are responsible for the dynamic range of representable
 numbers. Instead of having a fixed length, regime bits are defined as the sequence of identical bits after the sign bit, which are
 eventually terminated by an opposite bit, e.g. \texttt{000001} or \text{1110}, the last bit is the terminating bit respectively.
 
-The flexible length allows the mantissa (or significand) to occupy more bits when less regime bits are needed, which is the
-case for numbers around 1 and -1 (in a logarithmic sense). More mantissa bits mean a that the representable numbers are
+The flexible length allows the mantissa (or significand) to occupy more bits when fewer regime bits are needed, which is the
+case for numbers around 1 and -1 (in a logarithmic sense). More mantissa bits mean that the representable numbers are
 denser packed, resulting in a higher precision around $\pm 1$. On the other hand, the regime bits occupy more bit positions
 for very small or very large numbers in an absolute sense, e.g. $-10^{-10}$ or $10^{10}$, which reduces the number of 
 available mantissa bits for those. Therefore, the higher precision around $\pm 1$ for posits is traded against a gradually
@@ -360,10 +359,10 @@ Eq. \ref{eq:2comp})
 p = (-1)^s \cdot useed^k \cdot 2^e \cdot (1+f)
 \label{eq:posit}
 \end{equation}
-where $k$ is the number of regime bits excluding the terminating bit. $e$ is the unsigned integer represented by the
-exponent bits and $f$ is the fraction which is encoded in the fraction (or mantissa) bits. The base $useed = 2^{2^{n_e}}$ is
-determined by the number of exponent bits $n_e$ in a given format, e.g. for Posit(4,1) $useed = 4$. More exponent bits
-increase - by increasing $useed$ - the dynamic range of representable numbers at the cost of precision,
+where $k$ is the number of regime bits, excluding the terminating bit. The exponent bits are interpreted as the unsigned integer $e$
+and $f$ is the fraction which is encoded in the fraction (or mantissa) bits. The base $useed = 2^{2^{n_e}}$ is
+determined by the number of exponent bits $n_e$ in a given format; e.g. for Posit(4,1) with $n_e=1$ exponent bit we have $useed = 4$.
+More exponent bits increase - by increasing $useed$ - the dynamic range of representable numbers at the cost of precision,
 as increasing $useed$ also increases the spacing between representable numbers. The exponent bits themselves do
 not affect the dynamic range by changing the value of $2^e$ in Eq. \ref{eq:posit}. Instead, they fill gaps of
 powers of two spanned by $useed = 4,16,256,...$ for $n_e=1,2,3,...$, such that the regime and exponent combined
@@ -411,50 +410,54 @@ The proposed posit standard defines several posit number formats as a drop-in re
 exponent bits (hence also called Posit(8,0)). Although 8-bit floats are not officially defined, the Float8 format presented in Table \ref{tab:formats}
 has 3 exponent bits and has a similar range-precision trade-off as Posit8. Posit16 is the 16-bit format with 1 exponent bit, hence also called
 Posit(16,1) and is thought to be the alternative to Float16. Posit32 is the 32-bit posit format with 2 exponent bits, hence shortened from
-Posit(32,2), which is proposed to be the alternative to Float32. The following chapters will mostly investigate Posit8,Posit16 and Posit32,
+Posit(32,2), which is proposed to be the alternative to Float32. While a Posit64 format with 64 bits including 3 exponent bits is defined,
+we will not consider this format here. The following chapters will mostly investigate Posit8,Posit16 and Posit32,
 as in the proposed posit standard, but chapter \ref{chap:shallow_water} will additionally discuss Posit(16,2).
 
 The posit number framework also highly recommends \emph{quires}, an additional register on hardware to store intermediate results.
-Dot-product operations are fused with quire arithmetic and can therefore be executed with a single rounding error, which is only applied
-when converting back to posits. The quire concept could also be applied to floating-point arithmetic (fused multiply-add is available on
-some processors), but is technically difficult to implement on hardware for a general dot-product as the required registers would need
-to be much larger in size. For fair comparison we do not take quires into account. 
+Dot-product operations like $\mathbf{a} \cdot \mathbf{b} = a_1b_1 + a_2b_2 + ... + a_nb_n$ are fused with quire arithmetic and can
+therefore be executed with a single rounding error, which is only applied when converting back to posits. The quire concept could also
+be applied to floating-point arithmetic (fused multiply-add $ab + c$ is available on some processors), but is technically difficult to implement on
+hardware for a general dot-product as the required registers would need to be much larger in size. For fair comparison we do not take quires into account. 
 
 In order to use posits on a conventional CPU we developed for the programming language Julia \citep{Bezanson2017} the posit
-emulator \emph{SoftPosit.jl} \citep{Klower2019}, which is a wrapper for the C-based library SoftPosit \citep{Leong2020}.
+emulator \emph{SoftPosit.jl} \citep{Klower2019}, which is a wrapper for the C-based library SoftPosit \citep{Leong2020}. More details
+and examples on how to use different number formats interchangeably within the Julia programming language are provided in
+section \ref{sec:type_flexible}.
 
 \subsection{Summary on number formats}
 \label{sec:summary_formats}
 
 \begin{table}[htbp]
+	\renewcommand{\arraystretch}{1.1}
 	\center
 	\begin{tabular}{l | r | r | l | l | r | r | r}
 	\textbf{Format} & bits & exp bits & $minpos$ & $maxpos$ & dyn range & $\epsilon$ &  \% NaR \\
 	\hline
-	Float64    & $64$ & $11$ & $5.0 \cdot 10^{-324}$ & $1.8 \cdot 10^{308}$ & 631.6 & $16.3$ & $0.0$ \\
-	Float32    & $32$ & $8$ & $1.0 \cdot 10^{-45}$ & $3.4 \cdot 10^{38}$ & 83.4 & $7.6$ & $0.4$ \\
-	Float16    & $16$ & $5$ & $6.0 \cdot 10^{-8}$ & $65504$ & 12.0 & $3.7$ & $3.1$ \\
-	BFloat16    & $16$ & $8$ & $ 9.2 \cdot 10^{-41}$ & $3.4 \cdot 10^{38}$ & 78.6 & $2.8$ & $0.4$  \\
-        Float8 & $8$ & $3$ & $1.5 \cdot 10^{-2}$ & $15.5$ & 3.0 & $1.9$ & $12.5$\\
+	Float64    & $64$ & $11$ & $5.0 \cdot 10^{-324}$ & $1.8 \cdot 10^{308}$ & 631.6 & $16.3$ & $0.05$ \\
+	Float32    & $32$ & $8$ & $1.0 \cdot 10^{-45}$ & $3.4 \cdot 10^{38}$ & 83.4 & $7.6$ & $0.39$ \\
+	Float16    & $16$ & $5$ & $6.0 \cdot 10^{-8}$ & $65504$ & 12.0 & $3.7$ & $3.13$ \\
+	BFloat16    & $16$ & $8$ & $ 9.2 \cdot 10^{-41}$ & $3.4 \cdot 10^{38}$ & 78.6 & $2.8$ & $0.39$  \\
+        Float8 & $8$ & $3$ & $1.5 \cdot 10^{-2}$ & $15.5$ & 3.0 & $1.9$ & $12.50$\\
         \hline
-        Posit32 & $32$ & $2$ &  $7.5 \cdot 10^{-37}$ & $1.3 \cdot 10^{36}$ & 72.2 & $8.8$ & $0.0$ \\
-        Posit16 & $16$ & $1$ & $3.7 \cdot 10^{-9}$ & $2.7 \cdot 10^{8}$ & 16.9 & $4.3$ & $0.0$\\
-        Posit(16,2) & $16$ & $2$ & $1.4 \cdot 10^{-17}$ & $7.2 \cdot 10^{16}$ & 33.7 & $4.0$ & $0.0$\\
-        Posit8 & $8$ & $0$ & $1.6 \cdot 10^{-2}$ & $64$ & 3.6 & $2.2$ & $0.4$  \\
+        Posit32 & $32$ & $2$ &  $7.5 \cdot 10^{-37}$ & $1.3 \cdot 10^{36}$ & 72.2 & $8.8$ & $10^{-8}$ \\
+        Posit16 & $16$ & $1$ & $3.7 \cdot 10^{-9}$ & $2.7 \cdot 10^{8}$ & 16.9 & $4.3$ & $10^{-3}$\\
+        Posit(16,2) & $16$ & $2$ & $1.4 \cdot 10^{-17}$ & $7.2 \cdot 10^{16}$ & 33.7 & $4.0$ & $10^{-3}$\\
+        Posit8 & $8$ & $0$ & $1.6 \cdot 10^{-2}$ & $64$ & 3.6 & $2.2$ & $0.39$  \\
         \hline
         Int64 & $64$ & $0$ & $1$ & $9.2 \cdot 10^{18}$ & 19.0 & $0.8$ & $0$\\
         Int16 & $16$ & $0$ & $1$ & $32767$ & 4.5 & $0.8$ & $0$\\
         Q6.10 & $16$ & $0$ & $9.8 \cdot 10^{-4}$ & $32.0$ & 4.5 & $3.7$ & $0$\\
         \hline
-        LogFixPoint16 & $16$ & $5$ & $1.5 \cdot 10^{-5}$ & $65491.7$ & 9.6 & $3.8$ & $0.0$\\
-        BLogFixPoint16 & $16$ & $8$ & $5.4 \cdot 10^{-20}$ & $9.1 \cdot 10^{18}$ & 77.1 & $2.9$ & $0.0$
+        LogFixPoint16 & $16$ & $5$ & $1.5 \cdot 10^{-5}$ & $65491.7$ & 9.6 & $3.8$ & $10^{-3}$\\
+        BLogFixPoint16 & $16$ & $8$ & $5.4 \cdot 10^{-20}$ & $9.1 \cdot 10^{18}$ & 77.1 & $2.9$ & $10^{-3}$
         \end{tabular}
         \vspace{10pt}
 	\caption{\textbf{Some characteristics of various number formats.} The number of exponent bits is for logfixs the number of
 	integer bits in the exponent (see section \ref{sec:logfixs}). $minpos$ is the smallest representable positive number,
 	$maxpos$ the largest. The dynamic range is $\log_{10}(\tfrac{maxpos}{minpos})$. The machine precision $\epsilon$ is the decimal
 	precision at $1$ (see section \ref{sec:decimal_precision}), equivalent to the decimal places at least correct after rounding.
-	\% NaR denotes the percentage of bit patterns that represent Not-A-Number (NaN), infinity or Not-A-Real (NaR).}
+	\% NaR denotes the approximate percentage of bit patterns that represent Not-A-Number (NaN), infinity or Not-A-Real (NaR).}
 	\label{tab:formats}
 \end{table}
 
@@ -548,7 +551,7 @@ example as above (Fig. \ref{fig:methods_rounding_modes}b)
 	\label{eq:bitset}
 \end{align}
 
-Different to bitshave, bitsetting has a bias away from zero and will increase the variance following similar arguments. Furthermore,
+Different to bitshave, bitsetting has a bias away from zero and will increase the variance following a similar argumentation. Furthermore,
 although the trailing bits are simpler because they are all \texttt{1}, they still have to be explicitly stored to preserve the rounded
 value. So while bitsetting is a valid binary rounding mode, it does not provide any storage benefits and will need to be combined
 with methods like lossless compression (see section \ref{sec:compression_methods_compression}) to actually yield rounded
@@ -1053,19 +1056,19 @@ infinite loop (Listing \ref{lst:harmonic_sum}). As the first argument the functi
 number format or any other, possibly custom, type in Julia. The syntax \texttt{where T} triggers a separate compilation
 for every type \texttt{T} that is provided as the first argument. Julia hereby makes use of its just-in-time (JIT) compiler,
 which automatically compiles a function at first execution. It relies thereby on \emph{multiple-dispatch} which is a
-programming paradigm whereby all types of the arguments are assessed to determine which (possibly already compiled)
-version of a function to execute. Multiple-dispatch therefore avoids overloading of functions, as several functions
-can exist in parallel, as long as they are defined for different types (and the most type-specific version is chosen in
-case functions are defined for super and subtypes).
+programming paradigm which assesses the types of all arguments to determine which (possibly already compiled)
+version of a function to execute. With multiple-dispatch several, conceptually similar functions
+of the same name can exist in parallel, as long as they are defined for different types, and the most
+type-specific version is chosen in case functions are defined for super and subtypes.
 
-The function is \texttt{harmonic\_sum} is type-stable, as the types of all variables are either internally declared (e.g.
+The function \texttt{harmonic\_sum} is type-stable, as the types of all variables are either internally declared (e.g.
 \texttt{i}, the counter of the loop is always an integer) or follow directly from the provided types in the arguments.
 Therefore, writing abstractly \texttt{s = zero(T)} to obtain the zero-element of type \texttt{T} instead of \texttt{s = 0}
-is important to avoid implicit conversions between types. The function is \texttt{harmonic\_sum} is also type-flexible,
+is important to avoid implicit conversions between types. The function \texttt{harmonic\_sum} is also type-flexible,
 as it can be executed with every type \texttt{T} that has the following functions defined: \texttt{zero(T), one(T)}, addition,
 division, comparison (\texttt{==} in line 10) conversion from integer (\texttt{convert(T,i)} in line 8) and to Float64.
 For example, \texttt{zero(::Type\{Posit8\}) = reinterpret(Posit8,0x00)} to define the zero-element for 8-bit posits, or
-\texttt{+(x::LogFixPoint16,y::LogFixPoint16) = ...} to define the addition between LogFixPoint16s.
+\texttt{+(x::LogFixPoint16, y::LogFixPoint16) = ...} to define the addition between LogFixPoint16s.
 
 These features of Julia allow for \emph{code composability}. As the function \texttt{harmonic\_sum} is abstractly written
 to allow for type flexibility it does not know about any (possibly custom) number format, such as posits or logfixs.
@@ -1147,10 +1150,13 @@ Base.Float64(x::Float16print) = Float64(x.float16)
 \end{lstlisting}
 \end{figure}
 
-While the application here is rather simple, it shows how custom analysis number format will change the compilation of a function. Here,
-Julia's compiler will create an compiled version of \texttt{harmonic\_sum} that contains a \texttt{print} statement after
-every addition, by doing so the two codes of Listing \ref{lst:harmonic_sum} and \ref{lst:float16print} are composed allowing the user
-to interfere with pre-existing algorithms on a high-level basis, e.g. no compiler knowledge is necessary.a
+While the application here is rather simple, it shows how an analysis number format will change the compilation of a function. Here,
+Julia's compiler will create a compiled version of \texttt{harmonic\_sum} that contains a \texttt{print} statement after
+every addition. Hence, the two codes of Listing \ref{lst:harmonic_sum} and \ref{lst:float16print} are composed allowing the user
+to interfere with pre-existing algorithms on a high-level basis; e.g. no compiler knowledge is necessary.
+
+As a result, Listing \ref{lst:harmonic_sum_float16print} shows how the first elements of the harmonic sum $1 + \tfrac{1}{2} + \tfrac{1}{3} + ...$ are added,
+and how the sum stagnates at $7.086$. The next term $\tfrac{1}{514}$ cannot change $7.086$ in addition as it is less than half the distance to the next representable number (round-to-nearest, section \ref{sec:roundnearest}) and the result is rounded back. In Float16 arithmetic we therefore have $7.086 + \tfrac{1}{514} = 7.086$.
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:harmonic_sum_float16print, caption={\textbf{Analysing the function \texttt{harmonic\_sum} with the
@@ -1169,76 +1175,78 @@ julia> harmonic_sum(Float16print)
 \end{lstlisting}
 \end{figure}
 
-As a result, Listing \ref{lst:harmonic_sum_float16print} shows how the first elements of the harmonic sum $1 + \tfrac{1}{2} + \tfrac{1}{3} + ...$ are added,
-and how the sum stagnates at $7.086$. The next term $\tfrac{1}{514}$ cannot be added as it is less than half the distance to the next representable number,
-and therefore round back to $7.086$.
-
 \section{Information theory}
 \label{sec:information}
 
-The following sections introduce fundamental ideas of information theory and how they can be applied to analyse the information contained in the bits
-of binary numbers that are used for weather and climate computing. A more specific discussion on the bitwise real information content analysed for
+The following sections introduce information theory and how it can be used to analyse the information contained in binary number formats,
+which are used for weather and climate computing. A more specific discussion on the bitwise real information content analysed for
 atmospheric data in chapter \ref{chap:compression} is found in section \ref{sec:compression_methods_information_content}.
 
 \subsection{Entropy}
 \label{sec:entropy}
 
-Information entropy is a quantity that measures the amount of information contained in a random variables \citep{Shannon1948,MacKay2003}.
-A random variable $X$ with $n$ discrete outcomes $x_1,x_2,...,x_n$ at chances $p_i \geq 0, i = 1,...,n$ has a probability mass function
-determined by $p_i$ for which the information entropy $H$ is calculated as
+Information entropy is a quantity that measures the amount of information contained in a random variable \citep{Shannon1948,MacKay2003}.
+The information entropy $H$ for a discrete random variable $X$ with $n$ outcomes $x_1,x_2,...,x_n$ is defined as 
 \begin{equation}
-	H = - \sum_i^n p_i \log_b(p_i)
-	\label{eq:entropy}
+    H(X) = - \sum_i^n p_i \log_b(p_i)\text{,}
+    \label{eq:entropy}
 \end{equation}
-The base $b$ of the logarithm defines the unit of entropy. In the following chapters we will exclusively use $b=2$ such that the unit of information
-is given in bits. Furthermore, the entropy contribution of impossible outcomes is $0$, i.e. for $p_j = 0$ we set $p_j \log_b(p_j) = 0$. 
+where the $p_i$ are the values of the probability mass function of $X$, i.e. the probabilities associated with the $i$-th outcome,
+such that $p_i \geq 0, i = 1,...,n$, $\sum_{i=1}^n p_i = 1$. The base $b$ of the logarithm defines the unit of entropy. In the following
+chapters we will exclusively use $b=2$ such that the unit of information is given in bits. Furthermore, the entropy of impossible
+outcomes is defined as $0$, i.e. for $p_j = 0$ we set $p_j \log_b(p_j) = 0$.
 
-Considering the flip of a coin with equal probabilities $p_1=p_2=\tfrac{1}{2}$ (e.g. for $i=1$ the outcome is \emph{tail}, and for $i=2$ it is \emph{head})
-as a first example how to interpret information entropy. Before the coin is flipped, it is known that the outcome is equally likely tail or head. After flipping the
-coin the outcome is observed and we are equally surprised about either outcome. Given our knowledge of the probabilities we had an equal expectation
-for tail or head and so the uncertainty of the outcome is maximised. Applying Eq. \ref{eq:entropy} yields an entropy of 1 bit, which corresponds to
-representing head and tail with \texttt{0} and \texttt{1} such that a sequence of 8 coin flips can be recorded as, for example, \texttt{10110100}.
-The observation of the outcome of every coin flip adds another bit to the sequence.
+For example, when flipping a fair coin each side of the coin has the probability $p_1=p_2=\tfrac{1}{2}$. Here, for
+$i=1$ the outcome is \emph{tail}, and for $i=2$ it is \emph{head}, so each of the two outcomes is equally likely. 
+However, if we assume that the coin is bent, its probabilities are, for example, changed to $p_1 = \tfrac{1}{10}$ and
+$p_2 = \tfrac{9}{10}$. Now in 9 out of 10 cases we would hardly be surprised as the outcome is head as we should expect,
+but in 1 out of 10 cases we would be surprised --- the rarer the event the larger the surprise. Applying Eq. \ref{eq:entropy} yields
+an information entropy of 1 bit for the fair coin, but an entropy of $0.47$ for the bent coin. Intuitively, information entropy can
+be interpreted as the average surprise when observing a random variable. When flipping the fair coin, each of the two outcomes
+are equally likely and therefore the uncertainty, i.e. the surprise, of the outcome is maximised. However, when observing the bent coin,
+in most cases the outcome corresponds to our expectation, which is the more certain event, yielding an information entropy that is less
+than half of the fair coin. The average surprise of the bent coin is lower than the average surprise of the fair coin. 
 
-Assume now that the coin is bent, such that its probabilities change to $p_1 = \tfrac{1}{10}$ and $p_2 = \tfrac{9}{10}$. Now we should expect the outcome
-of a flip to be head, as it is much more likely than tail. Hence, we would be surprised if the outcome was indeed tail given its probability. In this sense
-the information entropy can be interpreted as the average surprise when observing outcomes. In 9 out of 10 cases we would not be surprised as the
-outcome is head as we should expect, but in 1 out of 10 cases we would be surprised --- the rarer the event the larger the surprise. The entropy of such
-a bent coin flip is calculated to be about $0.47$ bit, hence less than half of the coin flip with equal probabilities. Observing the coin flip conveys here
-less information as in most cases we already know what the outcome will be. Recording several coin flips with \texttt{0} and \texttt{1} as before
-will yield a sequence, for example, like \texttt{0000100000000100...} which consists mostly of \texttt{0}s.
+The entropy of a discrete random variable defined over a closed interval, is maximised by a uniformly distributed probability
+mass function, i.e. all outcomes are equally likely (Eq. \ref{eq:entropy}). For $n$ possible outcomes the maximum entropy is then
+$\log_2(n)$ bits. Therefore, the fair coin flip with equal probabilities has maximum entropy, meaning that the prior knowledge of the
+probability function does not provide a means to predict the outcome. In that sense, observing the outcome provides exactly 1 bit of
+information. In contrast, the flip of the bent coin does not have maximum entropy but observing the event only conveys $0.47$ bit of
+information, as in most cases we can correctly predict its outcome.
 
-The entropy of a random variable is maximised for a uniform distribution, i.e. all outcomes are equally likely (see Eq. \ref{eq:entropy}). For $n$
-possible outcomes the maximum entropy is then $\log_2(n)$ in units of bits. The coin flip with equal probabilities therefore has maximum
-entropy, meaning that the prior knowledge of its probabilities does not provide a mean to predict the next outcome. In that sense, observing
-the next outcome provides exactly 1 bit of information. In contrast, the flip of a bent coin does not have maximum entropy. Shannon's source
-coding theorem \citep{Shannon1948} therefore says that there is a way to encode a sequence like \texttt{0000100000000100...} (as
-observed for the bent coin) with less than 1 bit per coin flip. In fact, its entropy of 0.47 bit is a lower limit on the average number of bits needed
-to encode such a sequence. Intuitively, one may think of an encoding which only stores the number of flips until the next \texttt{1} (i.e. head)
-is observed, here $5,9,...$. Finding an encoding that requires less storage is the subject of lossless compression algorithms, which
-aim to remove redundancies (here long sequences of \texttt{0}s) until an encoding is found that itself approaches maximum entropy.
+The outcomes of several coin flips can be represented with head and tail or equivalently \texttt{0} and \texttt{1} such that a sequence
+of 8 flips with the fair coin can be recorded as, for example, \texttt{10110100}. Every element of that sequence is a bit, forming an
+8-bit sequence or 1 byte together. Given the entropy of 1 bit for every flip of the fair coin, the observation
+of the outcome adds another bit to the sequence. In the case of the bent coin, such a sequence will contain on average nine times
+as many \texttt{0}s than \texttt{1}s, for example 14 flips of the bent coin could result in \texttt{00001000000001}.
+When taking independent samples from a random variable and encoding them as such a sequence, Shannon's source coding theorem
+\citep{Shannon1948} states that the information entropy is the lower limit on the average number of bits required to encode that sequence.
+For example, for the bent coin one may use an encoding which only stores the number of flips until the next 1 (e.g. 5,9 for \texttt{00001000000001})
+instead of the outcome of each individual throw. Finding an encoding for a sequence that approaches maximum entropy and therefore requires
+less storage without loss of information is the subject of lossless compression algorithms \citep{MacKay2003}.
 
 \subsection{Bitpattern entropy}
 \label{sec:bitpattern_entropy}
 
 An $n$-bit number format has $2^n$ bitpatterns available to encode a real number. The bitpattern entropy is the
-Shannon information entropy $H$, in units of bits \citep{Shannon1948}, calculated from the probability of each bitpattern 
+Shannon information entropy $H$, in units of bits \citep{Shannon1948}, calculated from the probability $p_i, i = 1,...,2^n$ of each bitpattern 
 	\begin{equation}
 	H = - \sum_{i=1}^{2^n} p_i \log_2(p_i)
 	\end{equation}
-For most data arrays, not all bitpatterns are used at uniform probability for which $p_i = 2^{-n}$, which maximises the entropy
-to $H = \log_2(2^n) = n$. The difference $n-H$ between maximum entropy $n$ and the actual entropy $H$ is denoted as free
-entropy and can be interpreted as the number of bits that are effectively unused in the encoding of a data array into the
-respective number format. For example, a data array of signed integers that is uniform in the positive range, but does not
-contain negative integers will have a free entropy of 1 bit, as the sign bit is unused.
+For most data arrays, the bitpatterns are not used at uniform probability. For a uniform distribution the probabilities are all equal and
+$p_i = 2^{-n}$ and the entropy is maximised to $\log_2(2^n) = n$. The difference $n-H$ between maximum entropy $n$ and
+the actual entropy $H$ is denoted as free entropy. With Shannon's source coding theorem, the free entropy and can be interpreted as
+the number of bits that are effectively unused in the encoding of a data array into the respective number format. For example, a data
+array of signed integers that is uniform in the positive range, but does not contain negative integers will have a free entropy of 1 bit,
+as the sign bit is unused.
 
 Floating-point numbers can never have a maximum entropy as their encoding is not a bijective function. While one could argue
 that encoding both +0 and -0 with distinct bitpatterns is bijective ($\tfrac{1}{-0} = -\infty \neq \infty = \tfrac{1}{0}$ in float arithmetic),
 many bitpatterns are used to encode NaN (see Eq. \ref{eq:float_all}), violating bijection. In practice, the free entropy resulting
 from this redundancy is negligible. Even for Float8 with 12.5\% of bitpatterns representing NaR (Table \ref{tab:formats}) the 
 resulting free entropy is 0.2 bit, reducing the maximum entropy of 8 bit to 7.8 bit. In contrast, using Float64 to represent 
-numbers in the range of [256,512) (similar to for example air or water temperature on Earth in Kelvin) has an entropy of at 
-most 52 bit compared to the 64 available bits as the sign and exponent bits are unused. Furthermore, such a data array
+numbers in the range of [256,512) (similar to, for example, air or water temperature in Kelvin on Earth) has an entropy of at 
+most 52 bits compared to the 64 available bits as the sign and exponent bits are unused. Furthermore, such a data array
 would need to have at least $2^{52} \approx 10^{15.6}$ entries to reach maximum entropy in 52 bits. This corresponds to
 a theoretical array size of 36 Petabyte, which is far beyond typical array sizes. From an entropy perspective, using 64-bit number
 formats are therefore a very inefficient way to encode real numbers into bits. Nevertheless, this entropy inefficiency allows
@@ -1272,7 +1280,7 @@ Substituting into Eq. \ref{eq:cond_entropy} yields a conditional entropy of $H(\
 interpreted as follows. While it is unclear which team will win, once one team is known to have won no further information is 
 provided when learning that the other team has lost --- this is implicitly given, given the knowledge of whether one team has won or lost.
 However, the unconditional entropy, calculated from the unconditional probabilities of either team winning, $p_i = \tfrac{1}{3},
-p_j = \tfrac{2}{3}$, is $H \approx 0.92\mathrm{bit}$. The (unconditional) information entropy is larger than 0 as it is
+p_j = \tfrac{2}{3}$, is $H \approx 0.92~\mathrm{bit}$. The (unconditional) information entropy is larger than 0 as it is
 still uncertain which team will win, however, once one team wins, it implicitly follows that the other team has lost, which does not
 provide any further information. 
 
