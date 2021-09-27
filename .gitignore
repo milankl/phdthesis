@@ -5,4 +5,7 @@
 *.pyg
 *.synctex.gz
 *.toc
+*.bbl
+*.blg
+*.brf
 .DS_Store

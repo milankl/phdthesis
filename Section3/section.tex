@@ -100,7 +100,7 @@ the search for periodic orbits becomes computationally very demanding and we out
 distributed computing in section \ref{sec:distributed_orbit_search}. The agreement between invariant measures
 is analysed with the Wasserstein distance, which is briefly described in section \ref{sec:wasserstein}.
 
-\subsection{An improved random number generator for uniformly distributed floats}
+\subsection[Improved random number generation of floats]{Improved random generation of uniformly distributed floats}
 \label{sec:randfloat}
 
 Conventional random number generation for a float $f$ from a uniform distribution $U(0,1)$
@@ -117,7 +117,7 @@ magnitude larger than $minpos$, the smallest representable positive float, which
 for Float32, Float64, respectively (Table \ref{tab:formats}).
 
 \begin{figure}[tbhp]
-\begin{lstlisting}[language=JuliaLocal,label=lst:randfloat,caption={\textbf{An improved random number generator (RNG) for uniformly
+\begin{lstlisting}[language=JuliaLocal,label=lst:randfloat,caption={\textbf{An improved random number generator for uniformly
 distributed floats.} The Julia function \texttt{randfloat} takes a number format as argument (here only the version for Float32 is presented).
 \texttt{\%} is the remainder after division, for unsigned integers effectively converting between unsigned integers by adding leading
 zeros or discarding leading bits. \texttt{?} indicates a one-line if-clause. \texttt{\&} is the bitwise logical and-operation. \texttt{$\vert$}
@@ -246,8 +246,8 @@ and simulates the dynamical system independently of other processes until an orb
 which reduces successively all $n$ orbits found into a list of unique orbits, as several initial conditions can yield the same orbit.
 Instead of defining an orbit by all of the points on it, which would be computationally inefficient for very long orbits, we describe
 an orbit by its period length and minimum. The minimum of an orbit is the point for which the $L^2$ norm is minimised.  While it is
-theoretically possible that an orbit has several minima with identical norms, this case was practically negligible in our applications.
-In other applications two such falsely-identified unique orbits can still be merged in post-processing.
+theoretically possible that an orbit has several minima with identical norms, this case was very rare in our applications.
+Two such falsely-identified unique orbits can still be merged in post-processing.
 A uniqueness check between two orbits (or one orbit and a list of orbits, in which case the uniqueness check is pairwise against every
 orbit in the list) is unsuccessful and yields a single orbit only if all of the three following criteria are fulfilled
 
@@ -257,8 +257,9 @@ orbit in the list) is unsuccessful and yields a single orbit only if all of the 
 \item \textbf{Minimum.} The orbits’ minima, including possible rotation of the variables for spatially periodic solutions, have to be bitwise identical.
 \end{enumerate}
 
-While criterion 3 is sufficient to identify the uniqueness of two orbits, it is computationally more efficient to check for criterion 3
-only if criterion 2 is fulfilled, which is only checked if criterion 1 is fulfilled, hence the proposed order of the criteria.
+While criterion 3 is sufficient to identify the uniqueness of two orbits (excluding the two minima exception as described above),
+it is computationally more efficient to check for criterion 3 only if criterion 2 is fulfilled, which is only checked if criterion 1 is fulfilled,
+hence the proposed order of the criteria.
 \subsection{Wasserstein distance}
 \label{sec:wasserstein}
 

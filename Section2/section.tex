@@ -75,6 +75,7 @@ correlation of climate data is exploited for higher compression efficiency \cite
 \label{sec:compression_data}
 
 \subsection{Copernicus Atmospheric Monitoring Service}
+\label{sec:CAMS}
 
 CAMS data is analysed for one time step on 01/12/2019 12:00 UTC, bilinearly regridded onto a regular 0.4\textdegree{}x0.4\textdegree{}
 longitude-latitude grid using climate data operators (cdo) v1.9. All 137 vertical model levels are included.
@@ -89,6 +90,7 @@ which circles on latitude bands around the globe starting at the South Pole till
 Fewer grid points of the octahedral grid reduce the size, but the correlation in latitudinal direction cannot be exploited.
 
 \subsection{Grid definitions}
+\label{sec:grid_definitions}
 
 The compression methods described here are applied to gridded binary data. Data on structured grids can be represented as a tensor,
 such that for two dimensions that data can be arranged in a matrix $A$  with elements $a_{ij}$ and $i,j$ indices.
@@ -99,10 +101,11 @@ bit position fixed. For example, the sequence of bits consisting of the first ma
 and so on. We may refer to these bits as bits from adjacent grid points. Every bit position in elements of $A$ is itself a matrix, e.g.
 the matrix of sign bits across all grid points.
 
-\section{Methods: Information content}
-\label{sec:compression_methods_information_content}
+\section{Methods}
+\label{sec:compression_methods}
 
 \subsection{Real information content}
+\label{sec:real_information}
 
 The Shannon information entropy $H$ in units of bits \citep{Shannon1948} takes for a bitstream $b = b_1b_2...b_k...b_l$, i.e. a sequence
 of bits of length $l$, the form
@@ -113,8 +116,8 @@ of bits of length $l$, the form
 with $p_0,p_1$ being the probability of a bit $b_k$ in $b$ being $0$ or $1$ (see section \ref{sec:entropy}).
 The entropy is maximised to 1 bit for equal probabilities $p_0 = p_1 = \tfrac{1}{2}$ in $b$. We derive the mutual information
 \citep{Schreiber2000,Kraskov2004,Pothapakula2019}
-of two bitstreams $r = r_1r_2...r_k...r_l$ and $s = s_1s_2...s_k...s_l$. The mutual information is defined via the joint probability
-mass function $p_{rs}$, which here takes the form of a 2x2 matrix
+of two bitstreams $r = r_1r_2...r_k...r_l$ and $s = s_1s_2...s_k...s_l$ (see section \ref{sec:mutual_information}). The mutual
+information is defined via the joint probability mass function $p_{rs}$, which here takes the form of a 2x2 matrix
  	\begin{equation}
 	p_{rs} = \begin{pmatrix} p_{00} & p_{01} \\ p_{10} & p_{11} \end{pmatrix}
 	\end{equation}
@@ -125,10 +128,12 @@ The mutual information $M(r,s)$ of the two bitstreams $r,s$ is then
 	M(r,s) = \sum_{r=0}^1 \sum_{s=0}^1 p_{rs} \log_2 \left( \frac{p_{rs}}{p_{r=r}p_{s=s}} \right)
 	\end{equation}
 We now consider the two bitstreams $r,s$ being the preceding and succeeding bits (for example in space or time) in a single bitstream $b$,
-i.e. $r=b_1b_2...b_{l-1}$ and $s=b_2b_3...b_l$. As explained above, this can for example be the bitstream of all first mantissa bits in the
-gridded data. Considering $r,s$ as the preceding and succeeding bits is equivalent to the bitwise mutual information in adjacent grid points.
+i.e. $r=b_1b_2...b_{l-1}$ and $s=b_2b_3...b_l$. As explained in section \ref{sec:grid_definitions}, this can for example be the
+bitstream of all first mantissa bits in the gridded data. Considering $r,s$ as the preceding and succeeding bits is equivalent to
+the bitwise mutual information in adjacent grid points.
 The (unconditional) entropy is then effectively $H = H(r) = H(s)$ as in Eq. \ref{eq:bit_unconditional_entropy} and for $l$ being very large.
-The conditional entropies $H_0,H_1$ are conditioned on the state of the preceding bit $b_{k-1}$ being $0$ or $1$, respectively
+The conditional entropies $H_0,H_1$ (see section \ref{sec:cond_entropy}) are conditioned on the state of the preceding bit
+$b_{k-1}$ being $0$ or $1$, respectively
 	\begin{align}
 	H_0 &= -p_{00} \log_2(p_{00}) - p_{01} \log_2(p_01)\\
 	H_1 &= -p_{10} \log_2(p_{10}) - p_{11} \log_2(p_11) 
@@ -141,7 +146,7 @@ Eq. \ref{eq:bit_unconditional_entropy} the mutual information $M$ of succeeding 
 	\label{eq:realinformation_content}
 	\end{equation}
 which is the real information content $I$. This definition is similar to \cite{Jeffress2017} but avoids an additional assumption of an uncertainty
-measure. Their formulation similarly uses the state of bits as predictors but assesses the conditional probability density function (pdf) of a
+measure. Their formulation similarly uses the state of bits as predictors but assesses the conditional probability mass functions of a
 dynamical system as predictands. The binwidth of the pdf is chosen to represent the uncertainty in the system, which the bitwise real information
 strongly depends on. The formulation here avoids such an additional assumption of uncertainty as bits are used as both predictors and
 predictands in the conditional entropy. Consequently, the uncertainty is obtained from the data itself solely based on the mutual information
@@ -153,6 +158,7 @@ In the case where $H > p_0H_0 + p_1H_1$, the preceding bit is a predictor for th
 real information ($I > 0$).
 
 \subsection{The multidimensional real information content}
+\label{sec:multidimensional_real_information}
 
 The real information content $I_m$ for an $m$-dimensional array $A$ is the sum of the real information along the $m$ dimensions.
 Let $b_j$ be a bitstream obtained by unravelling a given bitposition in $A$ along its $j$-th dimension. 
@@ -167,6 +173,7 @@ Due to the presence of periodic boundary conditions for longitude a succeeding b
 This simplifies the calculation as the bitstreams are obtained from permuting the dimensions of  and subsequent unravelling into a vector.
 
 \subsection{Preserved information}
+\label{sec:preserved_information}
 
 We define the preserved information $P(r,s)$ in a bitstream $s$ when approximating $r$ (e.g. after a lossy compression) via the
 symmetric normalised mutual information
@@ -196,6 +203,7 @@ positions in the joint probability $p_{rs}$, which will then be a $m \times 2$ m
 real information as the rounding errors of round-to-nearest and halfshave are equivalent.
 
 \subsection{Significance of real information}
+\label{sec:significance_real_information}
 
 In the analysis of real information it is important to distinguish between bits with very little but significant information and
 those with information that is insignificantly different from zero. While the former have to be retained, the latter should be
@@ -229,10 +237,8 @@ We consider real information below $H_f$ as insignificantly different from 0 and
 	\label{fig:information_resolution}
 \end{figure}
 
-\section{Methods: Properties of real information}
-\label{sec:compression_methods_properties}
-
 \subsection{Dependency of the bitwise real information on correlation}
+\label{sec:information_correlation}
 
 The real information as defined here depends on the mutual information of bits in adjacent grid points.
 Higher autocorrelation in data (meaning a higher correlation between adjacent grid points) increases the
@@ -270,6 +276,7 @@ where only the last exponent bit and mantissa bits contain information (Fig. \re
 Using Celsius instead shifts information from the mantissa bits into the exponent and sign bits.
 
 \subsection{Limitations of the information-preserving compression}
+\label{sec:information_limitation}
 
 The definition of real information presented here is based on the mutual information in adjacent grid points.
 We therefore assume a spatial and temporal coherence of data that will come with some autocorrelation.
@@ -314,6 +321,7 @@ floats repeatedly will have no effect beyond the first application (idempotence)
 \end{figure}
 
 \subsection{Preservation of gradients}
+\label{sec:preservation_gradients}
 
 The preservation of gradients and other higher-order derivatives in data is a challenging aspect of compression.
 Removing false information in data via rounding can result in identical values in adjacent grid points. Even if these values
@@ -331,6 +339,7 @@ Weak gradients are better preserved with Zfp compression at similar compression 
 visible (Fig. \ref{fig:compression_gradients}f). 
 
 \subsection{Structural similarity}
+\label{sec:structural_similarity}
 
 A metric to assess the quality of lossy compression in image processing is the structural similarity index measure (SSIM, \cite{Wang2004}).
 For images it is based on comparisons of luminance, contrast and structure. For floating-point arrays the luminance contributions
@@ -374,9 +383,6 @@ of real information the SSIM$_{\log}$ is also above the Baker threshold (Fig. \r
 threshold of 99\% preserved real information is reasonable. In general, the preserved information is a monotonic function of the
 structural similarity SSIM (or SSIM$_{\log}$) for rounded floating-point arrays, further supporting the usage of preserved
 information as a metric for data compression. 
-
-\section{Methods: Compression}
-\label{sec:compression_methods_compression}
 
 \subsection{Linear and logarithmic quantization}
 \label{sec:linlogquantization}
@@ -428,6 +434,7 @@ to 0. Neither bitshuffle nor XOR significantly increased the compression factors
 \end{figure}
 
 \subsection{Matching retained bits to Zfp's precision}
+\label{sec:zfp_compression}
 
 The Zfp compression algorithm divides a $d$-dimensional array into blocks of size $4^d$ to exploit correlation
 in every dimension of the data. Within each block a transformation of the data is applied with specified absolute
@@ -457,6 +464,7 @@ log-preprocessed data bounds these maximum errors well (Fig. \ref{fig:compressio
 \end{figure}
 
 \subsection{Compressor performances}
+\label{sec:compressor_performance}
 
 Although different compressors and their performance are not within the central focus of this chapter, we analyse
 the compression and decompression speeds as a sanity check (Fig. \ref{fig:compression_speed}). In order to
@@ -495,11 +503,11 @@ orders of magnitude (Fig. \ref{fig:cams_histograms}).
 
 The current compression technique for CAMS is the linear quantization, widely used in the weather and climate
 community through the data format GRIB2 \citep{WMO2003}. CAMS uses the 24-bit version, which encodes values
-in a data array with integers from $0$ to $2^{24}-1$. These 24-bit unsigned integers represent values linearly distributed
-in the min-max range. Unused sign or exponent bits from the floating-point representation are therefore avoided and
-some of the trailing mantissa bits are discarded in quantization. Choosing the number of bits for quantization
-determines the file size, but the precision follows implicitly, leaving the required precision or amount of preserved
-information unassessed.
+in a data array with integers from $0$ to $2^{24}-1$ (see section \ref{sec:linlogquantization}). These 24-bit unsigned
+integers represent values linearly distributed in the min-max range. Unused sign or exponent bits from the floating-point
+representation are therefore avoided and some of the trailing mantissa bits are discarded in quantization. Choosing the
+number of bits for quantization determines the file size, but the precision follows implicitly, leaving the required precision
+or amount of preserved information unassessed.
 
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/bitpattern_hist.png}
@@ -613,7 +621,7 @@ Many general-purpose lossless compression algorithms are available
 dictionaries and other statistical techniques to remove redundancies. Most algorithms operate on bitstreams and exploit the
 correlation of data in a single dimension only, we therefore describe this method as 1-dimensional (1D) compression. Here, we
 use Zstandard for lossless compression \citep{Collet2020}, which has emerged as a widely available default in recent years
-(see section \ref{sec:compression_methods_compression}).
+(see section \ref{sec:compression_lossless}).
 
 The compression of water vapour at 100\% preserved information (16 mantissa bits are retained) yields a compression
 factor of 7x relative to 64-bit floats (Fig. \ref{fig:map_roundlossless_zfp}a). At 99\% of preserved information
@@ -712,7 +720,7 @@ algorithm for two to four dimensions \citep{Lindstrom2014,Pinard2020,Poppick2020
 Zfp divides a $d$-dimensional array into blocks of $4^d$  values (i.e. the edge length is 4), which allows to
 exploit the correlation of climate data in up to 4 dimensions. To extend the concept of information-preserving
 compression to modern compressors like Zfp, the bitwise real information is translated to the precision options of Zfp
-(more details in section \ref{sec:compression_methods_compression}).
+(more details in section \ref{sec:zfp_compression}).
 
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/compression/compressfac_comparison.pdf}
@@ -758,7 +766,7 @@ For temperature this is equivalent to a median absolute error of 0.1\textdegree{
 Compressing the entire CAMS dataset in the three spatial dimensions with Zfp while preserving 99\% of the information yields
 an overall compression factor of 24x (Fig. \ref{fig:compression_error}). Maximum absolute error and decimal errors are for
 most variables very similar to 1D round+lossless (see Fig. \ref{fig:compression_error_distribution} and section
-\ref{sec:compression_methods_compression} for a discussion why they are not identical), providing evidence that a
+\ref{sec:zfp_compression} for a discussion why they are not identical), providing evidence that a
 multidimensional compression is preferable for higher compression factors. 
 
 Due to the limited meaning of error norms in the presence of uncertainties in the uncompressed reference data, the forecast

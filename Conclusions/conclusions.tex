@@ -1,16 +1,60 @@
-\chapter{Conclusions}
+\chapter{Concluding discussion}
 \label{chap:conclusions}
-\section{Summary}
 
 Numerical models of weather and climate are high-performance applications for the world's largest supercomputers, producing very large amounts of data. 
 While 32 and 64-bit floating-point numbers are the only widely available number formats for scientific computing, this thesis investigates the potential
 for lower precision computations and data compression for weather and climate modelling. An information-preserving compression for climate data
-is derived, presented and discussed that distinguishes between the real and false information in data.
+is derived, presented and discussed that distinguishes between the real and false information in data. Discarding the false information bits was shown
+to be efficient to achieve compression factors between 10 and 50x for many different variables. Especially the analysis of the bitwise real information content
+shows that different variables require different levels of precision. Hence, using a default level of precision for all of them, will be inefficient as either large amounts of false information is retained or real information discarded. Given that default precisions are generally high, a large share of a climate data
+archive stores essentially random bits without any real information. Removing such bits before storage will reduce the load on the data archive,
+file sharing servers and bandwidth constraints of users. If information-preserving compression is combined with low-precision computing,
+the free resources from the supercomputer and the data archive can also be used to archive variables at higher resolution.
+
+But understanding the impact of low-precision arithmetic on chaotic systems is difficult. Using simple chaotic dynamical systems as well as the more
+complex shallow water equations we investigate several ways how low precision affects the simulated dynamics. With low precision the number of
+discrete states in a system is exponentially reduced, causing bitwise periodicity with shorter periods compared to high precision. While low precision
+truncates the periodic orbit spectrum and therefore the simulated attractors, we find no evidence for a significant degradation of a system with more than
+just a few variables. A system with many variables is estimated to have bitwise periodic orbits that are far beyond reach for any computer, even at low
+precision. Given that low-precision computing is applied to accelerate simulations such that freed resources can be reinvested into improving resolution
+through more variables, there is little practical concern. In our applications, the reduction in periodic orbit lengths due to low precision is compensated with
+higher resolution. 
+
+Furthermore, stochastic rounding can be applied to avoid periodicity and to reduce rounding errors. This rounding mode was found beneficial in 
+simulations of simple chaotic systems to reduce average rounding errors without the need for higher precision.  Although stochastic rounding is
+currently unsupported by available hardware, it is nevertheless possible to include a software-implementation into a few operations without
+sacrificing performance. Mixed-precision with stochastically rounded conversions between low and high precision might be a competitive
+approach as it circumvents the need for stochastic arithmetics on hardware and can be used for low-precision communication too.
+
+However, in the shallow water equations we found evidence that a simulation's resilience to low precision can highly depend on details of the
+numerical discretisation schemes implemented: With a conventional time integration Float16 simulations include greatly amplified gravity waves,
+impact the geostrophic balance and rounding errors grow similarly fast as discretisation errors. However, with a compensated time integration to
+reduce the rounding errors in one addition per time step and variable, Float16 simulations are a competitive alternative to simulations with Float64.
+On the other hand, alternative number formats such as posits can provide more precision at the same number of bits compared to floats.
+But given the lack of widely available hardware support, their future in high-performance computing is questionable. In general, we find
+low-precision resilient algorithms far more important than the choice of the number format to reduce the impact of rounding errors from
+low precision. While floats are not the best number format for weather and climate models, they may be good enough even at 16 bits when
+combined with carefully designed algorithms.
+
+To test the performance of the, to our knowledge, first 16-bit fluid circulation model ShallowWaters.jl we execute it on Fujitsu's A64FX, the first
+available central processing unit that supports Float16 arithmetic. We approach 4x speedups with Float16 compared to Float64 at minimal
+rounding errors due to the compensated time integration and avoid issues from the small representable range of Float16 by systematic rescaling.
+Both techniques show the importance of algorithms that are designed for 16-bit computing and that a naive transition to lower precision will
+likely fail. However, this also provides an opportunity as it will be easier to port algorithms that are more resilient to low precision to future hardware.
+Many weather and climate forecasting centres have a new supercomputer regularly and the time to next upgrade can be less than
+the time to rewrite and test core algorithms. In that sense, a weather or climate model with core algorithms that are developed for 16-bit
+arithmetics will be much easier to transition to new computing hardware. On the other hand, a model that relies on 64-bit arithmetic will
+likely miss out on future advances in computing hardware and an avoidable dependency is created.
+
+While it remains an open question whether an entire weather or climate model can be executed with 16-bit arithmetics, this thesis finds no
+reason that it is not possible. The bitwise real information content of no variable was found to exceed 16 bits; scaling techniques are
+presented to squeeze complex algorithms into a limited dynamic range; and precision issues can be addressed by modifications of the
+numerical schemes, as presented for the compensated time integration. Converting complex algorithms towards 16 bits can be a 
+challenging endeavour but modern programming languages can accelerate efforts. In this thesis we exploited the programming paradigms
+of code composability and type flexibility to develop a shallow water model that can run with many different number formats and on different
+computing architectures, without any code changes. With a combination of these techniques and an increased effort there is little reason
+to assume that 16-bit weather and climate models are not possible. While the development can be challenging, such a new generation of
+computationally efficient models will provide a competitive performance on modern computing architecture towards more reliable weather
+and climate forecasts in the future.
 
 
-
-Low-precision climate computing can accelerate simulations
-such that freed resources can be reinvested into improving 
-
-
-\section{Discussion}
