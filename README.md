@@ -1,6 +1,7 @@
 # Low-precision climate computing: Preserving information despite fewer bits
 
-A thesis submitted for the degree Doctor of Philosophy
+A thesis submitted for the degree Doctor of Philosophy,
+[[pdf version here]](https://github.com/milankl/phdthesis/blob/main/thesis.pdf).
 
 Milan Klöwer  
 Atmospheric, Oceanic and Planetary Physics  
