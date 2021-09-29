@@ -62,7 +62,7 @@ adding so-called half precision to the set of available levels of precision for 
 Fugaku, the fastest supercomputer as of June 2021 (\href{https://top500.org}{TOP500}, \cite{Dongarra2011}), consists
 of many million processors all of which are capable to compute 16-bit numbers four times as fast as 64 bits. However, these 
 16-bit half-precision floating-point numbers have a reduced precision of less than 4 decimal places over a limited range from
-$6 \cdot 10^{-8}$ to $65504$. Numbers with an absolute values smaller or larger cannot be represented. Using 16-bit computations in 
+$6 \cdot 10^{-8}$ to $65504$. Numbers with an absolute value smaller or larger cannot be represented. Using 16-bit computations in 
 complex simulations is therefore challenging \citep{Klower2020a}: The range of numbers occurring in simulation has to be controlled,
 which requires scaling of algorithms to avoid very small and very large numbers outside the representable range.
 Rounding errors arising from computations at lower precision should not exceed other errors, which may require
@@ -83,7 +83,7 @@ simulation have to be compared to the statistics from a high precision reference
 can then be considered if no significant deviation of the simulated statistics with a changing precision is found. Such a comparison
 can be understood as a Turing test \citep{Turing1950, Baker2019} in which a low precision simulation or data set has to pass in
 comparison to a high precision reference with respect to any metrics that are considered important for a simulation's use cases.
-For weather forecast model higher rounding errors may be acceptable if the skill in predicting the weather at a given location within
+For weather forecast models higher rounding errors may be acceptable if the skill in predicting the weather at a given location within
 a week is not degraded \citep{Duben2014}. However, the impacts of rounding errors on such complex systems can be diverse
 and not obvious. While a change in precision impacts the simulation of every chaotic dynamical system, the usefulness of a simulation
 can be unaffected even over a large range of precision \citep{Palmer2015}.

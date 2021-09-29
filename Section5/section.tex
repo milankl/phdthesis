@@ -16,13 +16,13 @@ Earth Systems}, in review. Preprint \href{https://doi.org/10.1002/essoar.1050747
 \vspace{\baselineskip}
 \normalsize
 
-\paragraph{Abstract.} Most Earth-system simulations run on conventional CPUs in 64-bit double precision floating-point numbers
+\paragraph{Abstract.} Most Earth-system simulations run on conventional CPUs in 64-bit double-precision floating-point numbers
 Float64, although the need for high-precision calculations in the presence of large uncertainties has been questioned. Fugaku,
 currently the world’s fastest supercomputer, is based on A64FX microprocessors, which also support the 16-bit low-precision format
 Float16. We investigate the Float16 performance on A64FX with ShallowWaters.jl, the first fluid circulation model that runs entirely
 with 16-bit arithmetic. The model implements techniques that address precision and dynamic range issues in 16 bit. The precision-critical
 time integration is augmented to include compensated summation to minimize rounding errors. Such a compensated time integration is
-as precise but faster than mixed-precision with 16 and 32-bit floats. As subnormals are inefficiently supported on A64FX the very
+as precise but faster than mixed precision with 16 and 32-bit floats. As subnormals are inefficiently supported on A64FX the very
 limited range available in Float16 is $6 \cdot 10^{-5}$ to $65504$. We develop the analysis-number format Sherlogs.jl to log the arithmetic results
 during the simulation. The equations in ShallowWaters.jl are then systematically rescaled to fit into Float16, using 97\% of the available
 representable numbers. Consequently, we benchmark speedups of 3.8x on A64FX with Float16. Adding a compensated time integration
@@ -32,7 +32,7 @@ therefore shows that 16-bit calculations are indeed a competitive way to acceler
 
 \section{Introduction}
 
-The first numerical weather prediction models have recently moved away from 64-bit double precision floating-point numbers
+The first numerical weather prediction models have recently moved away from 64-bit double-precision floating-point numbers
 for higher computational efficiency in lower precision \citep{Govett2017,Nakano2018,Rudisuhli2013,Vana2017}. While both Float32
 and Float64 formats are widely available for high-performance computing, support for 16-bit arithmetic is only available on mainstream
 hardware for a few years, due to the demand for low precision by the deep learning community. The transition towards 16 bit is challenging
@@ -71,14 +71,14 @@ require small time steps such that tendencies are often several times smaller th
 Adding the two yields a loss of precision from the tendency as small increments can only be poorly resolved in low precision
 \citep{Gill1951,Kahan1965,Moller1965}. In extreme cases this can lead to a model stagnation \citep{Croci2020}, and is often
 dealt with using mixed-precision approaches \citep{Dawson2018,Klower2020a,TintoPrims2019}, where the tendencies are computed
-in low-precision, but converted to a high-precision format before addition. This is beneficial as a large share of computing time is
+in low precision, but converted to a high-precision format before addition. This is beneficial as a large share of computing time is
 accelerated with low precision, while precision-critical operations are kept in high precision.
 
 Precision loss in calculations can be analysed with a variety of available tools, like FPBench \citep{Damouche2017},
 CADNA \citep{Jezequel2008}, Verrou \citep{Fevotte2019}, and Verificarlo \citep{Denis2016}. Such tools are often either
 based on interval arithmetic, providing rigid rounding error bounds, or on stochastic arithmetic to assess the rounding error growth.
 While these can be useful to identify the minimal decimal precision for simulating chaotic systems, analysing the limited dynamic range
-of low precision number formats is largely unaddressed in these tools.
+of low-precision number formats is largely unaddressed in these tools.
 
 In this chapter, we present, to our knowledge, the first fluid circulation model that runs entirely in hardware-accelerated 16-bit floats on the
 ARM architecture-based microprocessor A64FX. Strategies are presented to solve precision and range issues with 16-bit arithmetic:
@@ -293,7 +293,8 @@ is the first work in which compensated summation is used in a fluid circulation 
 To understand compensated summation, consider the following naïve algorithm for the summation of all the
 entries of a length-$n$ vector $a$ with elements $a_i, i = 1,...,n$
 
-\begin{lstlisting}[language=JuliaLocal]
+\vspace{11pt}
+\begin{lstlisting}[language=JuliaLocal,caption={\textbf{A naïve summation algorithm.}}]
 sum = 0             # variable to store the sum
 for ai in a         # loop over all elements of a
 	sum += ai       # accumulate each element into sum   
@@ -304,9 +305,10 @@ return sum
 This algorithm is prone to rounding errors, which accumulate at a rate proportional to $n$ \citep{Higham1993}.
 Furthermore, the algorithm might cause stagnation, a phenomenon for which the partial sum becomes too large,
 causing each subsequent addition to be neglected due to rounding. Compensated summation offers a much
-better alternative at the cost of introducing an additional compensation variable \texttt{c}:
+better alternative at the cost of introducing an additional compensation variable \texttt{c} (Listing \ref{lst:compensated_summation})
 
-\begin{lstlisting}[language=JuliaLocal]
+\begin{figure}
+\begin{lstlisting}[language=JuliaLocal,caption={\textbf{An algorithm for compensated summation.}},label=lst:compensated_summation]
 c = 0                      # compensation, initially 0
 sum = 0                    # variable to store the sum
 for ai in a                # loop over all elements of a
@@ -317,6 +319,7 @@ for ai in a                # loop over all elements of a
 end
 return sum
 \end{lstlisting}
+\end{figure}
 
 At infinite precision, the compensation \texttt{c} will remain 0. At finite precision, however, calculating \texttt{c = (temp-sum) - aic}
 will estimate the rounding error in the addition \texttt{sum + aic} and subsequently attempt to compensate for it in the next iteration
@@ -324,7 +327,7 @@ through \texttt{aic = ai - c}. For base-2 floating point arithmetic we have exac
 variable \texttt{c} correctly captures the rounding errors in the addition. Compensated summation prevents the rounding errors
 from accumulating, and the overall summation error will stay a mere multiple of machine precision \citep{Higham1993}. Overall,
 the compensation \texttt{c} can be interpreted as a storage variable for rounding errors and effectively prevents rounding errors
-in the summation from growing beyond machine precision accuracy.
+in the summation from growing beyond machine precision.
 
 Compensated summation is especially useful in settings in which the order of summation cannot be manipulated to prevent
 rounding error growth. Time integration schemes, for which the state variables are updated sequentially, are especially
@@ -381,7 +384,7 @@ and no conversions between number formats are necessary.
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/a64fx/error_growth.png}
 	\caption{\textbf{Rounding error growth with Float16 in ShallowWaters.jl
-	using compensated time integration or mixed-precision. a}
+	using compensated time integration or mixed precision. a}
 	Errors are root-mean square (RMS) errors of zonal velocity $u$ relative to Float64. Solid lines denote the median
 	and shadings the interdecile confidence interval. \textbf{b,c} Snapshots of tracer $q$ from a zoom into
 	Fig. \ref{fig:a64fx_tracermixing} after 100 days of simulation and \textbf{d} as \textbf{c} but without
@@ -399,13 +402,14 @@ ShallowWaters.jl is started from identical, in Float16 perfectly representable, 
 an idealised checkerboard pattern to better highlight the turbulence everywhere in the domain.  The grid consists
 of 3000x1500 points at about 2.7~km grid-spacing. With Float16 and without compensated time integration,
 the accumulated rounding error for zonal velocity $u$ compared to Float64 exponentially increases 100-fold in
-the first 150 days (Fig. \ref{fig:a64fx_error_growth}a). With mixed-precision, using Float16 for the tendencies
-and Float32 for the prognostic variables, this rounding error growth is strongly reduced. Errors after a few time steps
-without mixed-precision are reached after about 100 days (about 25,000 time steps) of integration. After
-that the error growth accelerates and chaos removes the information of the initial conditions.
+the first 150 days (Fig. \ref{fig:a64fx_error_growth}a). With mixed precision, using Float16 for the tendencies
+and Float32 for the prognostic variables (see section \ref{sec:swm_results_mixed}), this rounding error growth
+is strongly reduced. Errors after a few time steps without mixed precision are reached after about 100 days
+(about 25,000 time steps) of integration. After that the error growth accelerates and chaos removes the
+information of the initial conditions.
 
 Using a compensated time integration, the rounding error from Float16 is strongly reduced and matches well with the
-error growth of mixed-precision. From the perspective of rounding errors the two methods are therefore equivalently
+error growth of mixed precision. From the perspective of rounding errors the two methods are therefore equivalently
 suited to reduce rounding errors with 16-bit arithmetic. The rounding error growth of the other prognostic variables is
 similar. The positive effect of compensated time integration is well illustrated in snapshots of tracer mixing where even
 after 100 days of simulation only a very slight deviation from the Float64 reference is observable
@@ -428,7 +432,7 @@ where the mixing is enhanced, a difference is visible. The remaining rounding er
 in a more realistic setup by model or discretization errors. Reducing the precision in calculations raises concerns
 about the numerical conservation of physically conserved quantities like mass. The compensated time integration
 conserves the mass in the shallow water equations with Float16 (<0.002\% change within 500 days compared to Float64),
-similar to mixed-precision (Fig. \ref{fig:a64fx_conservation}). Without compensated time integration for Float16 the conservation is with
+similar to mixed precision (Fig. \ref{fig:a64fx_conservation}). Without compensated time integration for Float16 the conservation is with
 0.05\% change over 500 days less accurate. Similar results were obtained for the conservation of the tracer.
 We will now assess the speedups with Float16 compared to Float64 on A64FX.
 
@@ -438,7 +442,7 @@ We will now assess the speedups with Float16 compared to Float64 on A64FX.
 	Mass conservation relative to Float64. \textbf{b} Tracer conservation relative to Float64 in units of tracer
 	concentration with initial conditions in (-1,1), see Fig. \ref{fig:a64fx_tracermixing}. Both mass and tracer
 	are well conserved with Float16 arithmetic. Best conservations are obtained with compensated time
-	integration or mixed-precision.}
+	integration or mixed precision.}
 	\label{fig:a64fx_conservation}
 \end{figure}
 
@@ -485,7 +489,7 @@ As discussed in previous sections, using a compensated time integration can be u
 which comes with a small additional computational cost: Using the compensated time integration the speedups drop to
 about 3.6x for large grids. Nevertheless, a compensated time integration yields higher performances than mixing the
 precision of Float16 and Float32, which approaches only 2.75x here. Consequently, a compensated time integration
-for Float16 is, although as precise, faster than mixed-precision.
+for Float16 is, although as precise, faster than mixed precision.
 
 \section{Discussion}
 \label{sec:hardware_discussion}
@@ -504,23 +508,23 @@ to minimise underflows while making the most of the available representable numb
 subnormal floating-point numbers had to be avoided and scaling of the equations dropped the amount of
 subnormals occurring from 10 to below 0.2\%.
 
-Using 16-bit floats will likely cause precision issues in fluid simulations. While mixed-precision has been
+Using 16-bit floats will likely cause precision issues in fluid simulations. While mixed precision has been
 used to minimise rounding errors in precision-critical calculations, we have presented here an approach
 that compensates for rounding errors to allow for simulations entirely within 16-bit arithmetic.
 The compensated time integration minimises rounding errors from this precision-critical part of a simulation
-at a slightly higher cost. Benchmarking in comparison to mixed-precision shows that the compensated
-time integration is faster in ShallowWaters.jl while being as precise as mixed-precision.
+at a slightly higher cost. Benchmarking in comparison to mixed precision shows that the compensated
+time integration is faster in ShallowWaters.jl while being as precise as mixed precision.
 
 Alternatives to floats have been discussed for weather and climate simulations previously \citep{Klower2019a,Klower2020a}.
 Although posit numbers \citep{Gustafson2017a} are more precise in these applications, the improvement from floats to
-posits is smaller than using mixed-precision and therefore also smaller than the compensated time integration.
-In that sense, algorithms that are low-precision resilient are far more important than the actual choice of the
+posits is smaller than using mixed precision and therefore also smaller than the compensated time integration.
+In that sense, algorithms that are low precision-resilient are far more important than the actual choice of the
 number format, especially given that only floats are widely hardware-supported.
 
 The work in this chapter shows that a naive translation of the mathematical equations into code will likely fail with 16-bit arithmetic.
 However, this does not mean that 16-bit arithmetic is unsuited for the numerical solution of complex partial differential
 equations such as the shallow water equations. But it means that both precision and range issues have to be addressed
-in the design of the algorithms used. A compensated time integration is a low-precision resilient algorithm,
+in the design of the algorithms used. A compensated time integration is a low precision-resilient algorithm,
 and scaling is essential to fit the very limited range of Float16. 
 
 While 16-bit hardware is largely designed for machine learning, its potential to increase computational efficiency

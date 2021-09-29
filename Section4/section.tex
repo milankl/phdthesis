@@ -19,15 +19,15 @@ in Weather and Climate Modeling Analyzed With a Shallow Water Model}, \textbf{Jo
 \vspace{\baselineskip}
 \normalsize
 
-\paragraph{Abstract.} The need for high precision calculations with 64-bit or 32-bit floating-point arithmetic for weather and
+\paragraph{Abstract.} The need for high-precision calculations with 64-bit or 32-bit floating-point arithmetic for weather and
 climate models is questioned. Lower precision numbers can accelerate simulations and are increasingly supported
 by modern computing hardware. This paper investigates the potential of 16-bit arithmetic when applied within a shallow
 water model that serves as a medium complexity weather or climate application. There are several 16-bit number
-formats that can potentially be used (IEEE half precision, BFloat16, posits, integer and fixed-point). It is evident that a
+formats that can potentially be used (IEEE half-precision, BFloat16, posits, integer and fixed-point). It is evident that a
 simple change to 16-bit arithmetic will not be possible for complex weather and climate applications as it will degrade model
 results by intolerable rounding errors that cause a stalling of model dynamics or model instabilities. However, if the posit number
 format is used as an alternative to the standard floating-point numbers the model degradation can be significantly reduced.
-Furthermore, a number of mitigation methods, such as rescaling, reordering and mixed-precision, are available to make model
+Furthermore, a number of mitigation methods, such as rescaling, reordering and mixed precision, are available to make model
 simulations resilient against a precision reduction. If mitigation methods are applied, 16-bit floating-point arithmetic can be used
 successfully within the shallow water model. The results show the potential of 16-bit formats for at least parts of complex weather
 and climate models where rounding errors would be entirely masked by initial condition, model or discretisation error.
@@ -40,7 +40,7 @@ computational resources have vastly increased over the last decades, forecast er
 errors. For instance, uncertainties in the observational data and their assimilation contribute to the errors in the initial conditions
 \citep{Ghil1991}; discrepancies between the mathematical model and the real world cause model errors; and the finite spatial and
 temporal resolution result in discretisation errors. The forecast error is in general a combination and respective contributions can be
-different for different variables and forecast lead times \citep{Jung2010,Palmer2019a}. 64-bit double precision floating-point numbers
+different for different variables and forecast lead times \citep{Jung2010,Palmer2019a}. 64-bit double-precision floating-point numbers
 (Float64, \cite{IEEE1985} and section \ref{sec:floats}) are used by default for weather and climate models since the 1980s with the
 rise of 64-bit computing. The Float64 format introduces rounding errors \citep{Higham2002} that are largely negligible compared
 to the other mentioned sources of error.
@@ -48,9 +48,9 @@ to the other mentioned sources of error.
 Faster calculations and communication on computing architectures can be achieved with reduced-precision floating-point numbers,
 with a trade-off between speed and precision, provided a hardware-accelerated implementation. Deep learning algorithms require
 only low numerical precision \citep{Wang2018,Sun2020} but high computational performance. The recent boom of machine learning
-applications increased the demand on hardware-accelerated reduced precision calculations, such that hardware developments
+applications increased the demand on hardware-accelerated reduced-precision calculations, such that hardware developments
 increasingly offer more flexibility on low-precision number formats. While 16-bit arithmetic was not available for use on commodity
-supercomputing hardware in the past, today most hardware vendors offer the use of 16-bit formats, such as 16-bit half precision
+supercomputing hardware in the past, today most hardware vendors offer the use of 16-bit formats, such as 16-bit half-precision
 floating-point numbers (Float16, \cite{IEEE2008} and section \ref{sec:floats}), on the next generation of hardware
 \citep{Sato2020,Burgess2019}.
 
@@ -103,7 +103,7 @@ the results in this chapter.
 The methods are structured as follows: Section \ref{sec:swm_swm} introduces the shallow water equations and our
 discretisation thereof. For 16-bit arithmetic it is important to scale and reorder the equations which is presented in 
 section \ref{sec:swm_scale}. Section \ref{sec:swm_semilagrange} describes a semi-Lagrangian advection scheme
-resilient to 16-bit arithmetic. The concept of mixed precision and reduced precision communication are explained
+resilient to 16-bit arithmetic. The concept of mixed precision and reduced-precision communication are explained
 in section \ref{sec:swm_mixed} and \ref{sec:swm_comm}.
 
 An extensive discussion of the number formats used in this chapter is found in section \ref{sec:numbers}.
@@ -272,17 +272,17 @@ and a calculation with reals, with a removed offset to reduce rounding errors.
 \subsection{Mixed precision}
 \label{sec:swm_mixed}
 
-In many models, it will not be possible (or useful) to use 16-bit arithmetic throughout the entire model. Some model components
+In many models, it may be challenging to use 16-bit arithmetic throughout the entire model. Some model components
 will be more sensitive to a reduction in precision when compared to others and it often makes sense to reduce precision only in
 those components where results are not deteriorated, while keeping precision high in precision-sensitive components. This approach
 is called \emph{mixed precision} and is already used for the reduction to single precision in ocean and atmosphere models 
-\citep{Vana2017,TintoPrims2019}. Mixed precision requires conversion between high and low precision formats, which introduces
+\citep{Vana2017,TintoPrims2019}. Mixed precision requires conversion between high and low-precision formats, which introduces
 an additional computational step. The conversion either has to be done efficiently on hardware, such as NVidia's tensor cores
 \citep{Hatfield2019,Haidar2018}. Otherwise, the number of conversions should be kept low to reduce overhead \citep{Higham2019}.
 Mixed precision is therefore especially attractive when using low precision for a comparably independent algorithm, such that
 conversion back to high precision is only required once for the result.
 
-\subsection{Reduced precision communication for distributed computing}
+\subsection{Reduced-precision communication for distributed computing}
 \label{sec:swm_comm}
 
 Complex weather and climate models rely on parallelisation to distribute the computational cost of simulations efficiently among
@@ -292,7 +292,7 @@ decomposition, where the spatial domain is split into many subdomains to be calc
 neighbouring subdomains. If 16-bit arithmetic cannot be used within the entire model, it may still be possible to reduce precision
 in the communication between processors \citep{Fan2019}.
 
-Not all weather and climate models would benefit from a reduced precision communication as the acceleration potential depends
+Not all weather and climate models would benefit from a reduced-precision communication as the acceleration potential depends
 on many factors specific to a model and the used hardware, e.g. number of nodes in a cluster and how shared and distributed
 memory is managed. It will also be important whether communication is latency or volume bound. Latency bound communication
 is bound by the time a package of information requires to travel between processors. In contrast, volume bound communication
@@ -302,14 +302,14 @@ can be achieved with reducing precision.
 \begin{figure}[htbp]
 \includegraphics[width=1\textwidth]{Figures/swm/snapshot.png}
 \caption{\textbf{Snapshot of tracer concentration simulated by the shallow water model using different 16-bit number formats.}
-The high-resolution configuration ($\Delta = 5$km) is used with 400x200 grid points. The mixed precision simulations presented
+The high-resolution configuration ($\Delta = 5$km) is used with 400x200 grid points. The mixed-precision simulations presented
 in \textbf{e} and \textbf{f} use Float32 for the prognostic variables only. The tracer was injected uniformly in the lower half of the
 domain 50 days before the time step shown.}
 \label{fig:snapshot}
 \end{figure}
 
 However, if communication volume is an identified bottleneck in a given application, which is often the case in weather and
-climate models, a reduction in computing time can be achieved with reduced precision communication. Reliable model simulations
+climate models, a reduction in computing time can be achieved with reduced-precision communication. Reliable model simulations
 might be possible with 16 or even 8-bit communication, which would result in a significant reduction in communication volume.
 In general, various lossy and lossless data compression techniques can be used to reduce communication volume. Lossless
 communication allows for bit-reproducible compression, but reductions in communication volumes are small due to many
@@ -337,7 +337,7 @@ will be discussed in section \ref{sec:swm_results_mixed}.
 \includegraphics[width=1\textwidth]{Figures/swm/rmse_eta_darker.pdf}
 \caption{\textbf{Forecast error of sea surface height $\eta$ measured as root mean square error (RMSE) taking Float64 as reference.}
 \textbf{a} Forecast error for various 16-bit number formats and mixed 16/32-bit simulations for which the prognostic variables
-are kept in Float32. \textbf{b} Forecast error for reduced precision communication in 8 or 16 bit with various number formats used
+are kept in Float32. \textbf{b} Forecast error for reduced-precision communication in 8 or 16 bit with various number formats used
 for encoding, with Float64 used for all calculations. The communication of boundary values occurs at every time step
 for the prognostic variables. The RMSE is normalised by a mean forecast error at very long lead times. Solid or dashed lines represent
 the median of 200 forecasts per number format. The shaded areas of each model configuration denote the interquartile
@@ -458,7 +458,7 @@ simulated with BFloat16.
 
 In the previous simulations the entire shallow water simulation was performed with the specified number format. As the addition
 of tendencies to the prognostic variables was identified as a key calculation that is error-prone, we investigate now the benefits
-of mixed precision arithmetic, where Float32 is used for the prognostic variables but the tendencies are computed with either
+of mixed-precision arithmetic, where Float32 is used for the prognostic variables but the tendencies are computed with either
 Float16 or BFloat16, two number formats that have the lowest decimal precision around 1. The prognostic variables are now
 reduced to Float16 or BFloat16 before the tendencies are calculated and every term of the tendencies is converted back before
 addition to the prognostic variables. The continuity equation (Eq. \ref{eq:swe}b) then becomes
@@ -475,7 +475,7 @@ and BFloat16/Float32 and instabilities at fronts or in filaments are visibly red
 The forecast error growth is strongly reduced once the prognostic variables are kept as Float32 (Fig. \ref{fig:rmse}a), supporting the
 hypothesis that the addition of tendencies to the prognostic variables is a key computation with low rounding error-tolerance. Although
 BFloat16 is not suitable for shallow water simulations when applied to all computations, mixing BFloat16 with Float32 yields a similar error
-growth to posits, which is well below the discretisation error. Mean state or variability are virtually identical for both mixed precision cases
+growth to posits, which is well below the discretisation error. Mean state or variability are virtually identical for both mixed-precision cases
 (Fig. \ref{fig:mean}) compared to the Float64 reference. The geostrophic balance is largely unaffected, but ageostrophic velocities
 increase in variance, especially for BFloat16 (Fig. \ref{fig:geo}). Gravity waves are similarly present for mixed precision although weaker
 for tendencies computed with Float16 (Fig. \ref{fig:tend}d) and, as discussed, they tend to not interact with the geostrophic time and
@@ -500,7 +500,7 @@ case for posits.
 
 \begin{figure}
 \includegraphics[width=1\textwidth]{Figures/swm/snapshot_comm.png}
-\caption{\textbf{Snapshot of tracer concentration simulated by the shallow water model using reduced precision communication.}
+\caption{\textbf{Snapshot of tracer concentration simulated by the shallow water model using reduced-precision communication.}
 The communication of boundary values occurs at every time step for the prognostic variables. Float64 was used for all calculations.
 Areas where the absolute error exceeds 0.05 are shaded in red only in the lower half of the domain. The tracer was injected uniformly
 in the lower half of the domain 50 days before. This simulation was run in the high-resolution configuration ($\Delta = 5$km).}
@@ -513,17 +513,17 @@ in the lower half of the domain 50 days before. This simulation was run in the h
 A standard method to parallelise simulations is the distributed-memory parallelism via Message Passing Interface (MPI, \cite{TheMPIForum1993}).
 We emulate MPI-like communication in the shallow water model with the copying of boundary values between the right and left boundary (periodic
 boundary conditions). Although the shallow water model does not run in parallel, reducing the precision in the copying of boundary values
-introduces an equivalent error as if reduced precision MPI communication was used between subdomains. Reduced precision is applied
+introduces an equivalent error as if reduced-precision MPI communication was used between subdomains. Reduced precision is applied
 for the communication of the prognostic variables at every Runge-Kutta substep.
 
-Regarding snapshots of tracer concentration simulated with reduced precision communication shows a negligible error for Float16 and
+Regarding snapshots of tracer concentration simulated with reduced-precision communication shows a negligible error for Float16 and
 16-bit posits (Fig. \ref{fig:snapshot_comm}). The error is largest at fronts and not concentrated around the boundaries. Encoding the
 communication with BFloat16 introduces a larger error than for the other 16-bit formats as the decimal precision is with 2.8 clearly lower
 (Table \ref{tab:formats}) for the range of values occurring within the prognostic variables (Fig. \ref{fig:tend}a and b). The errors are quantified
 by the RMSE of surface height $\eta$ as before and are up to about two orders of magnitude smaller than the errors that result from 16-bit arithmetic.
-Even the worst format for 16-bit communication, BFloat16, has a smaller error than the best mixed precision formats, Float16 with Float32.
+Even the worst format for 16-bit communication, BFloat16, has a smaller error than the best mixed-precision formats, Float16 with Float32.
 We therefore extend the short-term forecast experiments to include two 8-bit formats, Posit(8,0) and Float8 (see Table \ref{tab:formats} for
-a description). Both formats are found to be suitable for reduced precision communication here and do not introduce an error that is larger than the
+a description). Both formats are found to be suitable for reduced-precision communication here and do not introduce an error that is larger than the
 discretisation error. Having said that, Float8 communication introduces an error that is comparably large in the first days but growths only
 linearly in the first 50 days of the simulation, which is in contrast to the exponential error growth observed for 16-bit arithmetic.
 
@@ -546,7 +546,7 @@ Shallow water simulations with 16-bit arithmetic required rescaling of some term
 or algorithms. Given that only floats are currently hardware-supported, we investigated mixed-precision approaches.
 Keeping the prognostic variables at 32 bit while computing the tendencies in 16 bit reduced the rounding errors significantly.
 We also showed that numerical precision for communication between compute nodes can be greatly reduced down to 16 or
-even 8-bit without introducing a large error. Reduced precision communication was not found to have a significant impact on
+even 8-bit without introducing a large error. Reduced-precision communication was not found to have a significant impact on
 either mean state, variability, geostrophy or tendencies.
 
 A \emph{perfect model} is used in this study, such that any form of model or initial condition error is ignored and only the number

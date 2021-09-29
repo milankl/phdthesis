@@ -5,124 +5,170 @@
 \section{Open-source software developments}
 \label{sec:open}
 
-\subsection{SoftPosit.jl}
-
-\begin{itemize}
-    \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer, M Giordano, C Leong
-    \item URL: github.com/milankl/SoftPosit.jl
-    \item License: MIT
-    \item Version: 0.3.0
-\end{itemize}
-
-SoftPosit.jl is a software emulator for posit arithmetic. The package exports the Posit8, Posit16, Posit32 number types among other non-standard types, as well as arithmetic operations, conversions and additional functionality. The package is a wrapper for the SoftPosit C-library written by C Leong.
-
-\subsection{StochasticRounding.jl}
-
-\begin{itemize}
-    \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/StochasticRounding.jl
-    \item License: MIT
-    \item Version: 0.1.0
-\end{itemize}
-
-StochasticRounding.jl is a software emulator for stochastic rounding in the Float32, Float16 and BFloat16 number formats. Both 16bit implementations rely on conversion to and from Float32 and stochastic rounding is only applied for arithmetic operations in the conversion back to 16bit. Float32 with stochastic rounding uses Float64 internally. Xoroshio128Plus is used as a high-performance random number generator.
+Several open-source software packages that were developed as part of this thesis are briefly described in the following. For more information
+see the respective repositories.
 
 \subsection{ShallowWaters.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/ShallowWaters.jl
-    \item License: MIT
-    \item Version: 0.3.0
+    \item Author: M Klöwer
+    \item \href{https://github.com/milankl/ShallowWaters.jl}{github.com/milankl/ShallowWaters.jl}
+    \item Version: 0.5.0
+    \item Language: Julia
 \end{itemize}
 
-ShallowWaters.jl is a shallow water model with a focus on type-flexibility and 16bit number formats, which allows for integration of the shallow water equations with arbitrary number formats as long as arithmetics and conversions are implemented. ShallowWaters also allows for mixed-precision and reduced precision communication.
+A shallow water model with a focus on type-flexibility and 16-bit number formats. ShallowWaters allows for Float64/32/16, Posit32/16/8, BFloat16,
+LogFixPoint16, Sonum16, Float32/16 and BFloat16 with stochastic rounding and in general every number format with arithmetics and conversions
+implemented. ShallowWaters also allows for mixed-precision and reduced precision communication.
 
-ShallowWaters is fully-explicit with an energy and enstrophy conserving advection scheme and a Smagorinsky-like biharmonic diffusion operator. Tracer advection is implemented with a semi-Lagrangian advection scheme. Runge-Kutta 4th-order is used for pressure, advective and Coriolis terms and the continuity equation. Semi-implicit time stepping for diffusion and bottom friction. Boundary conditions are either periodic (only in x direction) or non-periodic super-slip, free-slip, partial-slip, or no-slip. Output via NetCDF.
+ShallowWaters uses an energy and enstrophy conserving advection scheme and a Smagorinsky-like biharmonic diffusion operator. Tracer advection
+is implemented with a semi-Lagrangian advection scheme. Strong stability-preserving Runge-Kutta schemes of various orders and stages are used
+with a semi-implicit treatment of the continuity equation. Boundary conditions are either periodic (only in x direction) or non-periodic super-slip, free-slip,
+partial-slip, or no-slip. Output via NetCDF.
+
+\subsection{SoftPosit.jl}
+
+\begin{itemize}
+    \setlength\itemsep{-5pt}
+    \item Authors: M Klöwer, M Giordano, C Leong
+    \item \href{https://github.com/milankl/SoftPosit.jl}{github.com/milankl/SoftPosit.jl}
+    \item Version: 0.3.0
+    \item Languages: Julia, C
+\end{itemize}
+
+SoftPosit.jl is a software emulator for posit arithmetic. The package exports the Posit8, Posit16, Posit32 number types among other non-standard types,
+as well as arithmetic operations, conversions and additional functionality. The package is a wrapper for the SoftPosit C-library written by C Leong.
+
+\subsection{StochasticRounding.jl}
+
+\begin{itemize}
+    \setlength\itemsep{-5pt}
+    \item Author: M Klöwer
+    \item \href{https://github.com/milankl/StochasticRounding.jl}{github.com/milankl/StochasticRounding.jl}
+    \item Version: 0.6.0
+    \item Language: Julia
+\end{itemize}
+
+StochasticRounding.jl is a software emulator for stochastic rounding in the Float32, Float16 and BFloat16 number formats. Both 16bit implementations
+rely on conversion to and from Float32 and stochastic rounding is only applied for arithmetic operations in the conversion back to 16bit. Float32 with
+stochastic rounding uses Float64 internally. Xoroshiro128+ is used as a high-performance random number generator.
 
 \subsection{Sherlogs.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/Sherlogs.jl
-    \item License: MIT
-    \item Version: 0.1.0
-\end{itemize}
-
-Sherlogs.jl provides a number format Sherlog64 that behaves like Float64, but inspects your code by logging all arithmetic results into a 16bit bitpattern histogram during calculation. Sherlogs can be used to identify the largest or smallest number occuring in your functions, and where algorithmic bottlenecks are that limit the ability for your functions to run in low precision. A 32bit version is provided as Sherlog32, which behaves like Float32. A 16bit version is provided as Sherlog16{T}, which uses T for computations as well as for logging.
-
-\subsection{Sonums.jl}
-
-\begin{itemize}
-    \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/Sonums.jl
-    \item License: MIT
+    \item Authors: M Klöwer, Ben Arthur
+    \item \href{https://github.com/milankl/Sherlogs.jl}{github.com/milankl/Sherlogs.jl}
     \item Version: 0.2.0
+    \item Language: Julia
 \end{itemize}
 
-Sonums.jl is a software emulator for Sonums - the Self-Organizing NUMbers. A number format that learns from data. Sonum8 is the 8bit version, Sonum16 for 16bit computations.  The package exports number types, conversions and arithmetics. Sonums conversions are based on binary tree search, and arithmetics are based on table lookups. Training can be done via maximum entropy or minimising the rounding error.
+Sherlogs.jl provides a number format Sherlog64 that behaves like Float64, but inspects code by logging all arithmetic results into a 16-bit bitpattern histogram
+during calculation. Sherlogs can be used to identify the largest or smallest number occurring in functions, and where algorithmic bottlenecks are that limit the
+ability for your functions to run in low precision. A 32-bit version is provided as Sherlog32, which behaves like Float32. A 16-bit version is provided as Sherlog16\{T\},
+which uses T for computations as well as for logging.
 
-\subsection{Float8s.jl}
+Sherlogs.jl also exports the analysis number format DrWatson. DrWatson64{f} behaves like Float64 but evaluates the function f after every arithmetic operation.
+If the result of f is true a stacktrace is recorded, which can be used to identify where in the code certain arithmetic results occur.
+
+\subsection{BitInformation.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer, J Sarnoff
-    \item URL: github.com/milankl/Float8s.jl
-    \item License: MIT
-    \item Version: 0.1.0
+    \item Author: M Klöwer
+    \item \href{https://github.com/milankl/BitInformation.jl}{github.com/milankl/BitInformation.jl}
+    \item Version: 0.2.0
+    \item Language: Julia
 \end{itemize}
 
-Float8s.jl is a software emulator for a 8bit floating-point format, with 3 exponent and 4 significant bits. The package provides the \texttt{Float8} number type, as well as arithmetic operations, conversions and additional functionality. The software emulator is based on conversion to and from Float32, which is used for arithmetic operations.
+BitInformation.jl is a package for the analysis of bitwise information in Julia Arrays. Based on counting the occurrences of bits in floats (or generally any bittype)
+across various dimensions of an array, this package provides functions to calculate quantities like the bitwise real information content, the mutual information,
+the redundancy or preserved information between arrays.
+
+BitInformation.jl also implements various rounding modes (round,bitshave,bitset,halfshave etc.) efficiently with bitwise operations. Furthermore, transformations like XOR-delta,
+bittranspose, or signed\_exponent are implemented.
 
 \subsection{LogFixPoint16s.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/LogFixPoint16s.jl
-    \item License: MIT
-    \item Version: 0.1.0
+    \item Author: M Klöwer
+    \item \href{https://github.com/milankl/LogFixPoint16s.jl}{github.com/milankl/LogFixPoint16s.jl}
+    \item Version: 0.3.0
+    \item Language: Julia
 \end{itemize}
 
-LogFixPoint16s.jl is a software emulator for 16-bit logarithmic fixed-point numbers with 7 signed integer bits and 8 fraction bits. The package provides the \texttt{LogFixPoint16} number type, as well as arithmetic operations, conversions and additional functionality. The software emulator is based on either integer addition or look-up tables and is therefore a comparably fast emulator.
+LogFixPoint16s.jl is a software emulator for 16-bit logarithmic fixed-point numbers with an adjustable number of integer and fraction bits.The package exports the
+LogFixPoint16 number type, as well as arithmetic operations, conversions and additional functionality. The software emulator is based on integer addition for
+multiplication, division and square root, and based on lookup tables for addition and subtraction.
+
+\subsection{Float8s.jl}
+
+\begin{itemize}
+    \setlength\itemsep{-5pt}
+    \item Authors: M Klöwer, J Sarnoff
+    \item \href{https://github.com/milankl/Float8s.jl}{github.com/milankl/Float8s.jl}
+    \item Version: 0.1.0
+    \item Language: Julia
+\end{itemize}
+
+Float8s.jl is a software emulator for the 8-bit floating-point format Float8 with 3 exponent and 4 significant bits. The package provides the \texttt{Float8} number type,
+as well as arithmetic operations, conversions and additional functionality. The software emulator is based on conversion to and from Float32, which is used for arithmetic operations.
 
 \subsection{Lorenz96.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/Lorenz96.jl
-    \item License: MIT
+    \item Author: M Klöwer
+    \item \href{https://github.com/milankl/Lorenz96.jl}{github.com/milankl/Lorenz96.j}
     \item Version: 0.3.0
+    \item Language: Julia
 \end{itemize}
 
-Lorenz96.jl is a type-flexible one-level Lorenz 1996 model, which supports any number type, as long as conversions to and from Float64 and arithmetics are defined. Different number types can be defined for prognostic variables and calculations on the right-hand side, with automatic conversion on every time step. The equations are scaled such that the dynamic range of numbers can be changed. The scaled equations are written division-free.
+Lorenz96.jl is a type-flexible one-level Lorenz 1996 model, which supports many different number formats, as long as conversions to and from Float64 and arithmetics are defined.
+Lorenz96.jl supports mixed-precision: Different number types can be defined for prognostic variables and calculations on the right-hand side, with automatic conversion on every time step.
+The equations are scaled such that the dynamic range of numbers can be changed. The scaled equations are written division-free.
+
+Lorenz96.jl also exports functions that allow for the efficient search using distributed computing to find bitwise periodic orbits. A MapReduce approach is used with Julia's Distributed package.
 
 \subsection{Lorenz63.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/Lorenz63.jl
-    \item License: MIT
+    \item Author: M Klöwer
+    \item \href{https://github.com/milankl/Lorenz63.jl}{github.com/milankl/Lorenz63.jl}
     \item Version: 0.2.0
+    \item Language: Julia
 \end{itemize}
 
-Lorenz63.jl is a type-flexible Lorenz 1963 model, which supports any number type, as long as conversions to and from Float64 and arithmetics are defined. The Lorenz equations are scaled such that the dynamic range of numbers can be changed. The scaled equations are written division-free.
+Lorenz63.jl is a type-flexible Lorenz 1963 model, which supports many different number formats, as long as conversions to and from Float64 and arithmetics are defined.
+The Lorenz equations are scaled such that the dynamic range of numbers can be changed. The scaled equations are written division-free.
 
-\subsection{Jenks.jl}
+\subsection{ZfpCompression.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Kloewer
-    \item URL: github.com/milankl/Jenks.jl
-    \item License: MIT
-    \item Version: 0.1.0
+    \item Authors: M Klöwer, P Lindstrom
+    \item \href{https://github.com/milankl/ZfpCompression.jl}{github.com/milankl/ZfpCompression.jl}
+    \item Version: 0.2.0
+    \item Languages: Julia, C
 \end{itemize}
 
-Jenks.jl is the Jenks Natural Breaks Optimization, a data clustering method to minimise in-class variance or L1 rounding error. Jenks provides a data classification algorithm that groups one dimensional data to minimize an in-class error norm from the class mean but maximizes the same error norm between different classes.
+Julia bindings for the data compression library \href{https://github.com/LLNL/zfp}{zfp} v0.5.5, written by P Lindstrom. Zfp is a library to compress numerical arrays in
+2-4 dimensions. It uses lossy but error-bounded local approximations for data with spatio-temporal correlation in 2 to 4 dimensions. Higher compression factors
+will be achieved the higher the correlation in as many dimensions as possible.
+
+\subsection{LinLogQuantization.jl}
+
+\begin{itemize}
+    \setlength\itemsep{-5pt}
+    \item Author: M Klöwer
+    \item \href{https://github.com/milankl/LinLogQuantization.jl}{github.com/milankl/LinLogQuantization.jl}
+    \item Version: 0.2.0
+    \item Language: Julia
+\end{itemize}
+
+Linear and logarithmic quantisation for Julia arrays into 8, 16, 24 or 32-bit. Quantisation is a lossy compression method that divides the range of values in an array
+in equidistant quantums and encodes those as unsigned integers from $0$ to $2^{n-1}$ where n is the number of bits available. The quantums are either equidistant
+in linear space or in logarithmic space, which has a denser encoding for values close to the minimum in trade-off with a less dense encoding close to the maximum.

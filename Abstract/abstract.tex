@@ -1,5 +1,23 @@
 \begin{abstracts}
 
-...
+Progress towards more reliable weather and climate forecasts is limited by the resolution of numerical models and the complexity of simulated
+processes. Performance is therefore a major bottleneck and current models are not computationally efficient. High precision calculations are
+unnecessary, despite being the standard, given the uncertainties in the climate system and the errors from discretisation, data assimilation
+and unresolved climate processes. In this thesis, we advance several aspects of low-precision climate computing to preserve information despite
+fewer bits: An information-preserving compression is developed that distinguishes between real and false information to reduce the very large
+volume of climate data produced by numerical models, while minimising information loss. The bitwise real information content estimates the
+minimum required precision in climate data, which depends on the variable and is lower than the standard precision-levels of floating-point numbers. 
+The impact of rounding errors introduced by different low-precision arithmetics with deterministic or stochastic rounding modes is analysed
+in chaotic dynamical systems. Standard floating-point numbers are not the best number format for weather and climate simulations. However,
+alternatives, such as posits, exist, but it is unclear whether the large effort needed to develop the respective hardware for future supercomputers
+is justified given the moderate advantage they provide in our applications. A much more central issue towards 16-bit climate models is the design
+of low precision-resilient algorithms. A naive transition to 16 bits either fails or was found to cause issues like amplified gravity waves,
+a change in geostrophy or rounding errors that grow as quickly as discretisation errors. However, many of these issues are found to be
+preventable with techniques such as scaling or a compensated time integration. Combining techniques, we develop a 16-bit fluid circulation
+model that approaches 4x speedups on Fujitsu's A64FX processor compared to 64 bits, despite minimal rounding errors. The result of this
+thesis show that there is little reason to assume that 16-bit weather and climate models are not possible. While the design of models to
+compute and output only the bitwise real information is challenging, it will be a major step towards computationally efficient digital twins
+of the Earth's climate system.
+
 
 \end{abstracts}

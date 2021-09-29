@@ -7,7 +7,9 @@ Conceptualisation: MK, PDD. Data curation: MK. Formal Analysis: MK. Methodology:
 MK. Writing – review and editing: MK, PDD, TNP}
 
 \vspace{\baselineskip}
-\indent M Klöwer, PD Düben, and TN Palmer, 2020. \emph{Number Formats, Error Mitigation, and Scope for 16-Bit Arithmetics in Weather and Climate Modeling Analyzed With a Shallow Water Model}, \textbf{Journal of Advances in Modeling Earth Systems}, \href{https://doi.org/10.1029/2020MS002246}{10.1029/2020MS002246}.
+\indent M Klöwer, PD Düben, and TN Palmer, 2020. \emph{Number Formats, Error Mitigation, and Scope for 16-Bit Arithmetics in Weather and
+Climate Modeling Analyzed With a Shallow Water Model}, \textbf{Journal of Advances in Modeling Earth Systems},
+\href{https://doi.org/10.1029/2020MS002246}{10.1029/2020MS002246}.
 \vspace{\baselineskip}
 \hrule
 \vspace{\baselineskip}
@@ -485,31 +487,32 @@ which representable number serves as approximation to the exact result is called
 
 Rounding a number in a given format usually makes its representation simpler by some measure. For example, rounding $\pi = 3.14159...$
 to $3.1$ reduces the number of decimal places required to represent an approximation to $\pi$. However, the representation is usually
-only simplified in the format where the rounding is applied in: While the approximation $3.1$ of $\pi$ requires less decimal places (meaning
-that trailing decimal places are set to zero) its representation in Float32 does not necessarily set any number of trailing bits to zero
+only simplified in the format where the rounding is applied in and does not translate to other formats: While the approximation $3.1$ of $\pi$
+requires fewer decimal places (meaning that trailing decimal places are set to zero) its representation in binary does not set any number of
+trailing bits to zero, as seen in the following
 \begin{align}
 \text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927 \nonumber \\
 \text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10001100110011001100110} = 3.1 \nonumber \\
 \text{BFloat16:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001} = 3.140625
 \end{align}
-However, as shown in this example, rounding in binary from Float32 to BFloat16 sets trailing bits to zero, but does not considerably
-reduce the decimal places. In the following we will present several \emph{binary} rounding modes, meaning that the binary encoding
-of an exact value within a given format is replaced by shorter (or at least simpler due to more trailing zeros) bit sequence, representing
-an approximation to the exact value.
+As shown in this example, rounding in decimal does not round in Float32. However, rounding in binary from Float32 to
+BFloat16 sets trailing bits to zero, but does not considerably reduce the decimal places. In the following we will present
+several \emph{binary} rounding modes, meaning that the binary encoding of an exact value within a given format is replaced
+by shorter (or at least simpler due to more trailing zeros) bit sequence, representing an approximation to the exact value.
 
 \begin{figure}[tbhp]
 	\includegraphics[width=1\textwidth]{Figures/methods/rounding_modes.pdf}
 	\caption{\textbf{Schematic to illustrate some rounding modes. a}
-	Bitshave rounds the exact value $x$, indicated by a dashed line, down to the next smaller or equal representable number $x_2$. \textbf{b}
-	Bitset rounds $x$ up to $x_3^- = x_3-\epsilon$, i.e. just smaller than $x_3$ by machine precision $\epsilon$ of the exact representation
-	(see Eq. \ref{eq:bitset}). \textbf{c} Halfshave rounds $x$ to $x_2^* = \tfrac{x_2 + x_3}{2}$ which is half-way between the representable
-	numbers $x_2,x_3$. \textbf{d} Round-to-nearest rounds $x$ to the nearest representable number, $x_2$ here. Nearest is hereby defined
-	as the smallest linear distance $\vert x - x_i \vert$ for all representable numbers $x_i$. \textbf{e} Stochastic rounding rounds $x$ up or
-	down at a chance that is proportional to the distance of $x$ with its adjacent representable numbers. Here, $x$ is located one fifth the
-	way between $x_2$ and $x_3$, hence it is round down to $x_2$ in $1-\tfrac{1}{5} = 80\%$ of the cases, but round up to $x_3$ at
-	$\tfrac{1}{5} = 20\%$ chance. The rounding modes \textbf{a}-\textbf{d} are deterministic. Line segments and representable numbers
-	(circles) are colour-coded, such that the all numbers on a line segment of a given colour are rounded to the representable number
-	with the same colour.}
+	Bitshave rounds the exact value $x$, indicated by a dashed line, down to the next smaller or equal representable number $x_2$
+	(all assumed positive). \textbf{b} Bitset rounds $x$ up to $x_3^- = x_3-\epsilon$, i.e. just smaller than $x_3$ by machine precision
+	$\epsilon$ of the exact representation (see Eq. \ref{eq:bitset}). \textbf{c} Halfshave rounds $x$ to $x_2^* = \tfrac{x_2 + x_3}{2}$ which
+	is half-way between the representable numbers $x_2,x_3$. \textbf{d} Round-to-nearest rounds $x$ to the nearest representable number,
+	$x_2$ here. Nearest is hereby defined as the smallest linear distance $\vert x - x_i \vert$ for all representable numbers $x_i$.
+	\textbf{e} Stochastic rounding rounds $x$ up or down at a chance that is proportional to the distance of $x$ from its adjacent representable
+	numbers. Here, $x$ is located one fifth the way between $x_2$ and $x_3$, hence it is rounded down to $x_2$ in $1-\tfrac{1}{5} = 80\%$
+	of the cases, but rounded up to $x_3$ at $\tfrac{1}{5} = 20\%$ chance. The rounding modes \textbf{a}-\textbf{d} are deterministic.
+	Line segments and representable numbers (circles) are colour-coded, such that all numbers on a line segment of a given colour are
+	rounded to the representable number with the same colour.}
 	\label{fig:methods_rounding_modes}
 \end{figure}
 
@@ -524,9 +527,9 @@ rounds up for negative values. For an exact value $x$ in between two representab
 									x_2, \quad \text{if } x < 0 \text{ and } x_1 < x \leq x_2 \end{cases}
 	\label{eq:round_zero}
 \end{equation}
-For an illustration of the round-to-zero see Fig. \ref{fig:methods_rounding_modes}a. The binary version bitshave achieves this behaviour
-by setting trailing mantissa bits to 0, which reduced the fraction $f$ in the mantissa
-(Eq. \ref{eq:float}). For example, bitshaving $\pi$ in Float32 to 7 mantissa bits yields (rounded bits in grey)
+For an illustration of the round-to-zero see Fig. \ref{fig:methods_rounding_modes}a. Bitshave achieves this behaviour
+by setting trailing mantissa bits to 0, which reduces the fraction $f$ in the mantissa (Eq. \ref{eq:float}). For example,
+bitshaving $\pi$ in Float32 to 7 mantissa bits yields (rounded bits in grey)
 \begin{align}
 	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927 \nonumber \\
 	\text{Float32, bitshaved:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001{\color{gray}0000000000000000}} = 3.140625
@@ -560,10 +563,10 @@ values that require fewer bits in memory.
 \subsubsection{Halfshave}
 To remove the biases from bitshaving and bitsetting, the binary rounding mode halfshave is proposed \citep{Zender2016,Kouznetsov2020}.
 This rounding mode is similar to bitshaving, but replaces the shaved bits with \texttt{1000$...$} instead of \texttt{0000$...$}.
-Halfshave therefore replaces the representable numbers $x_1,x_2,x_3,...$ from bitshaving with the respective mid-points.
+Halfshave therefore replaces the representable numbers $x_1,x_2,x_3,...$ that could occur from bitshaving with the respective mid-points.
 Halfshaved representable numbers are therefore $x_1^* = \tfrac{x_1+x_2}{2}, x_2^* = \tfrac{x_2 + x_3}{2}, ...$ and require
 one more bit (which is always \texttt{1}) to be stored explicitly (which can be subject to lossless compression due to redundancy,
-see section \ref{sec:compression_methods_compression}). Following the same example as above
+see section \ref{sec:compression_lossless}). Following the same example as above
 \begin{align}
 	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927 \nonumber \\
 	\text{Float32, bitset:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001{\color{mygreen}1}
@@ -572,21 +575,20 @@ see section \ref{sec:compression_methods_compression}). Following the same examp
 \end{align}
 where the trailing bit that is set to \texttt{1} is marked in green. 
 
-Halfshave can either round up or down (Fig. \ref{fig:methods_rounding_modes}c) and in most cases rounds to the nearest represemtable
+Halfshave can either round up or down (Fig. \ref{fig:methods_rounding_modes}c) and in most cases rounds to the nearest representable
 number, which largely removes the positive/negative and to/away-from-zero bias. However, the bias is not fully removed as halfshave does
 not always round to the nearest representable number: For non-equidistantly spaced representable numbers $x_1,x_2,x_3,...$ the
-ties of the representable numbers with halfshave $x_1^*,x_2^*,x_3^*,...$ are again $x_1,x_2,x_3,...$
-(see Fig. \ref{fig:methods_rounding_modes}c) but not the mid-points of $x_1^*,x_2^*,x_3^*,...$.
+ties, i.e. those numbers that lie exactly in between two representable numbers, of the representable numbers with halfshave
+$x_1^*,x_2^*,x_3^*,...$ are again $x_1,x_2,x_3,...$ (see Fig. \ref{fig:methods_rounding_modes}c) but not the mid-points of $x_1^*,x_2^*,x_3^*,...$.
 Hence, there will be some numbers that are rounded away from their nearest representable number.
 For example, if $x_1 = 0.5, x_2 = 1, x_3 = 2, x_4 = 3$ then $x_1^* = 0.75,x_2^* = 1.5,x_3^*=2.5$ and the number
 $x = 1 = \mathtt{{\color{psign}0}{\color{pexpo}01111111}00...0}$ in Float32 will be rounded up to
 $x_2^* = 1.5 = \mathtt{{\color{psign}0}{\color{pexpo}011111111}{\color{mygreen}1}00...0}$ with halfshave although $x_1^*$ is closer
 ($\vert x - x_1^* \vert = 0.25$ versus $\vert x - x_2^* \vert = 0.5$).
 
-Furthermore, even for equidistant spacing, ties, i.e. those numbers that lie exactly in between two representable numbers, 
-are always round away from zero with halfshave: $x = 2$ is exactly in between $x_2^*=1.5$ and $x_3^* = 2.5$, however, 
-its binary representation is even (it ends in a \texttt{0} bit) as all $x_i^*$ end in a \texttt{1} bit, which means they are odd.
-Due to the ties being even, halfshave will always round them away from zero. Hence, there is an away-from-zero bias
+Furthermore, even for equidistant spacing, ties are always rounded away from zero with halfshave: $x = 2$ is exactly in between
+$x_2^*=1.5$ and $x_3^* = 2.5$, however, its binary representation is even (it ends in a \texttt{0} bit) as all $x_i^*$ end in a \texttt{1} bit,
+which means they are odd. Due to the ties being even, halfshave will always round them away from zero. Hence, there is an away-from-zero bias
 for the ties with halfshave. Such a bias is much smaller than the biases discussed for bitshave and bitset, but depending on
 the frequency of ties being round can be significant. One possibility to overcome the remaining biases with halfshave is
 round-to-nearest, which is discussed in the next section.
@@ -597,8 +599,8 @@ round-to-nearest, which is discussed in the next section.
 The default rounding mode for floats and posits is round-to-nearest tie-to-even \citep{IEEE1985}. In this rounding mode an
 exact result $x$ is rounded to the nearest representable number $x_i$. Nearest is hereby defined as the $L_1$ distance
 $\vert x - x_i \vert$ (alternatives, such as round-to-nearest in logarithmic space are discussed in section
-\ref{sec:roundnearest_logfix}). In case $x$ is a tie, i.e. exactly half-way between two representable numbers it will
-be round to the nearest even. A floating-point number $x_i$ is considered to be even, if its mantissa ends in a zero bit,
+\ref{sec:roundnearest_logfix}). In case $x$ is a tie, i.e. exactly half-way between two representable numbers, it will
+be rounded to the nearest even. A floating-point number $x_i$ is considered to be even, if its mantissa ends in a zero bit,
 e.g. \texttt{0110} is even, while \texttt{0011} is odd. This rule will round one tie down, but the next one up, which removes
 a bias that otherwise persists (see halfshave, section \ref{sec:bitshave}).
 
@@ -617,7 +619,7 @@ and an example can be seen in Fig. \ref{fig:methods_rounding_modes}d.
 
 In binary this rounding mode always sets all trailing bits to \texttt{0} (as with bitshave), but depending on the case in Eq. \ref{eq:roundnearest},
 may introduce a carry bit that carries into the unrounded bits for round up to always obtain the nearest representable number.
-Some examples using 8 mantissa bits that are rounded to 4, i.e. the representable numbers are \texttt{0000, 0001, ..., 1111}
+Some examples follow using 8 mantissa bits that are rounded to 4, i.e. the representable numbers are \texttt{0000, 0001, ..., 1111}
 with lesser significant mantissa bits implied to be \texttt{0}. The function round($x$) implements round-to-nearest tie-to-even
 in these examples
 \begin{align}
@@ -660,7 +662,8 @@ While posit arithmetic also implements the same round-to-nearest rounding mode, 
 rounding mode, such that $\op{round}(x) = maxpos$ if $x > maxpos$ (and similar for $x< -maxpos$ with $\op{round(x)} = -maxpos$).
 This is motivated as rounding to infinity returns a result that is infinitely less correct than $maxpos$. Although an overflow
 is therefore not easily signalled within an algorithm, it is proposed to perform overflow-like checks on the software level
-to simplify exception handling on hardware \citep{Gustafson2017a}.
+to simplify exception handling on hardware \citep{Gustafson2017a}. Whether this leads to increased performance in
+hardware implementations is unclear, but circuits will be simplified.
 
 \subsection{Round-to-nearest for logarithmic fixed-point numbers}
 \label{sec:roundnearest_logfix}
@@ -771,11 +774,11 @@ and \href{https://github.com/milankl/StochasticRounding.jl}{StochasticRounding.j
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:bitshave, caption={\textbf{Bitwise implementation of bitshave, bitset and halfshave for
-rounding to 7 mantissa bits.} Bitshave rounds a Float32 $x$ to $n_m = 7$ mantissa bits (equivalent to a BFloat16, but the tailing
-bits remain stored) using the bitwise logical-and operation \&. For other number of mantissa bits to be retained the mask
+rounding to 7 mantissa bits.} Bitshave rounds a Float32 $x$ to $n_m = 7$ mantissa bits (equivalent to a BFloat16, but the trailing
+bits remain stored) using the bitwise logical-and operation \&. For other numbers of mantissa bits to be retained the mask
 \texttt{0xffff\_0000} has to be changed, e.g. \texttt{0xffff\_e000} will round to $n_m = 10$ mantissa bits. The function \texttt{reinterpret}
 leaves the bits unchanged but changes the associated type. Bitset is implemented similar to bitshave but with the logical-or operation
-$\vert$ which sets the tailing bits to \texttt{1}. Halfshave is similar to bitshave but the tailing bits are replaced by \texttt{100$...$0}.}]
+$\vert$ which sets the trailing bits to \texttt{1}. Halfshave is similar to bitshave but the trailing bits are replaced by \texttt{100$...$0}.}]
 function bitshave(x::Float32)
 	ui = reinterpret(UInt32,x)
 	ui &= 0xffff_0000	    # set last 16 bits to 0
@@ -791,13 +794,13 @@ end
 function halfshave(x::Float32)
 	ui = reinterpret(UInt32,x)
 	ui &= 0xffff_0000    	# 1. shave last 16 bits to 1
-	ui |= 0x0000_8000       # 2. set most significant tailbit to 1
+	ui |= 0x0000_8000       # 2. set most significant trailbit to 1
 	return reinterpret(Float32,ui)
 end
 \end{lstlisting}
 \end{figure}
 Bitshave, bitset and halfshave are easily implemented with the bitwise logical operations, given here as an example for rounding from
-Float32 to BFloat16 (but preserving the tailbits, which would not be explicitly stored in most cases, Listing \ref{lst:bitshave}). Round-to-nearest
+Float32 to BFloat16 (but preserving the trailing bits, which would not be explicitly stored in most cases, Listing \ref{lst:bitshave}). Round-to-nearest
 is more complicated to implement as the cases from Eq. \ref{eq:roundnearest} are implemented without if-clauses, efficiently using bitwise
 operations (Listing \ref{lst:roundnearest}). This algorithm is adopted from the open-source package
 \href{https://github.com/JuliaComputing/BFloat16s.jl}{BFloat16s.jl}.
@@ -812,7 +815,7 @@ function round_nearest(x::Float32)
     # 1. check for even/odd of bit 16 with >> 16 & 1
     # 2. add either 0x7fff (even) or 0x8000 (odd) = +eps/2 with tie-to-even
     ui += 0x0000_7fff + ((ui >> 16) & 0x0000_0001)
-    # 3. set tailing bits to 0 for rounding
+    # 3. set trailing bits to 0 for rounding
     ui &= 0xffff_0000
     return reinterpret(Float32,ui)
 end
@@ -839,48 +842,46 @@ avoids if-branching.
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:stochround, caption={\textbf{Efficient bitwise stochastic rounding with integer
-arithmetic as implemented by StochasticRounding.jl} Example algorithm rounding Float32 to $n_f = 7$ mantissa bits as in Listing \ref{lst:bitshave}.
-\texttt{rand(Int32)} creates 32 random bits with equal probabilities that are interpreted as Int32. Any pseudo random number generator can be used.
-Line 5 returns zero if $\vert x \vert < \tfrac{1}{2}minpos$, $\mathtt{minpos\_half} = 2^{2-2^{n_e - 1} - (n_f + 1)} = \mathtt{0x0000\_8000}$ is a
-constant defined globally (Eq. \ref{eq:float_all}).}]
+arithmetic as implemented by StochasticRounding.jl.} Example algorithm rounding Float32 to $n_f = 7$ mantissa bits as in Listing \ref{lst:bitshave}.
+\texttt{rand(UInt16)} creates 16 random bits with equal probabilities that are interpreted as 16-bit unsigned integer.
+Any pseudo random number generator can be used. To round the stochastically perturbed value, the bitshave operation is applied
+using $>>16$, which shifts the trailing bits off the register.}]
 function stochastic_round(x::Float32)
-	rbits = rand(Int32)	# create random bits
-	# branch off a return zero to avoid integer wrap-around
-	# for values 0 < |x| < minpos/2 possibly producing NaN
-	abs(x) < minpos_half && return zero(Float32)
-	xi = reinterpret(Int32,x)
-	# arithmetic bitshift >> to create a random integer that is in (-u/2,u/2)
-	# always set last random bit to 1 via |1 to avoid creating -u/2
-	xr = reinterpret(Float32,xi + ((rbits >> 16) | one(Int32)))
-	return round_nearest(xr)
+    ui = reinterpret(UInt32,x)
+    ui += rand(UInt16)    # add random perturbation in [0,delta)
+    return reinterpret(BFloat16,(ui >> 16) % UInt16)    # bitshave
 end
 \end{lstlisting}
 \end{figure}
 While floats have a hybrid logarithmic-uniform distribution on the real axis, floats are uniformly distributed when interpreted as (signed) integers.
-Hence, in line 9 of Listing \ref{lst:stochround} it is only necessary to arithmetic bitshift the random bits to the correct position and add them using
-integer arithmetic, no further scaling is required. The arithmetic bitshift will create a random perturbation in $[-\tfrac{\delta}{2},\tfrac{\delta}{2})$
-and the |1 operation is added to limit this range to $(-\tfrac{\delta}{2},\tfrac{\delta}{2})$ to avoid round down if $x$ is already perfectly representable.
-Once the random perturbation is applied round-to-nearest will round down and up at correct probabilities. 
+Hence, in line 3 of Listing \ref{lst:stochround} it is only necessary to arithmetic add random bits using integer arithmetic, no further scaling is required.
+This creates a random perturbation in $[0,\delta)$ followed by a round to zero, implemented using bitshave through a bitshift.
+
+For example, an exactly representable value $x$ is perturbed by less than $\delta$, such that it cannot be larger than the next larger representable
+number. Bitshave then removes all random bits and $x$ is always rounded to $x$ as the probability to round away is 0. For $x$ being a tie, i.e. half-way
+between two representable numbers, the perturbation returns at probability $\tfrac{1}{2}$ a value that is smaller than the next larger
+representable number, in which case bitshave rounds down. If the perturbation is larger, bitshave will round to the next larger representable number,
+such that the probability of $x$ being round up or down is equal and $\tfrac{1}{2}$ in both cases.
 
 \section{Error norms}
 \label{sec:error_norms}
 
-To assess the impact of rounding errors, the absolute, mean, relative and decimal error are presented in the following.
+To assess the impact of rounding errors, the absolute, mean, relative, and decimal error are presented in the following.
 The decimal error can be translated to the decimal precision, which is used to quantify and compare the precision of the
 number formats from section \ref{sec:numbers}. 
 
 \subsection{Absolute and mean error}
 \label{sec:absmean_error}
 
-The absolute, or linear error of an exact value $x$ and its approximation $\hat{x}$ (which is for example a representable number of
+The absolute, or linear, error of an exact value $x$ and its approximation $\hat{x}$ (which is for example a representable number of
 a finite-precision number format) is 
 \begin{equation}
 	\text{absolute error} = \vert x - \hat{x} \vert
 	\label{eq:abserror}
 \end{equation}
-and therefore the $L_1$ distance between $x$ and $\hat{x}$ and preserves the unit of $x,\hat{x}$. The absolute error is invariant under addition,
-$\vert (x+c) - (\hat{x} + c)\vert = \vert x - \hat{x} \vert$, such that using either Kelvin or degree Celsius yields the same absolute error.
-However, the absolute is not invariant under scaling, such that using millimeter or meter will change also the unit of the absolute error,
+and therefore the $L_1$ distance between $x$ and $\hat{x}$. The absolute error has the unit of $x,\hat{x}$. The absolute error is invariant
+under addition, $\vert (x+c) - (\hat{x} + c)\vert = \vert x - \hat{x} \vert$, such that using either Kelvin or degree Celsius yields the same absolute error.
+However, the absolute error is not invariant under scaling, such that using millimeter or meter will change also the unit of the absolute error,
 $s^{-1}\vert x - \hat{x} \vert$ with scaling $s$, $x_s = sx, \hat{x}_s = s\hat{x}$. Assessing the absolute error of two arrays of numbers
 the exact ones $X = (x_1,x_2,...,x_n)$ and the respective approximations $\hat{X} = (\hat{x}_1,\hat{x}_2,...,\hat{x}_n)$ yields $n$ 
 absolute errors, hence an error distribution. The mean of such a distribution is the mean absolute error
@@ -902,14 +903,16 @@ positive.
 \subsection{Relative error}
 \label{sec:relative_error}
 
-The relative error assesses the absolute error relative to exact value. It is defined as
+The relative error assesses the absolute error relative to the exact value. It is defined as
 \begin{equation}
 	\text{relative error} = \vert \frac{x - \hat{x}}{x} \vert
 	\label{eq:relerror}
 \end{equation}
 and therefore dimensionless and invariant under scaling. The relative error does not discriminate sign changes, for example
 the relative error for $x=1$ and $\hat{x} = 3$ or $\hat{x} = -1$ is identical: $\vert 1- 3 \vert = 2 = \vert 1 - (-1) \vert$. It is therefore
-a less suitable error metric for non-negative variables like concentrations or precipitation. This issue is better addressed with
+a less suitable error metric in situations where non-negative variables could be subject to sign changes in approximation.
+For example when approximating non-negative variables like concentrations or precipitation with a negative value,
+an error metric that returns infinity for sign changes might be more suitable. This issue is better addressed with
 the decimal error, which is discussed next.
 
 \begin{figure}[tbhp]
@@ -934,7 +937,7 @@ The decimal error is here defined as
 					\end{cases}
 	\label{eq:decerror}
 \end{equation}
-and therefore the absolute error in logarithmic space
+and therefore is the absolute error in logarithmic space
 $\vert \log_{10}(\tfrac{x}{\hat{x}}) \vert = \vert \log_{10}(x) - \log_{10}(\hat{x}) \vert$ unless $x = \hat{x} = 0$.
 The decimal error quantifies the orders of magnitude an approximation $\hat{x}$ is away from the exact value $x$,
 for example $x = 1$ and $\hat{x} = 10$ yields a decimal error of 1, and so does $\hat{x} = \tfrac{1}{10}$. Based on
@@ -943,7 +946,7 @@ as \citep{Gustafson2017a,Klower2019a}
 \begin{equation}
 \op{decimal} \op{precision} = -\log_{10} \vert \log_{10} \left( \frac{x}{\hat{x}} \right) \vert
 \end{equation}
-The decimal precision quantifies the number of decimal places that are correct when using $\hat{x}$ as an approximate
+The decimal precision quantifies the number of decimal places that are correct when using $\hat{x}$ as an approximation
 to $x$. For example, $x = \pi$ and $\hat{x} = 3.14$ yields a decimal precision of $3.66...$, as the three explicit decimal
 digits $3,1,4$ agree and the following implicit 0 digits in $\hat{x} = 3.1400...$ are close to the exact digits $159...$ in $3.14{\color{pregime}159}...$
 
@@ -953,7 +956,7 @@ at the geometric mean $\sqrt{\hat{x}_1\hat{x}_2}$ in between two representable n
 This minimum defines the \emph{worst-case} decimal precision, i.e. the decimal precision when the rounding error
 is maximised. The worst-case decimal precision is the number of decimal places that are at least correct after rounding
 \citep{Gustafson2017a}. So while the decimal precision of a given number format over the whole
-range of representable numbers is of interest, it is dependent on the exact location of representable numbers not just
+range of representable numbers is of interest, it is dependent on the exact location of representable numbers, not just
 the spacing in between. In contrast, the worst-case decimal precision over the whole range of representable numbers
 is a more useful metric to assess the provided precision of a number format. In the following we will refer to the
 worst-case decimal precision simply as decimal precision.
@@ -1156,7 +1159,9 @@ every addition. Hence, the two codes of Listing \ref{lst:harmonic_sum} and \ref{
 to interfere with pre-existing algorithms on a high-level basis; e.g. no compiler knowledge is necessary.
 
 As a result, Listing \ref{lst:harmonic_sum_float16print} shows how the first elements of the harmonic sum $1 + \tfrac{1}{2} + \tfrac{1}{3} + ...$ are added,
-and how the sum stagnates at $7.086$. The next term $\tfrac{1}{514}$ cannot change $7.086$ in addition as it is less than half the distance to the next representable number (round-to-nearest, section \ref{sec:roundnearest}) and the result is rounded back. In Float16 arithmetic we therefore have $7.086 + \tfrac{1}{514} = 7.086$.
+and how the sum stagnates at $7.086$. The next term $\tfrac{1}{514}$ cannot change $7.086$ in addition as it is less than half the
+distance to the next representable number (round-to-nearest, section \ref{sec:roundnearest}) and the result is rounded back.
+In Float16 arithmetic we therefore have $7.086 + \tfrac{1}{514} = 7.086$.
 
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:harmonic_sum_float16print, caption={\textbf{Analysing the function \texttt{harmonic\_sum} with the
@@ -1180,7 +1185,7 @@ julia> harmonic_sum(Float16print)
 
 The following sections introduce information theory and how it can be used to analyse the information contained in binary number formats,
 which are used for weather and climate computing. A more specific discussion on the bitwise real information content analysed for
-atmospheric data in chapter \ref{chap:compression} is found in section \ref{sec:compression_methods_information_content}.
+atmospheric data in chapter \ref{chap:compression} is found in section \ref{sec:real_information}.
 
 \subsection{Entropy}
 \label{sec:entropy}
@@ -1309,6 +1314,7 @@ This can be interpreted as knowing there are sailing boats tells us there is win
 Hence, there is a remaining uncertainty which yields a non-zero (conditional) entropy.
 
 \subsection{Mutual information}
+\label{sec:mutual_information}
 
 In general, we may ask about the \emph{mutual information} of two random variables. In the example from before, we would
 like to know the mutual information between wind direction and the number of sailing boats. The mutual information
@@ -1340,7 +1346,7 @@ Such a joint probability matrix is then in general
 	p_{XY} = \bpm p_{00} & p_{01} \\
 			p_{10} & p_{11} \epm
 \end{equation}
-with $p_{00}$ the probability that both bits $X,Y$ are \texttt{0} and $p_{ij}$ the probability that $X=i$ and $Y=j$ simultaneously.
+with $p_{ij}$ the probability that $X=i$ and $Y=j$ simultaneously.
 In the case of 
 \begin{equation}
 	p_{XY} = \bpm p_{00} & 0 \\
@@ -1364,3 +1370,6 @@ probability matrix to
 			p_0 & p_1 \epm
 \end{equation}
 such that the probabilities in $X$ are independent of those in $Y$ and vice versa.
+
+Bitwise mutual information is a central concept to distinguish real and false information in data, which is the aim of the next chapter
+to develop an information-preserving compression for climate data.

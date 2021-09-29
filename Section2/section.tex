@@ -147,8 +147,8 @@ Eq. \ref{eq:bit_unconditional_entropy} the mutual information $M$ of succeeding 
 	\end{equation}
 which is the real information content $I$. This definition is similar to \cite{Jeffress2017} but avoids an additional assumption of an uncertainty
 measure. Their formulation similarly uses the state of bits as predictors but assesses the conditional probability mass functions of a
-dynamical system as predictands. The binwidth of the pdf is chosen to represent the uncertainty in the system, which the bitwise real information
-strongly depends on. The formulation here avoids such an additional assumption of uncertainty as bits are used as both predictors and
+dynamical system as predictands. The binwidth of the probability mass function is chosen to represent the uncertainty in the system, which the
+bitwise real information strongly depends on. The formulation here avoids such an additional assumption of uncertainty as bits are used as both predictors and
 predictands in the conditional entropy. Consequently, the uncertainty is obtained from the data itself solely based on the mutual information
 between bits in adjacent grid points.
 
@@ -542,7 +542,8 @@ be conserved while the latter should be discarded to increase compression effici
 \end{figure}
 
 We define the bitwise real information content as the mutual information
-\citep{Shannon1948,MacKay2003,Schreiber2000,Kraskov2004,Pothapakula2019,DelSole2004} of bits in
+(\cite{Shannon1948,MacKay2003,Schreiber2000,Kraskov2004,Pothapakula2019,DelSole2004} and sections
+\ref{sec:mutual_information}, \ref{sec:real_information}) of bits in
 adjacent grid points (Fig. \ref{fig:infograph}). A bit contains more real information the stronger the statistical
 dependence to the adjacent bits is. Bits without real information are identified when this dependence is
 insignificantly different from zero and we regard the remaining entropy in these bits as false information.
