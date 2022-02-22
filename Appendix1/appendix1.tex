@@ -2,6 +2,194 @@
 \markboth{\sc{Appendix}}{\sc{Appendix}}
 \renewcommand{\thechapter}{A}
 
+\section{The shallow water model}
+\label{sec:swm_appendix}
+
+A vertical integration of the Navier-Stokes equations yields the shallow water equations, following several approximations
+including the hydrostatic approximation \citep{Gill1982,Vallis2006}. The resulting equations of motions describe a thin
+layer of fluid with a flow that is independent of depth, but with a free surface. The density is constant, hence effects of
+stratification are excluded. The shallow water equations can be formulated in spherical or rectangular coordinates, with
+or without rotation, and with a flat or spatially varying bottom topography. The shallow water model is used to study many
+features of the general circulation of atmosphere and ocean as well as some two-dimensional non-linear interactions on
+shorter length and time scales. For atmospheric motions, the shallow water system is often forced through the free surface,
+maintaining horizontal pressure gradients that set the fluid in motion. For oceanic applications, the forcing is often in
+the momentum equations, as if a wind blows over the ocean inducing motion in the shallow water layer underneath.
+
+The shallow water model described here represents the ocean rather than the atmosphere, but many aspects are valid
+in both cases.The shallow water equations for the prognostic variables horizontal velocity $\mathbf{u} = (u,v)$, sea
+surface elevation $\eta$ and tracer $q$ are
+\begin{subequations}
+\begin{align}
+\frac{\partial \mathbf{u}}{\partial t} &+ (\mathbf{u} \cdot \nabla) \mathbf{u} +
+f\hat{\mathbf{z}} \times \mathbf{u} = -g\nabla \eta + \mathbf{D} + \mathbf{F}, \\
+\frac{\partial \eta}{\partial t} &+ \nabla \cdot (\mathbf{u}h) = 0, \\
+\frac{\partial q}{\partial t} &+ \mathbf{u} \cdot \nabla q = -\tau(q - q_0).
+\end{align}
+\label{eq:swe_appendix}%
+\end{subequations}
+The forcing $\mathbf{F}$ is a zonal wind stress. The dissipation term $\mathbf{D}$ removes energy on large scales (bottom friction, \cite{Arbic2008})
+and on small scales (diffusion, \citep{Griffies2000}). The non-linear term $(\mathbf{u} \cdot \nabla) \mathbf{u}$ represents advection of
+momentum. The term $f\hat{\mathbf{z}} \times \mathbf{u}$ is the Coriolis force and $-g\nabla \eta$ is the pressure gradient
+force, with $g$ being the gravitational acceleration. Eq. \ref{eq:swe_appendix}b is the shallow water-variant of the continuity equation,
+ensuring conservation of mass. The shallow water equations are extended with Eq. \ref{eq:swe_appendix}c, an advection equation for
+the passive tracer $q$. The terms in the shallow water equations are described in more detail in the following.
+
+The equations are solved in the $(x,y)$-plane over the zonally periodic rectangular domain $L_x \times L_y$.
+We associate $x$ with the zonal and $y$ with the meridional direction. The domain is centred in mid-latitudes around the latitude $\phi_0$.
+The Coriolis parameter $f$ uses the $\beta$-plane approximation $f = f_0 + \beta y$, which linearises the change of the Coriolis parameter
+around $\phi_0$ \citep{Vallis2006} and $\beta = 2\tfrac{\omega}{R}\cos(\phi_0)$ is the meridional derivative of the
+Coriolis parameter $f = 2\omega \sin(\phi)$ in spherical coordinates. The angular frequency of the Earth is $\omega$ and its radius $R$.
+$\hat{\mathbf{z}}$ is the unit vector in the vertical such that $f\hat{\mathbf{z}} \times \mathbf{u} = (-fv,fu)$.
+
+The boundary conditions are periodic in zonal direction
+\begin{equation}
+u(x=0) = u(x=L_x), \quad v(x=0) = v(x=L_x), \quad \eta(x=0) = \eta(x=L_x).
+\end{equation}
+No-slip boundary conditions are set for the northern and southern boundary,
+\begin{equation}
+u(y=0) = u(y=L_y) = 0, \quad v(y=0) = v(y=L_y) = 0, \quad \partial_y\eta \vert_{y=0,L_y} = 0,
+\end{equation}
+where the meridional velocity $v$ vanishes to avoid flow through the boundaries and the gradient
+of the surface is set to 0 for consistency.
+
+The wind stress forcing $\mathbf{F} = (F_x,0)$ is constant in time, acts only on the zonal momentum budget
+and vanishes at the boundaries,
+\begin{equation}
+F_x = \frac{F_0}{\rho h} \cos\left(\pi\left(y{L_y}^{-1} - 1\right)\right)^2.
+\end{equation}
+The constant water density is $\rho = 1000\op{kg}\op{m}^{-3}$ and $F_0 = 0.12\op{Pa}$.
+The wind forcing acts as a continuous input of large-scale kinetic energy that is balanced by the dissipation term.
+
+The dissipation term $\mathbf{D}$ is the sum of a quadratic bottom drag and biharmonic diffusion
+\begin{equation}
+\mathbf{D} = -\frac{c_D}{h}\| \mathbf{u} \| \mathbf{u} - \nu \nabla^4 \mathbf{u}.
+\label{eq:diss}
+\end{equation}
+The bottom drag scales with the dimensionless coefficient $c_D = 10^{-5}$ \citep{Arbic2008} and $\| \mathbf{u} \| = \sqrt{u^2 + v^2}$.
+The biharmonic diffusion scales with the viscosity coefficient $\nu_B$ \citep{Griffies2000}. The biharmonic viscosity $\nu_B = \Delta x^2 \nu_A$
+is derived from the harmonic viscosity $\nu_A$, which itself scales with the squared grid spacing $\Delta x^2$, and uses
+$\nu_{A,0} = 500~\mathrm{m}^2\mathrm{s}^{-1}$ at $\Delta x_0 = 30~\mathrm{km}$.
+\begin{equation}
+\nu_B = \Delta x^2 \nu_A = \frac{\Delta x^4}{\Delta x_0^2} \nu_{A,0}
+\end{equation}
+The only remaining adjustable parameter is therefore $\nu_{A,0}$ and the viscosity scales automatically to a wide range of resolutions.
+
+The layer thickness is $h = \eta + H(x)$, with
+\begin{equation}
+H(x) = H_0 - H_1\exp\left(-H_\sigma^{-2}(x-\tfrac{L_x}{2})^2\right)
+\end{equation}
+being the depth of the fluid at rest, including changes of the thickness due to topography. $H(x)$ represents a 
+a meridional mountain ridge at $x=\tfrac{L_x}{2}$ spanning from the southern to the northern boundary.
+The standard depth is $H_0 = 500\op{m}$. The ridge has a maximum height of $H_1 = 50\op{m}$
+and a characteristic width of $H_\sigma = 300\op{km}$, which makes a zonal current unstable as it needs to
+deviate towards the equator to cross the ridge. As a result, the flow regime is therefore governed both by
+eddy-mean flow as well as eddy-eddy interactions \citep{Ferrari2010}, after spin-up.
+
+The tracer $q$ is passive as the momentum and continuity equations Eq. \ref{eq:swe_appendix}a,b do not depend on $q$. Hence,
+the tracer concentration is advected by the flow, can mix and visualise the underlying flow field, but it does not impact the
+flow itself. The relaxation term $-\tau(q-q_0)$ with a reference concentration $q_0$ is introduced to prevent mixing towards
+a basin-wide homogeneous tracer concentration. The inverse time scale $\tau$ will restore the current tracer $q$ slowly
+back to the reference $q_0$.
+
+\subsection{A vector-invariant formulation}
+\label{sec:vector_invariant}
+
+The momentum equations in the shallow water model can be turned into a vector-invariant form by inverting the chain rule for the non-linear terms
+($u\partial_xu = \partial_x(\tfrac{1}{2}u^2)$ etc.) and combining the resulting terms with the pressure gradient $-\nabla (g\eta)$. This
+introduces the relative vorticity $\zeta = \partial_xv - \partial_yu$ which is combined with the planetary vorticity $f$ to the potential
+vorticity $\frac{f + \zeta}{h}$. Furthermore, the Bernoulli potential $\tfrac{1}{2}(u^2 + v^2) + g\eta$ arises and the shallow water
+momentum equations now read as
+\begin{subequations}
+\begin{align}
+\partial_tu &= \frac{f + \zeta}{h}vh -\partial_x\left(\frac{1}{2}(u^2 + v^2) + g\eta \right) + D_x + F_x, \\
+\partial_tv &= -\frac{f + \zeta}{h}uh -\partial_y\left(\frac{1}{2}(u^2 + v^2) + g\eta \right) + D_y + F_y.
+\end{align}
+\end{subequations}
+$(D_x,D_y)$ are the components of the dissipation vector $\mathbf{D}$.
+
+
+\subsection{Discretisation}
+The shallow water equations are discretised using 2nd order centred finite differences on an Arakawa C-grid \citep{Arakawa1977}.
+The rectangular domain is split into $N_x \times N_y$ cells with uniform grid spacing
+$\Delta_x = \frac{L_x}{N_x}, \Delta_y = \frac{L_y}{N_y}$ and always choose quadratic cells $\Delta_x = \Delta_y = \Delta$.
+The Arakawa C-grid staggers the variables such that they are located at either cell centres, edges or corners. A cell located at
+$(x,y)$ has its zonal velocity $u$ placed at $(x + \Delta x,y)$, the meridional velocity $v$ at $(x,y + \Delta y)$, the sea surface height
+$\eta$ and the tracer $q$ at $(x,y)$. Other diagnostic variables, like relative vorticity, are located at $(x+\Delta x, y + \Delta y)$.
+The staggered locations are chosen for the sake of centred gradients, e.g. the location of centred zonal gradients of $\eta$ sit
+at the location of $u$ where these two variables can easily be added. Other operations may include an interpolation from one
+of the staggered grids to another. For example, to obtain the Bernoulli potential $B$ at grid centres the velocities are linearly
+interpolated
+\begin{equation}
+B = \frac{1}{2}(\overline{u^2}^x + \overline{v^2}^y) + g\eta
+\end{equation}
+whereby $\overline{\phantom{u_2}}^x, \overline{\phantom{v_2}}^y$ are the interpolations in $x,y$. For the advection of potential
+vorticity in the vector-invariant formulation, these interpolations become more complicated and we use an energy and enstropy-conserving
+scheme to discretise these terms \citep{Arakawa1990,Salmon2004,Salmon2007}.
+
+The fourth-order Runge-Kutta method \citep{Butcher2016} is used for the time integration of the faster terms, pressure, Coriolis and advection,
+but a semi-implicit method is used for the slower, dissipative terms $\mathbf{D}$. Starting from $u,v,\eta$ at a given time step,
+the fourth-order Runge-Kutta method is used to update $u,v,\eta$ according to all tendencies except $\mathbf{D}$, which terms are
+then added in a single Euler-forward time step using the updated $u,v,\eta$.
+
+The time step $\Delta t$ is chosen to resolve surface gravity waves, traveling at the phase speed of $\sqrt{gh}$. Although
+the layer thickness $h$ depends on time and space, we approximate the shallow water gravity wave speed as $c_{ph} = \sqrt{gH_0}$
+using the undisturbed depth $H_0$. This approximation is justified as long as the sea surface anomalies are small $\vert \eta \vert \ll H_0$.
+Larger anomalies, however, can cause an underestimation of the gravity wave speed, such that for reasons of numerical stability
+the time steps needs to be further reduced. In practice, the Courant-Friedrichs-Lewy number $CFL$ \citep{Courant1967}
+\begin{equation}
+	CFL = \Delta t \frac{\sqrt{gH_0}}{\Delta x}
+	\label{eq:cfl}
+\end{equation}
+should be chosen as $CFL \leq 1$ to resolve gravity waves. Given a grid spacing $\Delta x$, gravity $g$ and layer depth $H_0$
+the time stepping can then be derived. In the case of reduced gravity simulations, e.g. $g=0.1~\mathrm{ms}^{-2}$ the
+sea surface anomalies increase, hence we reduce $CFL$ to $0.9$ or $0.8$ to guarantee numerical stability. The exact choice is often subject
+to experimentation.
+
+\subsection{Semi-Lagrangian advection scheme}
+\label{sec:semi_lagrange_appendix}
+A semi-Lagrangian advection scheme \citep{Smolarkiewicz1992} is used to discretise the tracer advection equation Eq. \ref{eq:swe_appendix}c.
+In the Lagrangian perspective, following a fluid element along its trajectory, the tracer concentration $q$ within that fluid element
+does not change in the absence of sources and sinks. Similarly, the tracer concentration for a given grid cell, which is considered
+to be the arrival point, is taken as the concentration at a departure point at the previous time step. While the arrival points correspond
+to grid cells by definition, the departure points in general do not coincide with the grid cells, such that an interpolation is required.
+The concentrations at the surrounding grid points are bilinearly interpolated onto the departure point, which is then used as the
+concentration at the arrival point one advective time step later.
+
+Starting from an arrival point $\mathbf{x}_a$, velocities are traced back to find the
+departure point $\mathbf{x}_d$. Using the velocity vector $\mathbf{u}(\mathbf{x}_a,t + \Delta t_{\mathrm{adv}})$ at the arrival point and time
+$t + \Delta t_{\mathrm{adv}}$ we can obtain the departure point as
+\begin{equation}
+	\mathbf{x}_d = -\mathbf{u}(\mathbf{x}_a,t + \Delta t_{\mathrm{adv}})  \Delta t_{\mathrm{adv}}.
+	\label{eq:SL_onestep}
+\end{equation}
+The semi-Lagrangian advection scheme is unconditionally stable, however, due to the interpolation its implicit diffusion is large for small time steps.
+In practice, we therefore choose $\Delta t_{\mathrm{adv}} = n_\mathrm{adv} \Delta t$, i.e. the semi-Lagrangian advection is only evaluated every
+$n_\mathrm{adv}$ time steps, which also reduces computational costs. However, with longer time steps, the accuracy of the departure point calculation
+decreases. We can increase the accuracy with an iterative method that uses several steps with interpolations of the velocity field onto intermediate
+velocity points. We use a two-step method with a mid-point $\mathbf{x}_m$
+\begin{subequations}
+	\begin{align}
+	\mathbf{x}_m &= \mathbf{x}_a - \mathbf{u}(\mathbf{x}_a,t) \frac{\Delta t_{\op{adv}}}{2}, \\
+	\mathbf{x}_d &= \mathbf{x}_a - \mathbf{u}(\mathbf{x}_m,t-\frac{\Delta t_{\op{adv}}}{2}) \Delta t_{\op{adv}},
+	\end{align}
+	\label{eq:SL_iterative}
+\end{subequations}
+which will improve accuracy over the one-step method in Eq. \ref{eq:SL_onestep}. 
+For very long time steps $\Delta t_{\op{adv}}$ it is crucial to have an accurate estimate of the departure point, as a rapidly changing turbulent flow
+field can otherwise lead to widely deviated departure points. Please note, that also an interpolation of the velocity $\mathbf{u}$ onto the arrival point
+(or intermediate points for the iterative method) is necessary due to the staggered Arakawa C-grid. This interpolation is done bilinearly, as discussed
+in the following for the interpolation of the tracer concentration.
+
+Once the departure point $\mathbf{x}_d$ is found, a bilinear interpolation of the surrounding grid points onto the departure point is performed.
+In the unit square we define the tracer concentrations $q(x,y)$ with $x,y \in [0,1]\times[0,1]$ of the corner points as
+$q_{00} = q(0,0), q_{01} = q(0,1),$ etc. The bilinear interpolation follows then as
+\begin{equation}
+q(x,y) = q_{00}(1-x)(1-y) + q_{10}x(1-y) + q_{01}(1-x)y + q_{11}xy
+\label{eq:bilin}
+\end{equation}
+such that for a given departure point $\mathbf{x}_d$ we have to deduce the relative coordinates $x,y$ in the grid cell surrounded by the four
+closest tracer concentration nodes. This procedure is simplified in our case of an equidistant grid, but can be generalised to arbitrary grids. 
+
 \section{Open-source software developments}
 \label{sec:open}
 
@@ -12,7 +200,7 @@ see the respective repositories.
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Author: M Klöwer
+    \item Author: \cite{Klower2021}
     \item \href{https://github.com/milankl/ShallowWaters.jl}{github.com/milankl/ShallowWaters.jl}
     \item Version: 0.5.0
     \item Language: Julia
@@ -31,9 +219,9 @@ partial-slip, or no-slip. Output via NetCDF.
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Klöwer, M Giordano, C Leong
+    \item Authors: \cite{Klower2019}, C Leong
     \item \href{https://github.com/milankl/SoftPosit.jl}{github.com/milankl/SoftPosit.jl}
-    \item Version: 0.3.0
+    \item Version: 0.4.0
     \item Languages: Julia, C
 \end{itemize}
 
@@ -58,7 +246,7 @@ stochastic rounding uses Float64 internally. Xoroshiro128+ is used as a high-per
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Authors: M Klöwer, Ben Arthur
+    \item Authors: \cite{Klower2020}, Ben Arthur
     \item \href{https://github.com/milankl/Sherlogs.jl}{github.com/milankl/Sherlogs.jl}
     \item Version: 0.2.0
     \item Language: Julia
@@ -69,16 +257,16 @@ during calculation. Sherlogs can be used to identify the largest or smallest num
 ability for your functions to run in low precision. A 32-bit version is provided as Sherlog32, which behaves like Float32. A 16-bit version is provided as Sherlog16\{T\},
 which uses T for computations as well as for logging.
 
-Sherlogs.jl also exports the analysis number format DrWatson. DrWatson64{f} behaves like Float64 but evaluates the function f after every arithmetic operation.
+Sherlogs.jl also exports the analysis number format DrWatson. DrWatson64\{f\} behaves like Float64 but evaluates the function f after every arithmetic operation.
 If the result of f is true a stacktrace is recorded, which can be used to identify where in the code certain arithmetic results occur.
 
 \subsection{BitInformation.jl}
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Author: M Klöwer
+    \item Author: \cite{Klower2021i}
     \item \href{https://github.com/milankl/BitInformation.jl}{github.com/milankl/BitInformation.jl}
-    \item Version: 0.2.0
+    \item Version: 0.3.0
     \item Language: Julia
 \end{itemize}
 
@@ -86,8 +274,7 @@ BitInformation.jl is a package for the analysis of bitwise information in Julia 
 across various dimensions of an array, this package provides functions to calculate quantities like the bitwise real information content, the mutual information,
 the redundancy or preserved information between arrays.
 
-BitInformation.jl also implements various rounding modes (round,bitshave,bitset,halfshave etc.) efficiently with bitwise operations. Furthermore, transformations like XOR-delta,
-bittranspose, or signed\_exponent are implemented.
+BitInformation.jl also implements various rounding modes (round, bitshave, bitset, halfshave etc.) efficiently with bitwise operations. Furthermore, transformations like XOR-delta, bittranspose, or signed\_exponent are implemented.
 
 \subsection{LogFixPoint16s.jl}
 
@@ -120,8 +307,8 @@ as well as arithmetic operations, conversions and additional functionality. The 
 
 \begin{itemize}
     \setlength\itemsep{-5pt}
-    \item Author: M Klöwer
-    \item \href{https://github.com/milankl/Lorenz96.jl}{github.com/milankl/Lorenz96.j}
+    \item Author: \cite{Klower2021e}
+    \item \href{https://github.com/milankl/Lorenz96.jl}{github.com/milankl/Lorenz96.jl}
     \item Version: 0.3.0
     \item Language: Julia
 \end{itemize}

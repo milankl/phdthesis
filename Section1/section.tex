@@ -34,9 +34,9 @@ Fixed-point numbers (section \ref{sec:fixpoints}), floating-point numbers (secti
 \label{sec:uint}
 
 Non-negative integers are represented in binary as unsigned integers. An $n$-bit unsigned integer is a sequence of $n$ bits
-$b_1, ..., b_n$ which are decoded into the integer $u$ as a sum of powers of two with exponents $n-1,n-2,...,1,0$
+$b_1, ..., b_n$ which are decoded into the integer $u$ as a sum of powers of two with exponents $n-1,n-2,...,1,0$:
 \begin{equation}
-	u = \sum_{i=1}^{n} b_i 2^{n-i}
+	u = \sum_{i=1}^{n} b_i 2^{n-i}.
 	\label{eq:uint}
 \end{equation}
 We hereby use the big-endian notation \citep{Cohen1981,James1990}, such that the first bit $b_1$ represents the most significant figure and the last bit $b_n$ the
@@ -54,7 +54,7 @@ The range of representable integers with UInt$n$ is 0 to $2^n-1$. Addition, subt
 range is exact so that no rounding has to be applied. A result outside this range is in most implementations subject to a \emph{wrap-around}
 behaviour which is equivalent to subsequent modulo operation with $2^n$. For example, for UInt16 we have \texttt{0xffff + 0x1 = 0x0}, i.e.
 adding 1 to 65536 would return 0; or \texttt{0x0000 - 0x1 = 0xffff}, i.e. subtracting 1 from 0 returns 65536. Such an example of modulo
-arithmetic avoids special cases (like NaN for floats, see section \ref{sec:floats}), but can easily yield catastrophic results when integers
+arithmetic avoids special cases (like Not-a-Number for floats, see section \ref{sec:floats}), but can easily yield catastrophic results when integers
 are used to approximate real numbers for scientific simulations.
 
 \subsubsection{Signed integers}
@@ -63,7 +63,7 @@ are used to approximate real numbers for scientific simulations.
 While unsigned integers cannot represent negative numbers, signed integers use the first bit $b_1$ to indicate the sign ($b_1 = 0$ is
 positive and $b_1 = 1$ negative). One way to decode an $n$-bit signed integer is the sign and magnitude representation
 \begin{equation}
-	s = (-1)^{b_1}\sum_{i=2}^{n} b_i 2^{n-i-1}
+	s = (-1)^{b_1}\sum_{i=2}^{n} b_i 2^{n-i-1},
 	\label{eq:int}
 \end{equation}
 which covers the range $[-2^{n-1}-1,2^{n-1}-1]$ but uses two bitpatterns to encode 0 (\texttt{0x00$\dots$00} = +0 and \texttt{0x10$\dots$00} = -0).
@@ -91,7 +91,7 @@ every additional fraction bit reduces the number of integer bits. A common notat
 Q6.10, which is the 16-bit fixed-point format with 6 signed integer bits and 10 fraction bits.
 With the sign and magnitude representation, a fixed-point number is decoded into $x$ as
 \begin{equation}
-x = (-1)^{b_1} \left( \sum_{i=2}^{n_i} b_i 2^{n-i-1}  + \sum_{i=1}^{n_f} b_{n_i+i} 2^{-i} \right)
+x = (-1)^{b_1} \left( \sum_{i=2}^{n_i} b_i 2^{n-i-1}  + \sum_{i=1}^{n_f} b_{n_i+i} 2^{-i} \right).
 \label{eq:fixpoints}
 \end{equation}
 The first summation is identical to the signed integers (Eq. \ref{eq:int}), and therefore one might use the two's complement
@@ -194,11 +194,11 @@ standardised in \cite{IEEE1985}. Recently more widely available on specialised h
 Float16 (5 exponent bits and 10 mantissa bits) and BFloat16 (8 exponent bits and 7 mantissa bits, a truncated version of Float32).
 The number $\pi = 3.14159...$ is encoded in these formats as (sign bit in red, exponent bits in blue, mantissa bits in black)
 \begin{align}
-\text{Float64:}& \quad {\color{psign}0}{\color{pexpo}10000000000}10010010000111111011 \nonumber \\
-			& \quad 01010100010001000010110100011000 = 3.141592653589793 \nonumber \\
-\text{Float32:}& \quad {\color{psign}0}{\color{pexpo}10000000}10010010000111111011011 = 3.1415927 \nonumber \\
-\text{Float16:}& \quad {\color{psign}0}{\color{pexpo}10000}1001001000 = 3.140625 \nonumber \\
-\text{BFloat16:}& \quad {\color{psign}0}{\color{pexpo}10000000}1001001 = 3.140625
+\text{Float64:}& \quad {\color{psign}0}{\color{pexpo}10000000000}10010010000111111011... \nonumber \\
+			& \quad 01010100010001000010110100011000 = 3.141592653589793, \nonumber \\
+\text{Float32:}& \quad {\color{psign}0}{\color{pexpo}10000000}10010010000111111011011 = 3.1415927, \nonumber \\
+\text{Float16:}& \quad {\color{psign}0}{\color{pexpo}10000}1001001000 = 3.140625, \nonumber \\
+\text{BFloat16:}& \quad {\color{psign}0}{\color{pexpo}10000000}1001001 = 3.140625.
 \end{align}
 While both Float16 and BFloat16 represent $\pi$ as 3.140625 note that Float16 is three bits more precise, which just happen to be all \texttt{0}.
 
@@ -227,7 +227,7 @@ on addition and subtraction, which, due to the logarithm, translates to multipli
 format with one sign bit $s$, and in the exponent $n_i$ signed integer bits followed by $n_f$ fraction bits,
 such that $n = 1 + n_i + n_f$. The decoding of a logfix number is defined as
 \begin{equation}
-x = (-1)^{b_1} \cdot 2^k
+x = (-1)^{b_1} \cdot 2^k,
 \label{eq:logfix}
 \end{equation}
 with the exponent $k = i + f$ being a fixed-point number with $n_i$ integer bits and $n_f$ fraction bits. The signed integer $i$
@@ -256,7 +256,7 @@ around 0. Floats are only symmetric with respect to addition.
 Multiplication, division, square root and power are easily implemented for a logarithmic number format with integer arithmetic. 
 Multiplication of two numbers $x,y$, for example, is equivalent to the addition of the exponents
 \begin{equation}
-xy = (-1)^{s_x \veebar s_y} \cdot 2^{k_x + k_y}
+xy = (-1)^{s_x \veebar s_y} \cdot 2^{k_x + k_y},
 \label{eq:logfix_mul}
 \end{equation}
 with $\veebar$ being the logical xor-operation on the sign bits $s_x,s_y$. Exceptions to Eq. \ref{eq:logfix_mul} occur for $x = \text{NaR}$
@@ -264,17 +264,17 @@ or $y = \text{NaR}$ in which case $xy = \text{NaR}$, or if no NaRs are present b
 is then followed by checking for underflows ($xy < \tfrac{1}{2}minpos$) or overflows ($xy > maxpos$), in which case 0 or NaR is returned,
 respectively. 
 
-Addition and subtraction for logfixs is based on the Gaussian logarithms $G^+,G^-$ which are functions of the argument $a$
+Addition and subtraction for logfixs is based on the Gaussian logarithms $G^+,G^-$ which are functions of the argument $a$:
 \begin{align}
-G^+(a) = -a + \log_2(1+2^a) \nonumber \\
-G^-(a) = -a + \log_2(1-2^a)
+G^+(a) = -a + \log_2(1+2^a), \nonumber \\
+G^-(a) = -a + \log_2(1-2^a).
 \label{eq:gauss_log}
 \end{align}
 The evaluation of the Gaussian logarithms makes addition and subtraction for logfixs much more complicated than the other arithmetic operations.
 The result $z = (-1)^{s_z} \cdot 2^{k_z}$ of an addition $x+y = z$ is given by
 \begin{align}
 k_z &= \log_2(\vert x \vert + \vert y \vert) \nonumber \\
-	&= k_y - (k_y - k_x) + \log_2(1+2^{k_y - k_x})  = k_y + G^+(k_y-k_x)
+	&= k_y - (k_y - k_x) + \log_2(1+2^{k_y - k_x})  = k_y + G^+(k_y-k_x),
 \label{eq:logfix_add}
 \end{align}
 and similar for subtraction $y-x = z$
@@ -289,8 +289,8 @@ The result of the base-2 logarithm $\log_2$ inside the Gaussian logarithms has t
 number like $k_x$ and $k_y$ for the subsequent addition. Consequently, for any finite-precision logfix format
 the Gaussian logarithms become
 \begin{align}
-	G^+(a) = -a + \op{round}(\log_2(1+2^a)) \nonumber \\
-	G^-(a) = -a + \op{round}(\log_2(1-2^a))
+	G^+(a) = -a + \op{round}(\log_2(1+2^a)), \nonumber \\
+	G^-(a) = -a + \op{round}(\log_2(1-2^a)),
 	\label{eq:gauss_log_round}
 \end{align}
 which introduces a rounding error in general, meaning that addition and subtraction with logfixs are not exact.
@@ -358,7 +358,7 @@ For positive numbers, decoding from posit bits into the number $p$ is defined as
 \citep{Gustafson2017a,Klower2019a,Chen2018} (negative posits are converted first to their two's complement, see
 Eq. \ref{eq:2comp})
 \begin{equation}
-p = (-1)^s \cdot useed^k \cdot 2^e \cdot (1+f)
+p = (-1)^s \cdot useed^k \cdot 2^e \cdot (1+f),
 \label{eq:posit}
 \end{equation}
 where $k$ is the number of regime bits, excluding the terminating bit. The exponent bits are interpreted as the unsigned integer $e$
@@ -373,10 +373,10 @@ $p = \pm 2^n \cdot (1+f)$ with a given integer $n$ \citep{Gustafson2017a,Chen201
 fraction $f$ following the floating-point standard \citep{IEEE1985}, see section \ref{sec:floats}, with the difference that
 the number of mantissa bits $n_m$ can change.
 
-An example for posit decoding is provided in the Posit(8,1)-system (i.e. $useed = 4$)
+An example for posit decoding is provided in the Posit(8,1)-system (i.e. $useed = 4$):
 \begin{equation}
 57 \approx \mathtt{{\color{psign}0}{\color{pregime}111}{\color{pregimet}0}{\color{pexpo}1}11}_{\op{Posit}(8,1)} = (-1)^{\color{psign}0}
-\cdot 4^{\color{pregime}2} \cdot 2^{\color{pexpo}1} \cdot (1+2^{-1}+2^{-2}) = 56
+\cdot 4^{\color{pregime}2} \cdot 2^{\color{pexpo}1} \cdot (1+2^{-1}+2^{-2}) = 56.
 \label{eq:posit_pos}
 \end{equation}
 The sign bit is given in red, regime bits in orange, the terminating regime bit in brown, the exponent bit in blue and the fraction bits in black.
@@ -489,11 +489,11 @@ Rounding a number in a given format usually makes its representation simpler by 
 to $3.1$ reduces the number of decimal places required to represent an approximation to $\pi$. However, the representation is usually
 only simplified in the format where the rounding is applied in and does not translate to other formats: While the approximation $3.1$ of $\pi$
 requires fewer decimal places (meaning that trailing decimal places are set to zero) its representation in binary does not set any number of
-trailing bits to zero, as seen in the following
+trailing bits to zero, as seen in the following:
 \begin{align}
-\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927 \nonumber \\
-\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10001100110011001100110} = 3.1 \nonumber \\
-\text{BFloat16:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001} = 3.140625
+\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927, \nonumber \\
+\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10001100110011001100110} = 3.1, \nonumber \\
+\text{BFloat16:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001} = 3.140625.
 \end{align}
 As shown in this example, rounding in decimal does not round in Float32. However, rounding in binary from Float32 to
 BFloat16 sets trailing bits to zero, but does not considerably reduce the decimal places. In the following we will present
@@ -523,16 +523,16 @@ Bitshave is one of the simplest binary rounding modes that \emph{shaves} off a g
 \citep{Zender2016,Kouznetsov2020}. This is the binary version of \emph{round-to-zero}, which rounds down for positive values, but
 rounds up for negative values. For an exact value $x$ in between two representable numbers $x_1,x_2$ round-to-zero is
 \begin{equation}
-	\op{round}_{\op{to-zero}}(x) = \begin{cases} x_1, \quad \text{if } x \geq 0 \text{ and } x_1 \leq x < x_2 \\
-									x_2, \quad \text{if } x < 0 \text{ and } x_1 < x \leq x_2 \end{cases}
+	\op{round}_{\op{to-zero}}(x) = \begin{cases} x_1, \quad \text{if } x \geq 0 \text{ and } x_1 \leq x < x_2, \\
+									x_2, \quad \text{if } x < 0 \text{ and } x_1 < x \leq x_2. \end{cases}
 	\label{eq:round_zero}
 \end{equation}
 For an illustration of the round-to-zero see Fig. \ref{fig:methods_rounding_modes}a. Bitshave achieves this behaviour
 by setting trailing mantissa bits to 0, which reduces the fraction $f$ in the mantissa (Eq. \ref{eq:float}). For example,
 bitshaving $\pi$ in Float32 to 7 mantissa bits yields (rounded bits in grey)
 \begin{align}
-	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927 \nonumber \\
-	\text{Float32, bitshaved:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001{\color{gray}0000000000000000}} = 3.140625
+	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927, \nonumber \\
+	\text{Float32, bitshaved:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001{\color{gray}0000000000000000}} = 3.140625.
 	\label{eq:bitshave}
 \end{align}
 This rounding mode therefore introduces a worst-case error that is equivalent to $\delta = x_2-x_1$, the distance between the two
@@ -549,15 +549,15 @@ round to values that are closer to zero or the same.
 An alternative to bitshaving is bitsetting \citep{Zender2016}, which sets the trailing bits to \texttt{1} instead. Following the same
 example as above (Fig. \ref{fig:methods_rounding_modes}b)
 \begin{align}
-	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927 \nonumber \\
-	\text{Float32, bitset:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001{\color{gray}1111111111111111}} = 3.1562498
+	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927, \nonumber \\
+	\text{Float32, bitset:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001{\color{gray}1111111111111111}} = 3.1562498.
 	\label{eq:bitset}
 \end{align}
 
 Different to bitshave, bitsetting has a bias away from zero and will increase the variance following a similar argumentation. Furthermore,
 although the trailing bits are simpler because they are all \texttt{1}, they still have to be explicitly stored to preserve the rounded
 value. So while bitsetting is a valid binary rounding mode, it does not provide any storage benefits and will need to be combined
-with methods like lossless compression (see section \ref{sec:compression_methods_compression}) to actually yield rounded
+with methods like lossless compression (see section \ref{sec:compression_lossless}) to actually yield rounded
 values that require fewer bits in memory.
 
 \subsubsection{Halfshave}
@@ -568,9 +568,9 @@ Halfshaved representable numbers are therefore $x_1^* = \tfrac{x_1+x_2}{2}, x_2^
 one more bit (which is always \texttt{1}) to be stored explicitly (which can be subject to lossless compression due to redundancy,
 see section \ref{sec:compression_lossless}). Following the same example as above
 \begin{align}
-	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927 \nonumber \\
+	\text{Float32:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}10010010000111111011011} = 3.1415927, \nonumber \\
 	\text{Float32, bitset:}& \quad \mathtt{{\color{psign}0}{\color{pexpo}10000000}1001001{\color{mygreen}1}
-	{\color{gray}000000000000000}} = 3.1484375
+	{\color{gray}000000000000000}} = 3.1484375.
 	\label{eq:halfshave}
 \end{align}
 where the trailing bit that is set to \texttt{1} is marked in green. 
@@ -611,7 +611,7 @@ to $x_1 < x \leq x_2$) then
 \begin{cases}
 x_1 \quad &\op{if} x - x_1 < x_2 - x,  \\
 x_1 &\op{if} x-x_1 = x_2 - x \op{~and~} x1 \op{~even}, \\
-x_2 &\op{else}.
+x_2 &\op{else},
 \end{cases}
 \label{eq:roundnearest}
 \end{equation}
@@ -624,15 +624,15 @@ with lesser significant mantissa bits implied to be \texttt{0}. The function rou
 in these examples
 \begin{align}
 	\text{Example 1: }\op{round}(&\mathtt{01000110}) \nonumber \\
-						= &\mathtt{0100{\color{gray}0000}} \qquad \text{(round down)} \nonumber \\
+						= &\mathtt{0100{\color{gray}0000}} \qquad \text{(round down)}, \nonumber \\
 	\text{Example 2: }\op{round}(&\mathtt{01001110}) \nonumber \\
-						= &\mathtt{010{\color{pregime}1}{\color{gray}0000}} \qquad \text{(round up)} \nonumber \\
+						= &\mathtt{010{\color{pregime}1}{\color{gray}0000}} \qquad \text{(round up)}, \nonumber \\
 	\text{Example 3: }\op{round}(&\mathtt{01111010}) \nonumber \\
-						= &\mathtt{{\color{pregime}1000}{\color{gray}0000}} \qquad \text{(round up)} \nonumber \\
+						= &\mathtt{{\color{pregime}1000}{\color{gray}0000}} \qquad \text{(round up)}, \nonumber \\
 	\text{Example 4: }\op{round}(&\mathtt{11101000}) \nonumber \\
-						= &\mathtt{1110{\color{gray}0000}} \qquad \text{(round down, tie to even)} \nonumber \\
+						= &\mathtt{1110{\color{gray}0000}} \qquad \text{(round down, tie to even)}, \nonumber \\
 	\text{Example 5: }\op{round}(&\mathtt{00011000}) \nonumber \\
-						= &\mathtt{00{\color{pregime}10}{\color{gray}0000}} \qquad \text{(round up, tie to even)}					
+						= &\mathtt{00{\color{pregime}10}{\color{gray}0000}} \qquad \text{(round up, tie to even)}.					
 	\label{eq:roundnearest_binary}
 \end{align}
 In the example 1 $x = \mathtt{01000110}$ is closer to \texttt{01000000} than to \texttt{01010000}, the next larger representable
@@ -671,9 +671,9 @@ hardware implementations is unclear, but circuits will be simplified.
 For a logarithmic-fixed point number format rounding to the nearest representable number is applied to the fraction bits in
 logarithmic space (see Eq. \ref{eq:gauss_log_round}) and not in linear space, which is the default for floating-point numbers.
 The tie between round down and round up is therefore not the midpoint $\tfrac{x_i + x_{i+1}}{2}$ with two representable
-numbers $x_i,x_{i+1}$, but the midpoint in logarithmic space
+numbers $x_i,x_{i+1}$, but the midpoint in logarithmic space,
 \begin{equation}
-2^{\tfrac{\log_2(x_i) + \log_2(x_{i+1})}{2}} = \sqrt{x_ix_{i+1}}
+2^{\tfrac{\log_2(x_i) + \log_2(x_{i+1})}{2}} = \sqrt{x_ix_{i+1}}.
 \end{equation}
 Round-to-nearest in linear space for logfixs therefore has to be derived.
 
@@ -683,21 +683,21 @@ $m + 1 = r \log_2(b)$. The function round() in Eq. \ref{eq:gauss_log_round} shou
 midpoint $\tfrac{a+b}{2}$ lies exactly at $m + \tfrac{1}{2}$ in logarithmic space to serve as the tie and
 satisfy round-to-nearest in linear space. Adding a constant $c_r$ before rounding achieves this with
 \begin{equation}
-c_r  = \frac{1}{2} - r(\log_2(\sqrt[r]{2} + 1)-1)
+c_r  = \frac{1}{2} - r(\log_2(\sqrt[r]{2} + 1)-1).
 \label{eq:roundnearest_logfix_cr}
 \end{equation}
 The value of $c_r$ only changes with the number of fraction bits $n_f$ and is therefore constant for a specific
 logfix format. The conversion of an exact number $x$ to its nearest representable logfix $x_1 = 2^k$, described
 by the scaled-to-integer exponent $rk$, is then
 \begin{equation}
-rk = \text{round}_{\op{Int}}(c_r + r\log_2(\vert x \vert))
+rk = \text{round}_{\op{Int}}(c_r + r\log_2(\vert x \vert)),
 \end{equation}
-Where round$_{\op{Int}}()$ rounds to the nearest integer including tie-to-even, which therefore also preserves
+where round$_{\op{Int}}()$ rounds to the nearest integer including tie-to-even, which therefore also preserves
 this tie rule for logfixs. Similarly, $c_r$ is included in the Gaussian logarithms $G^+,G^-$
-(Eq. \ref{eq:gauss_log_round}), now written with the scaled-to-integer difference $m = r(k_y - k_x)$
+(Eq. \ref{eq:gauss_log_round}), now written with the scaled-to-integer difference $m = r(k_y - k_x)$:
 \begin{align}
-	G^+(m) &= -m + \text{round}_{\op{Int}}( c_r + r\log2(1+2^{\tfrac{m}{r}})) \nonumber \\
-	G^-(m) &= -m + \text{round}_{\op{Int}}( c_r + r\log2(1-2^{\tfrac{m}{r}}))
+	G^+(m) &= -m + \text{round}_{\op{Int}}( c_r + r\log2(1+2^{\tfrac{m}{r}})), \nonumber \\
+	G^-(m) &= -m + \text{round}_{\op{Int}}( c_r + r\log2(1-2^{\tfrac{m}{r}})).
 \end{align}
 In case round-to-nearest in logarithmic space is preferred, one simply sets $c_r = 0$ as round$_{\op{Int}}()$
 rounds to the nearest integer within the logarithm. The difference between rounding in linear and logarithmic
@@ -732,7 +732,7 @@ $x_1,x_2$, $\delta = \vert x_2 - x_1 \vert$ then
 \begin{equation}
 \op{round}_{\op{stoch}}(x) =
 \begin{cases}
-x_1 \quad &\op{with~probability}\quad 1 - \delta^{-1}(x - x_1)  \\
+x_1 \quad &\op{with~probability}\quad 1 - \delta^{-1}(x - x_1),  \\
 x_2 &\op{with~probability}\quad  \delta^{-1}(x - x_1).
 \end{cases}
 \label{eq:stochround}
@@ -750,7 +750,7 @@ $\pm \delta$, whereas for round-to-nearest the error is bounded by $\pm \tfrac{\
 absolute rounding error is therefore larger for stochastic rounding, the expected rounding error
 decreases towards zero for repeated roundings
 \begin{equation}
-\lim_{N\to \infty}\frac{1}{N} \sum_i^N \op{round}_{\op{stoch}}(x) = x
+\lim_{N\to \infty}\frac{1}{N} \sum_i^N \op{round}_{\op{stoch}}(x) = x,
 \end{equation}
 as follows by inserting Eq. \ref{eq:stochround}. Stochastic rounding is therefore exact in expectation. There are
 other stochastic rounding modes, e.g. where the probability in Eq. \ref{eq:stochround} is $\tfrac{1}{2}$ in both
@@ -876,7 +876,7 @@ number formats from section \ref{sec:numbers}.
 The absolute, or linear, error of an exact value $x$ and its approximation $\hat{x}$ (which is for example a representable number of
 a finite-precision number format) is 
 \begin{equation}
-	\text{absolute error} = \vert x - \hat{x} \vert
+	\text{absolute error} = \vert x - \hat{x} \vert,
 	\label{eq:abserror}
 \end{equation}
 and therefore the $L_1$ distance between $x$ and $\hat{x}$. The absolute error has the unit of $x,\hat{x}$. The absolute error is invariant
@@ -886,17 +886,17 @@ $s^{-1}\vert x - \hat{x} \vert$ with scaling $s$, $x_s = sx, \hat{x}_s = s\hat{x
 the exact ones $X = (x_1,x_2,...,x_n)$ and the respective approximations $\hat{X} = (\hat{x}_1,\hat{x}_2,...,\hat{x}_n)$ yields $n$ 
 absolute errors, hence an error distribution. The mean of such a distribution is the mean absolute error
 \begin{equation}
-	\text{mean absolute error} = \tfrac{1}{n} \sum_{i=1}^n \vert x_i - \hat{x}_i \vert
+	\text{mean absolute error} = \tfrac{1}{n} \sum_{i=1}^n \vert x_i - \hat{x}_i \vert,
 	\label{eq:meanabserror}
 \end{equation}
 and similarly the median, maximum or any other statistical property can be calculated.
 
-In contrast, the mean error assesses the error in the respective means of the two arrays
+In contrast, the mean error assesses the error in the respective means of the two arrays,
 \begin{equation}
-	\text{mean error} = \tfrac{1}{n}\sum_{i=1}^n \hat{x}_i - \tfrac{1}{n}\sum_{i=1}^n x_i = \tfrac{1}{n} \sum_{i=1}^n \hat{x}_i - x_i
+	\text{mean error} = \tfrac{1}{n}\sum_{i=1}^n \hat{x}_i - \tfrac{1}{n}\sum_{i=1}^n x_i = \tfrac{1}{n} \sum_{i=1}^n \hat{x}_i - x_i,
 	\label{eq:meanerror}
 \end{equation}
-which can be both positive or negative. For example with $x_i \geq 0$ and $\hat{x}_i$ obtained via round-to-zero there is a
+which can be positive or negative. For example with $x_i \geq 0$ and $\hat{x}_i$ obtained via round-to-zero there is a
 negative mean error (i.e. bias) as the mean after rounding is smaller than before. For round-away-from-zero the bias is
 positive.
 
@@ -908,7 +908,7 @@ The relative error assesses the absolute error relative to the exact value. It i
 	\text{relative error} = \vert \frac{x - \hat{x}}{x} \vert
 	\label{eq:relerror}
 \end{equation}
-and therefore dimensionless and invariant under scaling. The relative error does not discriminate sign changes, for example
+and is therefore dimensionless and invariant under scaling. The relative error does not discriminate sign changes, for example
 the relative error for $x=1$ and $\hat{x} = 3$ or $\hat{x} = -1$ is identical: $\vert 1- 3 \vert = 2 = \vert 1 - (-1) \vert$. It is therefore
 a less suitable error metric in situations where non-negative variables could be subject to sign changes in approximation.
 For example when approximating non-negative variables like concentrations or precipitation with a negative value,
@@ -931,9 +931,9 @@ the decimal error, which is discussed next.
 The decimal error is here defined as
 \begin{equation}
 	\text{decimal error} = \begin{cases}
-						0 &\text{for } x = \hat{x} = 0 \\
-						\infty &\text{for } \op{sign}(x) \neq \op{sign}(\hat{x}) \\
-						\vert \log_{10}\left( \frac{x}{\hat{x}} \right) \vert &\text{else.}
+						0 &\text{for } x = \hat{x} = 0, \\
+						\infty &\text{for } \op{sign}(x) \neq \op{sign}(\hat{x}), \\
+						\vert \log_{10}\left( \frac{x}{\hat{x}} \right) \vert &\text{else},
 					\end{cases}
 	\label{eq:decerror}
 \end{equation}
@@ -941,10 +941,10 @@ and therefore is the absolute error in logarithmic space
 $\vert \log_{10}(\tfrac{x}{\hat{x}}) \vert = \vert \log_{10}(x) - \log_{10}(\hat{x}) \vert$ unless $x = \hat{x} = 0$.
 The decimal error quantifies the orders of magnitude an approximation $\hat{x}$ is away from the exact value $x$,
 for example $x = 1$ and $\hat{x} = 10$ yields a decimal error of 1, and so does $\hat{x} = \tfrac{1}{10}$. Based on
-the decimal error the decimal precision is defined for $\op{sign}(x) = \op{sign}(\hat{x})$ and $x \neq 0, \hat{x} \neq 0$ 
+the decimal error, the decimal precision is defined for $\op{sign}(x) = \op{sign}(\hat{x})$ and $x \neq 0, \hat{x} \neq 0$ 
 as \citep{Gustafson2017a,Klower2019a}
 \begin{equation}
-\op{decimal} \op{precision} = -\log_{10} \vert \log_{10} \left( \frac{x}{\hat{x}} \right) \vert
+\op{decimal} \op{precision} = -\log_{10} \vert \log_{10} \left( \frac{x}{\hat{x}} \right) \vert.
 \end{equation}
 The decimal precision quantifies the number of decimal places that are correct when using $\hat{x}$ as an approximation
 to $x$. For example, $x = \pi$ and $\hat{x} = 3.14$ yields a decimal precision of $3.66...$, as the three explicit decimal
@@ -1046,8 +1046,7 @@ function harmonic_sum(::Type{T},steps::Int=2000) where T
         s += oone/convert(T,i)  # s = s + 1/i, harmonic sum
 
         if s == s_old           # check for convergence
-            print((Float64(s),i))
-            break
+            return s,i
         end
     end
 end
@@ -1069,7 +1068,7 @@ The function \texttt{harmonic\_sum} is type-stable, as the types of all variable
 Therefore, writing abstractly \texttt{s = zero(T)} to obtain the zero-element of type \texttt{T} instead of \texttt{s = 0}
 is important to avoid implicit conversions between types. The function \texttt{harmonic\_sum} is also type-flexible,
 as it can be executed with every type \texttt{T} that has the following functions defined: \texttt{zero(T), one(T)}, addition,
-division, comparison (\texttt{==} in line 10) conversion from integer (\texttt{convert(T,i)} in line 8) and to Float64.
+division, comparison (\texttt{==} in line 10) and conversion from integer (\texttt{convert(T,i)} in line 8).
 For example, \texttt{zero(::Type\{Posit8\}) = reinterpret(Posit8,0x00)} to define the zero-element for 8-bit posits, or
 \texttt{+(x::LogFixPoint16, y::LogFixPoint16) = ...} to define the addition between LogFixPoint16s.
 
@@ -1089,16 +1088,16 @@ after 65 (BFloat16) to 1024 elements (Posit16).}]
 julia> using SoftPosit, BFloat16s, LogFixPoint16s   # load number formats
 julia> LogFixPoint16s.set_nfrac(10)                 # set to 10 fraction bits
 julia> harmonic_sum(Float16)
-(7.0859375, 513)            # converged to 7.09... after 513 elements
+(Float16(7.086), 513)            # converged to 7.09... after 513 elements
 
 julia> harmonic_sum(BFloat16)
-(5.0625, 65)                # converged to 5.06... after 65 elements
+(BFloat16(5.0625), 65)                # converged to 5.06... after 65 elements
 
 julia> harmonic_sum(Posit16)
-(7.77734375, 1024)          # converged to 7.78... after 1024 elements
+(Posit16(7.7773438), 1024)          # converged to 7.78... after 1024 elements
 
 julia> harmonic_sum(LogFixPoint16)
-(6.851249694824219, 432)    # converged to 6.85... after 432 elements
+(LogFixPoint16(6.8512497), 432)    # converged to 6.85... after 432 elements
 \end{lstlisting}
 \end{figure}
 
@@ -1127,7 +1126,7 @@ and more specific implementations of analysis number formats are presented in se
 \begin{figure}[tbhp]
 \begin{lstlisting}[language=JuliaLocal, label=lst:float16print, caption={\textbf{Minimal example of the definition of a new custom analysis
 number format \texttt{Float16print} in Julia.} The number format behaves like Float16 and defines all operations needed for \texttt{harmonic\_sum}
-but the addition is extended with a \texttt{print} statement that helps to analyse code without changing \texttt{harmonic\_sum} itself.}]
+but the addition also executes the \texttt{print} function that helps to analyse code without changing \texttt{harmonic\_sum} itself.}]
 struct Float16print      # define a custom type called Float16print
     float16::Float16     # that contains only a Float16
 end
@@ -1230,15 +1229,15 @@ For example, for the bent coin one may use an encoding which only stores the num
 instead of the outcome of each individual throw. Finding an encoding for a sequence that approaches maximum entropy and therefore requires
 less storage without loss of information is the subject of lossless compression algorithms \citep{MacKay2003}.
 
-\subsection{Bitpattern entropy}
+\subsection{Bit pattern entropy}
 \label{sec:bitpattern_entropy}
 
-An $n$-bit number format has $2^n$ bitpatterns available to encode a real number. The bitpattern entropy is the
-Shannon information entropy $H$, in units of bits \citep{Shannon1948}, calculated from the probability $p_i, i = 1,...,2^n$ of each bitpattern 
+An $n$-bit number format has $2^n$ bit patterns available to encode a real number. The bit pattern entropy is the
+Shannon information entropy $H$, in units of bits \citep{Shannon1948}, calculated from the probability $p_i, i = 1,...,2^n$ of each bit pattern,
 	\begin{equation}
-	H = - \sum_{i=1}^{2^n} p_i \log_2(p_i)
+	H = - \sum_{i=1}^{2^n} p_i \log_2(p_i).
 	\end{equation}
-For most data arrays, the bitpatterns are not used at uniform probability. For a uniform distribution the probabilities are all equal and
+For most data arrays, the bit patterns are not used at uniform probability. For a uniform distribution the probabilities are all equal and
 $p_i = 2^{-n}$ and the entropy is maximised to $\log_2(2^n) = n$. The difference $n-H$ between maximum entropy $n$ and
 the actual entropy $H$ is denoted as free entropy. With Shannon's source coding theorem, the free entropy and can be interpreted as
 the number of bits that are effectively unused in the encoding of a data array into the respective number format. For example, a data
@@ -1246,9 +1245,9 @@ array of signed integers that is uniform in the positive range, but does not con
 as the sign bit is unused.
 
 Floating-point numbers can never have a maximum entropy as their encoding is not a bijective function. While one could argue
-that encoding both +0 and -0 with distinct bitpatterns is bijective ($\tfrac{1}{-0} = -\infty \neq \infty = \tfrac{1}{0}$ in float arithmetic),
-many bitpatterns are used to encode NaN (see Eq. \ref{eq:float_all}), violating bijection. In practice, the free entropy resulting
-from this redundancy is negligible. Even for Float8 with 12.5\% of bitpatterns representing NaR (Table \ref{tab:formats}) the 
+that encoding both +0 and -0 with distinct bit patterns is bijective ($\tfrac{1}{-0} = -\infty \neq \infty = \tfrac{1}{0}$ in float arithmetic),
+many bit patterns are used to encode NaN (see Eq. \ref{eq:float_all}), violating bijection. In practice, the free entropy resulting
+from this redundancy is negligible. Even for Float8 with 12.5\% of bit patterns representing NaR (Table \ref{tab:formats}) the 
 resulting free entropy is 0.2 bit, reducing the maximum entropy of 8 bit to 7.8 bit. In contrast, using Float64 to represent 
 numbers in the range of [256,512) (similar to, for example, air or water temperature in Kelvin on Earth) has an entropy of at 
 most 52 bits compared to the 64 available bits as the sign and exponent bits are unused. Furthermore, such a data array
@@ -1265,21 +1264,21 @@ from the frequency of occurrences in data. Now, we will extend the concept of en
 that the conditional entropy measures a statistical relation between two random variables $X,Y$ with outcomes $x_i,y_j,
 i = 1,...,n, j = 1,...,m$. The conditional entropy $H(Y\vert X)$ of $Y$ conditioned on $X$ is defined as
 \begin{equation}
-	H(Y \vert X) = - \sum_{i,j} p_{i,j} \log_b \left( \frac{p_{i,j}}{p_i} \right)
+	H(Y \vert X) = - \sum_{i,j} p_{i,j} \log_b \left( \frac{p_{i,j}}{p_i} \right),
 	\label{eq:cond_entropy}
 \end{equation}
 with $p_{i,j}$ being an entry from the joint probability matrix $p_{XY}$ of the outcomes in $X,Y$ and $p_i$ the marginal probability of $X$.
 
-Assume the situation of two sport teams in a final where no draw is possible. If team 1 wins then team 2 loses and vice versa,
+Assume the situation of two sport teams competing in a final where no draw is possible. If team 1 wins then team 2 loses and vice versa,
 but assume that team 1 is twice as likely to win than team 2. Hence, $P(\text{Team 1 wins}) = \tfrac{2}{3}$ and $P(\text{Team 2 wins})
-= \tfrac{1}{3}$, which are the marginal probabilities $p_i,p_j$, but the conditional probabilities are 1
+= \tfrac{1}{3}$, which are the marginal probabilities $p_i,p_j$, but the conditional probabilities are 1:
 \begin{equation}
-P(\text{Team 1 wins}\vert \text{Team 2 lost}) = P(\text{Team 2 wins}\vert \text{Team 1 lost}) = 1
+P(\text{Team 1 wins}\vert \text{Team 2 lost}) = P(\text{Team 2 wins}\vert \text{Team 1 lost}) = 1.
 \end{equation}
 The joint probability matrix is then
 \begin{equation}
 	p_{XY} = \bpm 0 & \tfrac{1}{3} \\
-				\tfrac{2}{3} & 0 \epm
+				\tfrac{2}{3} & 0 \epm.
 \end{equation}
 Substituting into Eq. \ref{eq:cond_entropy} yields a conditional entropy of $H(\text{Team 2} \vert \text{Team 1}) = 0$ which can be
 interpreted as follows. While it is unclear which team will win, once one team is known to have won no further information is 
@@ -1290,11 +1289,11 @@ still uncertain which team will win, however, once one team wins, it implicitly 
 provide any further information. 
 
 Consider now the following joint probability that represents the wind direction for $X$ with \emph{East, no wind,} and \emph{West} and
-the number of sailing boats for $Y$ with some \emph{sailing boats} and \emph{no sailing boats}.
+the number of sailing boats for $Y$ with some \emph{sailing boats} and \emph{no sailing boats}:
 \begin{equation}
 	p_{XY} = \bpm \tfrac{3}{8} & 0 \\
 				0 & \tfrac{1}{4} \\
-				\tfrac{3}{8} & 0 \epm
+				\tfrac{3}{8} & 0 \epm.
 \end{equation}
 In 25\% of the cases no wind was observed, $P(\text{no wind}) = \tfrac{1}{4}$. For no wind, no sailing boats were seen,
 $P(\text{no sailing boats} \vert \text{no wind}) = 1$. In 75\% the wind came either from the East or from the West at
@@ -1344,13 +1343,13 @@ a 2x2 matrix. In that case we can describe $X,Y$ as bits being either \texttt{0}
 Such a joint probability matrix is then in general
 \begin{equation}
 	p_{XY} = \bpm p_{00} & p_{01} \\
-			p_{10} & p_{11} \epm
+			p_{10} & p_{11} \epm,
 \end{equation}
 with $p_{ij}$ the probability that $X=i$ and $Y=j$ simultaneously.
 In the case of 
 \begin{equation}
 	p_{XY} = \bpm p_{00} & 0 \\
-			0 & p_{11} \epm
+			0 & p_{11} \epm,
 \end{equation}
 the state of $X$ is entirely determined by the state of $Y$ and hence the conditional entropy is zero, while the mutual information
 is $M(X,Y) = H(X) = H(Y)$. The correlation between $X$ and $Y$ is 1 in this case and if the states \texttt{0,1} are also identified
@@ -1358,7 +1357,7 @@ with their respective numerical values $0,1$ (the latter requires a mapping of o
 is not always possible). Similarly, for
 \begin{equation}
 	p_{XY} = \bpm 0 & p_{01} \\
-			p_{10} & 0 \epm
+			p_{10} & 0 \epm,
 \end{equation}
 the same conclusions in terms of information hold, but the correlation is -1. Statistically independent $X,Y$ translate in the joint
 probability matrix to
@@ -1367,7 +1366,7 @@ probability matrix to
 			p_1 & p_1 \epm,
 	\quad \text{ or } \quad
 	p_{XY} = \bpm p_0 & p_1 \\
-			p_0 & p_1 \epm
+			p_0 & p_1 \epm,
 \end{equation}
 such that the probabilities in $X$ are independent of those in $Y$ and vice versa.
 

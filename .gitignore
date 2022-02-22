@@ -9,3 +9,5 @@
 *.blg
 *.brf
 .DS_Store
+
+/corrections

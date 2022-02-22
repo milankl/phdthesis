@@ -21,14 +21,13 @@ in Weather and Climate Modeling Analyzed With a Shallow Water Model}, \textbf{Jo
 
 \paragraph{Abstract.} The need for high-precision calculations with 64-bit or 32-bit floating-point arithmetic for weather and
 climate models is questioned. Lower precision numbers can accelerate simulations and are increasingly supported
-by modern computing hardware. This paper investigates the potential of 16-bit arithmetic when applied within a shallow
+by modern computing hardware. This chapter investigates the potential of 16-bit arithmetic when applied within a shallow
 water model that serves as a medium complexity weather or climate application. There are several 16-bit number
-formats that can potentially be used (IEEE half-precision, BFloat16, posits, integer and fixed-point). It is evident that a
-simple change to 16-bit arithmetic will not be possible for complex weather and climate applications as it will degrade model
-results by intolerable rounding errors that cause a stalling of model dynamics or model instabilities. However, if the posit number
-format is used as an alternative to the standard floating-point numbers the model degradation can be significantly reduced.
-Furthermore, a number of mitigation methods, such as rescaling, reordering and mixed precision, are available to make model
-simulations resilient against a precision reduction. If mitigation methods are applied, 16-bit floating-point arithmetic can be used
+formats that can potentially be used (IEEE half-precision, BFloat16, posits, integer and fixed-point). A simple change to
+16-bit arithmetic degrades model results by intolerable rounding errors that cause a stalling of model dynamics or model instabilities.
+However, a number of mitigation methods, such as rescaling, reordering and mixed precision, are available to make model
+simulations resilient against a precision reduction. The posit number format further reduces the model degradation compared to
+the standard floating-point numbers. Combining mitigation methods, 16-bit floating-point arithmetic can be used
 successfully within the shallow water model. The results show the potential of 16-bit formats for at least parts of complex weather
 and climate models where rounding errors would be entirely masked by initial condition, model or discretisation error.
 
@@ -36,7 +35,7 @@ and climate models where rounding errors would be entirely masked by initial con
 
 Predictions of weather and climate remain very difficult despite the use of the world's fastest supercomputers. Although the available
 computational resources have vastly increased over the last decades, forecast errors remain and have several origins
-\citep{Palmer2012,Palmer2015}. They can be categorised as initial and boundary condition errors, model errors and discretisation
+\citep{Palmer2012,Palmer2015}. They can be categorised as initial and boundary condition errors, scenario, model and discretisation
 errors. For instance, uncertainties in the observational data and their assimilation contribute to the errors in the initial conditions
 \citep{Ghil1991}; discrepancies between the mathematical model and the real world cause model errors; and the finite spatial and
 temporal resolution result in discretisation errors. The forecast error is in general a combination and respective contributions can be
@@ -60,6 +59,10 @@ as this format is sufficiently precise for many deep learning applications \cite
 supercomputers have reached peak performances of 500 Petaflop/s ($10^{17}$
 floating-point operations per second) according to \href{https://top500.org}{TOP500.org} \citep{Dongarra2011} with Float64 as of June 2021,
 but peak performances with Float16 are already beyond the exascale milestone ($10^{18}$ flop/s, \cite{Kurth2018,Kudo2020a}).
+While GPUs and TPUs are designed to process large amounts of data in parallel, the data transfer onto these processing units remains often
+a limiting factor to higher performance. At the same as low precision calculations allow for a higher performance in computing, low precision
+will also reduce the data volume that has to be transferred onto the processing units, such that data transfer issues are often addressed
+simultaneously.
 
 A gained speed from low-precision calculations can free resources to increase the complexity and therefore the forecast skill in
 weather and climate models \citep{Bauer2020}. The European Centre for Medium-Range Weather Forecasts reduces the runtime by
@@ -104,82 +107,51 @@ The methods are structured as follows: Section \ref{sec:swm_swm} introduces the 
 discretisation thereof. For 16-bit arithmetic it is important to scale and reorder the equations which is presented in 
 section \ref{sec:swm_scale}. Section \ref{sec:swm_semilagrange} describes a semi-Lagrangian advection scheme
 resilient to 16-bit arithmetic. The concept of mixed precision and reduced-precision communication are explained
-in section \ref{sec:swm_mixed} and \ref{sec:swm_comm}.
-
-An extensive discussion of the number formats used in this chapter is found in section \ref{sec:numbers}.
+in section \ref{sec:swm_mixed} and \ref{sec:swm_comm}. An extensive discussion of the number formats used in
+this chapter is found in section \ref{sec:numbers}.
 
 \subsection{The shallow water model}
 \label{sec:swm_swm}
 
-The shallow water model used here is an updated version of the one used in \cite{Klower2019a}, and most details described
-therein are also valid here. A vertical integration of the Navier-Stokes equations yields the shallow water equations, that can
-be used to understand many features of the general circulation of atmosphere and ocean as well as some two-dimensional
-non-linear interactions on shorter length and time scales \citep{Gill1982,Vallis2006}. The shallow water equations for the
-prognostic variables velocity $\mathbf{u} = (u,v)$ and sea surface elevation $\eta$ are
+The shallow water equations for the prognostic variables velocity $\mathbf{u} = (u,v)$, sea surface elevation $\eta$ and
+passive tracer $q$ are \citep{Gill1982,Vallis2006}
 \begin{subequations}
 \begin{align}
 \frac{\partial \mathbf{u}}{\partial t} &+ (\mathbf{u} \cdot \nabla) \mathbf{u} +
-f\hat{\mathbf{z}} \times \mathbf{u} = -g\nabla \eta + \mathbf{D} + \mathbf{F} \\
-\frac{\partial \eta}{\partial t} &+ \nabla \cdot (\mathbf{u}h) = 0.
+f\hat{\mathbf{z}} \times \mathbf{u} = -g\nabla \eta + \mathbf{D} + \mathbf{F}, \\
+\frac{\partial \eta}{\partial t} &+ \nabla \cdot (\mathbf{u}h) = 0, \\
+\frac{\partial q}{\partial t} &+ \mathbf{u} \cdot \nabla q = 0.
 \end{align}
 \label{eq:swe}%
 \end{subequations}
-$\eta$ can be interpreted as pressure for the atmosphere \citep{Gill1982}. The shallow water system is forced with a zonal
-wind stress $\mathbf{F}$. The dissipation term $\mathbf{D}$ removes energy on large scales (bottom friction, \cite{Arbic2008})
-and on small scales (diffusion, \citep{Griffies2000}). The non-linear term $(\mathbf{u} \cdot \nabla) \mathbf{u}$ represents advection of
-momentum. The term $f\hat{\mathbf{z}} \times \mathbf{u}$ is the Coriolis force and $-g\nabla \eta$ is the pressure gradient
-force, with $g$ being the gravitational acceleration. Eq. \ref{eq:swe}b is the shallow water-variant of the continuity equation,
-ensuring conservation of mass.
+The shallow water model and its discretisation is explained in more detail in Appendix \ref{sec:swm_appendix}. Here we
+discuss the parameter choices relevant for this chapter.
 
 The shallow water equations are solved in the $(x,y)$-plane over the zonally periodic rectangular domain $L_x \times L_y$,
 of size $2000\op{km} \times 1000\op{km}$. We associate $x$ with the zonal and $y$ with the meridional direction. The domain
-is centred at 45N with the beta-plane approximation \citep{Vallis2006}. The boundary conditions are periodic in zonal direction
-and no-slip at the northern and southern boundary. The layer thickness is $h = \eta + H(x)$, with
-\begin{equation}
-H(x) = H_0 - H_1\exp\left(-H_\sigma^{-2}(x-\tfrac{L_x}{2})^2\right)
-\end{equation}
-being the undisturbed depth, representing a meridional mountain ridge at $x=\tfrac{L_x}{2}$ spanning from the southern to
-the northern boundary. The standard depth is $H_0 = 500\op{m}$. The ridge has a maximum height of $H_1 = 50\op{m}$
-and a characteristic width of $H_\sigma = 300\op{km}$, which makes the zonal current barotropically unstable. The flow
-regime is therefore governed both by eddy-mean flow as well as eddy-eddy interactions \citep{Ferrari2010}. The wind stress
-forcing $\mathbf{F} = (F_x,0)$ is constant in time, acts only on the zonal momentum budget
-\begin{equation}
-Fx = \frac{F_0}{\rho h} \cos\left(\pi\left(y{L_y}^{-1} - 1\right)\right)^2
-\end{equation}
-and vanishes at the boundaries. The water density is $\rho = 1000\op{kg}\op{m}^{-3}$ and $F_0 = 0.12\op{Pa}$.
-The wind forcing acts as a continuous input of large-scale kinetic energy that is balanced by the dissipation term.
+is centred at $\phi_0 = 45$\textdegree{}N with the $\beta$-plane approximation \citep{Vallis2006}. The boundary conditions are
+periodic in zonal direction and no-slip at the northern and southern boundary, representing a zonal re-entrant channel at
+mid-latitudes. This idealised rectangular layer of ocean is at rest $H_0 = 500\op{m}$ deep, but a $50\op{m}$ high meridional
+mountain ridge is placed in the middle of the domain to trigger instabilities in the zonal flow. The mean flow remains predominantly
+zonal due to the zonal wind forcing which is constant in time.
 
-The dissipation term $\mathbf{D}$ is the sum
-\begin{equation}
-\mathbf{D} = -\frac{c_D}{h}\| \mathbf{u} \| \mathbf{u} - \nu \nabla^4 \mathbf{u}
-\label{eq:diss}
-\end{equation}
-of a quadratic bottom drag with dimensionless coefficient $c_D = 10^{-5}$ \citep{Arbic2008}
-and a biharmonic diffusion with viscosity coefficient $\nu \approx 1.33\times10^{11} \op{m}^4\op{s}^{-1}$ \citep{Griffies2000}.
+The gravitational acceleration is $g = 10\mathrm{ms}^{-2}$, such that the ocean layer in the shallow water model represents
+barotropic dynamics. The phase speed of gravity waves $c_{ph} \approx \sqrt{gH_0} = 70\mathrm{ms}^{-1}$ is in this system
+much higher than typical flow speeds $U = 1\mathrm{ms}^{-1}$. The Coriolis parameter changes from
+$f\vert_{y=0} \approx 0.9 \cdot 10^{-4}~\mathrm{s}^{-1}$ at
+the southern boundary to $f\vert_{y=L_y} \approx 1.1 \cdot 10^{-4}~\mathrm{s}^{-1}$ at the northern boundary.
+Consequently, the Rossby number $Ro = \tfrac{U}{fL}$ is small, $Ro \ll 1$, and only approaches unity for motions near the 
+grid scale $L = \mathcal{O}(\Delta x)$ (see next paragraph). The Rossby radius of deformation $L_R = \tfrac{c_{ph}}{f}$ is
+approximately $L_R = 700~\mathrm{km}$ and therefore on the order of the domain size. 
 
-The shallow water equations are discretised using 2nd order centred finite differences on an Arakawa C-grid \citep{Arakawa1977}
-and the fourth-order Runge-Kutta method \citep{Butcher2016} is used for time integration of the pressure, Coriolis and advective terms,
-whereas a semi-implicit method is used for the dissipative terms $\mathbf{D}$. We present results of simulations with three different
-levels of resolution: high resolution simulations with a grid spacing of $\Delta = 5\operatorname{km}$ (400x200 grid points), medium
-resolution simulations with a grid spacing of $\Delta = 20\operatorname{km}$ (100x50 grid points) and low resolution with a
-grid-spacing of $\Delta = 40\operatorname{km}$ (50x25 grid points). The grid spacing in $x$ and $y$-direction is always equal,
-$\Delta x = \Delta y = \Delta$. The time step $\Delta t = 282\op{s}$ at $\Delta = 20\mathrm{km}$ is chosen to resolve surface gravity waves,
-traveling at an estimated phase speed of $\sqrt{gH_0}$ with a CFL number close to 1 and gravitational acceleration $g=10\op{ms}^{-1}$.
-The advection terms are discretised using an energy and enstrophy conserving scheme \citep{Arakawa1990,Salmon2004,Salmon2007}.
-
-The shallow water equations are extended with an advection equation for tracers. Temperature and humidity or salinity are examples
-of tracers in the atmosphere and the ocean. For simplicity, we regard them as passive here, such that they do not influence the flow.
-The advection of a passive tracer $q$ given a velocity $\mathbf{u}$ is governed by
-\begin{equation}
-\frac{\partial q}{\partial t} + \mathbf{u} \cdot \nabla q = 0.
-\label{eq:adv}
-\end{equation}
-A semi-Lagrangian advection scheme \citep{Smolarkiewicz1992} is used to discretise Eq. \ref{eq:adv}. In this discretisation, the tracer
-concentration for a given grid cell, which is considered to be the arrival point, is calculated from the concentration at a departure point
-at the previous time step. Starting from each arrival point, velocities are traced back to find the respective departure points. 
-While the arrival points correspond to grid cells, the departure points in general do not coincide with the grid cells, such that an interpolation
-is required. The concentrations at the surrounding grid points are bilinearly interpolated onto the departure point, which
-is then used as the concentration at the arrival point one advective time step later.
+We present results of simulations with three different levels of resolution: high resolution simulations with a grid spacing of
+$\Delta = 5\operatorname{km}$ (400x200 grid points), medium resolution simulations with a grid spacing of
+$\Delta = 20\operatorname{km}$ (100x50 grid points) and low resolution with a grid-spacing of $\Delta = 40\operatorname{km}$
+(50x25 grid points). The grid spacing in $x$ and $y$-direction is always equal, $\Delta x = \Delta y = \Delta$. 
+All resolutions resolve well the Rossby radius of deformation and therefore the largest eddies. However, at higher resolution
+a larger part of the mesoscale is resolved and smaller eddies are therefore simulated. The time step
+$\Delta t = 282\op{s}$ at $\Delta = 20\mathrm{km}$ is chosen to resolve surface gravity waves, satisfying stability according
+to the Courant-Friedrichs-Lewy number (\cite{Courant1967} and Eq. \ref{eq:cfl}).
 
 \begin{figure}[htbp]
 \includegraphics[width=1\textwidth]{Figures/swm/decimal_precision.png}
@@ -219,7 +191,7 @@ in the discretised numerical model and we do not apply a rescaling of the shallo
 \ref{chap:hardware} rescales the shallow water equations fully to avoid subnormals, which is discussed in more detail in section
 \ref{sec:swm_scaling}.
 
-In this chapter, however, we introduce dimensionless gradients as the grid spacing $\Delta$ in units of meter is large for geophysical flows.
+In this chapter, we introduce dimensionless gradients as the grid spacing $\Delta$ in units of meter is large for geophysical flows.
 We therefore use dimensionless Nabla operators $\tilde{\nabla} = \Delta\nabla$. The continuity equation Eq. \ref{eq:swe}b, for example,
 reads then as
 \begin{equation}
@@ -236,10 +208,10 @@ Biharmonic diffusion \citep{Griffies2000} calculates a fourth-derivative in spac
 geophysical applications, due to the large physical dimensions, when using meters as a unit for length. Contrarily, biharmonic viscosity
 coefficients are typically very large
 $\mathcal{O}(10^{11})$.
-We therefore rescale $\mathbf{D}$ accordingly
+We therefore rescale $\mathbf{D}$ (see Eq. \ref{eq:diss}) accordingly
 \begin{equation}
 \tilde{\mathbf{D}} =-\frac{\tilde{c_D}}{h}\| \mathbf{u} \| \mathbf{u} -
-\tilde{\nu}\tilde{\nabla}^4\mathbf{u}
+\tilde{\nu}\tilde{\nabla}^4\mathbf{u},
 \end{equation}
 with $\tilde{c_D} = c_D\Delta = 0.2\op{m}$,  and $\tilde{\nu} = \nu\Delta^{-3}
 \approx 0.16\op{ms}^{-1}$, which are precomputed. The term
@@ -250,10 +222,10 @@ undone when multiplying with the rescaled time step $\tilde{\Delta t}$.
 \subsection{A 16-bit semi-Lagrangian advection scheme}
 \label{sec:swm_semilagrange}
 
-The semi-Lagrangian advection scheme is reformulated for 16-bit arithmetics. In the absence of sources and sinks,
-the Lagrangian point-of-view states that the tracer concentration $q$ does not change following a flow trajectory.
-The concentration $q$ at departure points $\mathbf{x}_d$ at time $t$ is therefore the same as the concentration at
-time $t+\Delta t_{\op{adv}}$ at arrival points $\mathbf{x}_a$, which are chosen to coincide with the grid points.
+The semi-Lagrangian advection scheme (Appendix \ref{sec:semi_lagrange_appendix}) is reformulated for 16-bit arithmetics.
+In the absence of sources and sinks, the Lagrangian point-of-view states that the tracer concentration $q$ does not change
+following a flow trajectory. The concentration $q$ at departure points $\mathbf{x}_d$ at time $t$ is therefore the same as the
+concentration at time $t+\Delta t_{\op{adv}}$ at arrival points $\mathbf{x}_a$, which are chosen to coincide with the grid points.
 The advective time step $\Delta t_{\op{adv}}$ does not have to be equal to the time step of other terms, hence we
 distinguish it here from $\Delta t$. Based on the flow velocity at the arrival point, the departure point is derived. To avoid
 large numbers for the coordinates (in our case $L_x = 2 \cdot 10^6$m), non-dimensional departure points
@@ -313,7 +285,7 @@ climate models, a reduction in computing time can be achieved with reduced-preci
 might be possible with 16 or even 8-bit communication, which would result in a significant reduction in communication volume.
 In general, various lossy and lossless data compression techniques can be used to reduce communication volume. Lossless
 communication allows for bit-reproducible compression, but reductions in communication volumes are small due to many
-high entropy mantissa bits (see also section \ref{sec:compression_methods_compression} and chapter
+high entropy mantissa bits (see also section \ref{sec:compression_methods} and chapter
 \ref{chap:compression} in general). We therefore restrict ourselves to lossy type conversions to Float16, Float8 or Posit8,
 which introduce rounding errors to the data that is sent around while the overhead due to encoding before and decoding
 after communication remains small.
@@ -341,29 +313,30 @@ are kept in Float32. \textbf{b} Forecast error for reduced-precision communicati
 for encoding, with Float64 used for all calculations. The communication of boundary values occurs at every time step
 for the prognostic variables. The RMSE is normalised by a mean forecast error at very long lead times. Solid or dashed lines represent
 the median of 200 forecasts per number format. The shaded areas of each model configuration denote the interquartile
-range of the forecast experiments.}
+range of the forecast experiments. Only the finite numerical precision contributes to the forecast error here by construction.}
 \label{fig:rmse}
 \end{figure}
 
 \subsection{Error growth}
 
 Short-term forecasts at medium-resolution ($\Delta = 10$km) are performed to analyse the differences between
-different 16-bit arithmetics. To quantify the error growth caused by rounding errors with different arithmetics in a
-statistically robust way, we create a number of forecasts with each member starting from one of 200 randomly picked
-start dates from a 50-year long control simulation. The forecast error in the shallow water model is computed as the 
-root mean square error (RMSE) of sea surface height $\eta$ with respect to Float64 simulations. Other variables yield
-similar results. Each forecast is performed several times with the various number formats but from identical initial conditions.
-The error growth caused by rounding errors is additionally compared to the error introduced by discretisation. A low-resolution
-model configuration with $\Delta = 20$km is used to quantify a realistic level of discretisation error. The RMSE is normalised
-by the climatological mean forecast error at very long lead times, which is the same for all model configurations. When the
-normalised RMSE reaches 1 all information on the initial conditions is removed by the chaotic evolution of the shallow water
-system.
+different 16-bit arithmetics. By construction, the forecast error here arises only from the finite numerical precision. All other
+sources of forecast error are excluded. To quantify the error growth caused by rounding errors with different arithmetics in a
+statistically robust way, we create a set of forecasts each starting from one of 200 randomly picked start dates from a 50-year
+long control simulation. Each forecast is performed several times from identical initial conditions only changing the number formats.
+The initial conditions were only subject to rounding errors in the conversion to the respective number formats.
+The forecast error in the shallow water model is computed as the root mean square error (RMSE) of sea surface height $\eta$
+with respect to Float64 simulations. Other variables yield similar results. The error growth caused by rounding errors is additionally
+compared to the error introduced by discretisation. A low-resolution model configuration with $\Delta = 20$km is used to quantify a
+realistic level of discretisation error. The RMSE is normalised by the climatological mean forecast error at very long lead times, which
+is the same for all model configurations. When the normalised RMSE reaches 1 all information on the initial conditions is removed
+by the chaotic evolution of the shallow water system.
 
-The forecast error of Float16 is as large as the discretisation error and clearly larger than with 16-bit posit arithmetic (Fig. \ref{fig:rmse}a).
-Both 16-bit posit formats, i.e. Posit(16,1) with 1 exponent bit and Posit(16,2) with two, yield a forecast error that is several times smaller
-than Float16. The forecast error of 32-bit arithmetic is several orders of magnitude smaller and is only after 200 days as large as the
-error for 16-bit arithmetic at short lead times of about 10 days. Also at 32 bit, posit arithmetic clearly causes smaller rounding
-errors and therefore outperform floats.
+The forecast error from low precision of Float16 is as large as the discretisation error and clearly larger than with 16-bit posit
+arithmetic (Fig. \ref{fig:rmse}a). Both 16-bit posit formats, i.e. Posit(16,1) with 1 exponent bit and Posit(16,2) with two,
+yield a forecast error that is several times smaller than Float16. The forecast error of 32-bit arithmetic is several orders of magnitude
+smaller and is only after 200 days as large as the error for 16-bit arithmetic at short lead times of about 10 days. Also at 32 bit,
+posit arithmetic clearly causes smaller rounding errors and therefore outperform floats.
 
 \begin{figure}
 \includegraphics[width=1\textwidth]{Figures/swm/meanvar_u.pdf}
@@ -400,7 +373,7 @@ The turbulence in shallow water simulations is largely geostrophic, such that th
 The resulting geostrophic velocities $\mathbf{u}_g$ can be derived from the sea surface height $\eta$ as
 \begin{subequations}
 \begin{align}
-\mathbf{u}_g &= \frac{g}{f}\hat{\mathbf{z}} \times \nabla \eta \\
+\mathbf{u}_g &= \frac{g}{f}\hat{\mathbf{z}} \times \nabla \eta, \\
 \mathbf{u} &= \mathbf{u}_{g} + \mathbf{u}_{ag}
 \end{align}
 \label{eq:geo}%
@@ -444,8 +417,8 @@ Gravity waves are identified from the tendency of sea surface height $\eta$. Com
 anomalous sea surface height, which is used as a proxy to locate eddies, we assume that rounding errors in regions
 of high eddy activity lead to instabilities that propagate away in the form of gravity waves. These gravity waves are not
 present in Float64 simulations (Fig. \ref{fig:tend}e) and tend to have only a small impact on quasi-geostrophic dynamics,
-as they act on different time and length scales. It is unclear but possible that gravity waves cause the observed increased
-ageostrophic velocities for 16-bit arithmetic.
+as they act on different time and length scales. It is unclear but likely that gravity waves cause the observed increased
+ageostrophic velocities for 16-bit arithmetic, given that gravity waves are ageostrophic.
 
 Tendencies are about 4 orders of magnitude smaller than the prognostic variables. This poses a problem for number formats
 with a machine epsilon, measured as decimal precision, significantly lower than 4 decimal places (Table \ref{tab:formats}).
@@ -472,11 +445,13 @@ and Float32() is the conversion function.
 
 Snapshots of tracer concentration reveal well simulated geostrophic turbulence (Fig. \ref{fig:snapshot}e and f) with Float16/Float32
 and BFloat16/Float32 and instabilities at fronts or in filaments are visibly reduced compared to 16-bit arithmetic for all calculations.
-The forecast error growth is strongly reduced once the prognostic variables are kept as Float32 (Fig. \ref{fig:rmse}a), supporting the
-hypothesis that the addition of tendencies to the prognostic variables is a key computation with low rounding error-tolerance. Although
-BFloat16 is not suitable for shallow water simulations when applied to all computations, mixing BFloat16 with Float32 yields a similar error
-growth to posits, which is well below the discretisation error. Mean state or variability are virtually identical for both mixed-precision cases
-(Fig. \ref{fig:mean}) compared to the Float64 reference. The geostrophic balance is largely unaffected, but ageostrophic velocities
+The forecast error growth from low precision is strongly reduced once the prognostic variables are kept as Float32 (Fig. \ref{fig:rmse}a),
+supporting the hypothesis that the addition of tendencies to the prognostic variables is a key computation with low rounding error-tolerance.
+Small time steps are required for stability, hence tendencies are much smaller than the prognostic variables they are added to.
+Consequently, loss of significance has to be expected, making this addition precision-critical.
+Although BFloat16 is not suitable for shallow water simulations when applied to all computations, mixing BFloat16 with Float32 yields a
+similar error growth to posits, which is well below the discretisation error. Mean state or variability are virtually identical for both mixed-precision
+cases (Fig. \ref{fig:mean}) compared to the Float64 reference. The geostrophic balance is largely unaffected, but ageostrophic velocities
 increase in variance, especially for BFloat16 (Fig. \ref{fig:geo}). Gravity waves are similarly present for mixed precision although weaker
 for tendencies computed with Float16 (Fig. \ref{fig:tend}d) and, as discussed, they tend to not interact with the geostrophic time and
 length scales. Although the results show that Float16 is generally a preferable number format over BFloat16 for the applications presented
@@ -514,7 +489,10 @@ A standard method to parallelise simulations is the distributed-memory paralleli
 We emulate MPI-like communication in the shallow water model with the copying of boundary values between the right and left boundary (periodic
 boundary conditions). Although the shallow water model does not run in parallel, reducing the precision in the copying of boundary values
 introduces an equivalent error as if reduced-precision MPI communication was used between subdomains. Reduced precision is applied
-for the communication of the prognostic variables at every Runge-Kutta substep.
+for the communication of the prognostic variables at every Runge-Kutta substep. Reduced-precision communication introduces at every time
+step a smaller total rounding error than mixed precision as in \label{sec:swm_results_mixed} as only the prognostic variables close to the
+boundaries are rounded. At the same time, the tendencies are calculated in high precision, while for mixed precision they are calculated in
+low precision. 
 
 Regarding snapshots of tracer concentration simulated with reduced-precision communication shows a negligible error for Float16 and
 16-bit posits (Fig. \ref{fig:snapshot_comm}). The error is largest at fronts and not concentrated around the boundaries. Encoding the
@@ -549,22 +527,24 @@ We also showed that numerical precision for communication between compute nodes 
 even 8-bit without introducing a large error. Reduced-precision communication was not found to have a significant impact on
 either mean state, variability, geostrophy or tendencies.
 
-A \emph{perfect model} is used in this study, such that any form of model or initial condition error is ignored and only the number
-format is changed between simulations. Solely discretisation errors are estimated by lowering the spatial resolution by a factor of 2.
-Although this is essential here to analyse the impact of rounding errors isolated from other errors, it is in general not a realistic
-configuration for weather or climate models. More complex models include many other sources of forecast error, such that the
-contribution of rounding errors from 16-bit arithmetic would likely be dwarfed by model, discretisation or initial condition errors.
+A \emph{perfect model} is used in this study, such that any form of model or initial condition error is ignored by construction
+and only the number format is changed between simulations. Solely discretisation errors are estimated by lowering the spatial
+resolution by a factor of 2. Although this is essential here to analyse the impact of rounding errors isolated from other errors,
+it is in general not a realistic configuration for weather or climate models. More complex models include many other sources
+of forecast error, such that the contribution of rounding errors from 16-bit arithmetic would likely be dwarfed by model, discretisation
+or initial condition errors.
 
 Only the most common discretisation method for fluid dynamics was used in this study: Finite differences with an explicit time
 stepping scheme. But various other discretisation methods exist, such as finite element or volume, spectral methods and
 implicit time stepping. These methods come with different algorithms and associated precision requirements. Consequently,
 some might be less tolerant to rounding errors than the method used in this study.
 
-There is currently no hardware available for posit arithmetic that we could have used for performance testing and it is seems
-impossible to make credible estimates whether such hardware would be faster or slower when compared to hardware optimised
-for Float16 arithmetic (as this does not only depend on theoretical considerations but also on investments into chip design).
-We therefore cannot draw any conclusion about the performance of posit arithmetic operations in comparison to Float16 or
-the other formats.
+There is currently no hardware available for posit arithmetic that we could have used for performance testing. It is difficult
+to make credible estimates whether such hardware would be faster or slower when compared to hardware-optimised
+float arithmetic. This does not only depend on theoretical considerations of but also on investments into chip design.
+However, first studies suggest that posits could be slower on hardware compared to floats \citep{deDinechin2019,Uguen2019,Forget2021}
+and also require a larger chip area for the variably-sized exponent. But we do not want to draw an early conclusion about the performance
+of posit arithmetic in comparison to floats when implemented on hardware.
 
 Until progress is made on hardware implementations for posits, the results here suggest that also 16-bit float arithmetic can
 successfully be used for parts of complex weather and climate models with the potential for acceleration on graphic and tensor
