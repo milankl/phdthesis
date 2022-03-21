@@ -7,7 +7,7 @@ for lower-precision computations and data compression for weather and climate mo
 is derived, presented and discussed that distinguishes between the real and false information in data without a prior knowledge of the data's uncertainty.
 Discarding the false information bits was shown to be efficient to achieve compression factors between 10 and 50x for many different variables. 
 The analysis of the bitwise real information content shows that different variables require different levels of precision.
-Hence, using a default level of precision for all of them, will be inefficient: Either large amounts of false information is retained when using unnecessarily
+Hence, using a default level of precision for all of them, will be inefficient: either large amounts of false information is retained when using unnecessarily
 high precision, or real information discarded when the precision is not high enough for some variables. Given that default precisions are generally high,
 a large share of a climate data archive stores essentially random bits without any real information. Removing such bits before storage will reduce
 the load on the data archive, data access servers and bandwidth constraints of users. If information-preserving compression is combined
@@ -30,8 +30,8 @@ sacrificing performance. Mixed-precision with stochastically rounded conversions
 approach as it circumvents the need for stochastic arithmetics on hardware and can be used for low-precision communication too.
 
 However, in the shallow water equations we found evidence that a simulation's resilience to low precision can highly depend on details of the
-numerical discretisation schemes implemented: With a conventional time integration Float16 simulations include greatly amplified gravity waves,
-impact the geostrophic balance and rounding errors grow similarly fast as discretisation errors. However, with a compensated time integration to
+implemented numerical discretisation schemes. With a conventional time integration, Float16 simulations include greatly amplified gravity waves.
+Ageostrophic velocities increase and rounding errors grow similarly fast as discretisation errors. However, with a compensated time integration to
 reduce the rounding errors in one addition per time step and variable, Float16 simulations are a competitive alternative to simulations with Float64.
 On the other hand, alternative number formats such as posits can provide more precision at the same number of bits compared to floats.
 But given the lack of widely available hardware support, their future in high-performance computing is questionable. In general, we find

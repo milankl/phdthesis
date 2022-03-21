@@ -82,7 +82,10 @@ longitude-latitude grid using climate data operators (cdo) v1.9. All 137 vertica
 Furthermore, global fields of temperature from ECMWF’s ensemble prediction system with 91 vertical levels are
 used from the first 25 members of a 50-member 15-day ensemble forecast starting on 24 Sept 2020 00:00 UTC.
 Bilinear regridding onto a regular 0.2\textdegree{}x0.2\textdegree{} longitude-latitude grid, similar as for the CAMS data, is applied.
-All compression methods here include the conversion from Float64 to Float32.
+All compression methods here include the conversion from Float64 to Float32. The bilinear interpolation can impact the bitwise real
+information content as defined in section \ref{sec:real_information}. A variable like cloud cover that takes only a few quantised states on
+the original model grid will have more states when interpolated due to averaging. Consequently, the information in trailing
+mantissa bits may be affected, but this is not further discussed here.
 
 Only longitude-latitude grids are considered in this paper. However, the methodology can be applied to other grids too.
 For example, ECMWF’s octahedral grid collapses the two horizontal dimensions into a single horizontal dimension
@@ -92,7 +95,7 @@ Fewer grid points of the octahedral grid reduce the size, but the correlation in
 \subsection{Grid definitions}
 \label{sec:grid_definitions}
 
-The compression methods described here are applied to gridded binary data. Data on structured grids can be represented as a tensor,
+The compression methods described here are applied to gridded binary data. Data on structured grids can be represented as an array,
 such that for two dimensions that data can be arranged in a matrix $A$  with elements $a_{ij}$ and $i,j$ indices.
 Adjacent elements in $A$, e.g. $a_{ij}$ and $a_{i+1,j}$, are also adjacent grid points. Every element $a_{ij}$ is a floating-point number,
 or in general a number represented in any binary format. The $n$ bits in $a_{ij}$ are described as bit positions, including sign, exponent
@@ -119,30 +122,34 @@ The entropy is maximised to 1 bit for equal probabilities $p_0 = p_1 = \tfrac{1}
 of two bitstreams $r = r_1r_2...r_k...r_l$ and $s = s_1s_2...s_k...s_l$ (see section \ref{sec:mutual_information}). The mutual
 information is defined via the joint probability mass function $p_{rs}$, which here takes the form of a 2x2 matrix
  	\begin{equation}
-	p_{rs} = \begin{pmatrix} p_{00} & p_{01} \\ p_{10} & p_{11} \end{pmatrix}
+	p_{rs} = \begin{pmatrix} p_{00} & p_{01} \\ p_{10} & p_{11} \end{pmatrix},
 	\end{equation}
 with $p_{ij}$ being the probability that the bits are in the state $r_k = i$ and $s_k = j$ simultaneously and $p_{00} + p_{01} + p_{10} + p_{11} = 1$.
 The marginal probabilities follow as column or row-wise additions in $p_{rs}$, e.g. the probability that $r_k = 0$ is $p_{r=0} = p_{00} + p_{01}$.
 The mutual information $M(r,s)$ of the two bitstreams $r,s$ is then
 	\begin{equation}
-	M(r,s) = \sum_{r=0}^1 \sum_{s=0}^1 p_{rs} \log_2 \left( \frac{p_{rs}}{p_{r=r}p_{s=s}} \right)
+	M(r,s) = \sum_{r=0}^1 \sum_{s=0}^1 p_{rs} \log_2 \left( \frac{p_{rs}}{p_{r=r}p_{s=s}} \right).
 	\end{equation}
 We now consider the two bitstreams $r,s$ being the preceding and succeeding bits (for example in space or time) in a single bitstream $b$,
 i.e. $r=b_1b_2...b_{l-1}$ and $s=b_2b_3...b_l$. As explained in section \ref{sec:grid_definitions}, this can for example be the
 bitstream of all first mantissa bits in the gridded data. Considering $r,s$ as the preceding and succeeding bits is equivalent to
 the bitwise mutual information in adjacent grid points.
 The (unconditional) entropy is then effectively $H = H(r) = H(s)$ as in Eq. \ref{eq:bit_unconditional_entropy} and for $l$ being very large.
-The conditional entropies $H_0,H_1$ (see section \ref{sec:cond_entropy}) are conditioned on the state of the preceding bit
+The conditional entropy (see section \ref{sec:cond_entropy})
+	\begin{equation}
+	H(s \vert r) = -\sum_{r=0}^1 \sum_{s=0}^1 p_{rs} \log_2 \left( \frac{p_{rs}}{p_r} \right)
+	\end{equation}
+is split into its contributions $H(s \vert r) = p_0H_0 + p_1H_1$. $H_0,H_1$ are the entropies conditioned on the state of the preceding bit
 $b_{k-1}$ being $0$ or $1$, respectively
 	\begin{align}
-	H_0 &= -p_{00} \log_2(p_{00}) - p_{01} \log_2(p_01)\\
-	H_1 &= -p_{10} \log_2(p_{10}) - p_{11} \log_2(p_11) 
+	H_0 &= -\frac{p_{00}}{p_0} \log_2(\frac{p_{00}}{p_0}) - \frac{p_{01}}{p_0} \log_2(\frac{p_{01}}{p_0}),\\
+	H_1 &= -\frac{p_{10}}{p_1}  \log_2(\frac{p_{10}}{p_1} ) - \frac{p_{11}}{p_1}  \log_2(\frac{p_{11}}{p_1}). 
 	\end{align}
 The conditional entropy is maximised to 1 bit for bitstreams where the probability of a bit being 0 or 1 does not depend on the state of the
 preceding bit, which is here defined as \emph{false information}. With the conditional and unconditional entropies and $p_0,p_1$ as in
 Eq. \ref{eq:bit_unconditional_entropy} the mutual information $M$ of succeeding bits can be written as
 	\begin{equation}
-	I = H - p_0H_0 - p_1H_1
+	I = H - p_0H_0 - p_1H_1,
 	\label{eq:realinformation_content}
 	\end{equation}
 which is the real information content $I$. This definition is similar to \cite{Jeffress2017} but avoids an additional assumption of an uncertainty
@@ -165,9 +172,9 @@ Let $b_j$ be a bitstream obtained by unravelling a given bitposition in $A$ alon
 Although the unconditional entropy $H$ is unchanged along the $m$-dimensions, the conditional entropies $H_0,H_1$ change as the
 preceding and succeeding bit is found in another dimension, e.g. $b_2$ is obtained by reordering $b_1$. $H_0(b_j)$ and $H_1(b_j)$
 are the respective conditional entropies calculated from bitstream $b_j$. Normalisation by $\tfrac{1}{m}$  is applied to $I_m$ such
-that the maximum information is 1 bit in $I_m^*$
+that the maximum information is 1 bit in $I_m^*$:
 	\begin{equation}
-	I_m^* = H - \frac{p_0}{m} \sum_{j=1}^mH_0(b_j) - \frac{p_1}{m}\sum_{j=1}^mH_1(b_j)
+	I_m^* = H - \frac{p_0}{m} \sum_{j=1}^mH_0(b_j) - \frac{p_1}{m}\sum_{j=1}^mH_1(b_j).
 	\end{equation}
 Due to the presence of periodic boundary conditions for longitude a succeeding bit might be found across the bounds of $A$.
 This simplifies the calculation as the bitstreams are obtained from permuting the dimensions of  and subsequent unravelling into a vector.
@@ -178,20 +185,20 @@ This simplifies the calculation as the bitstreams are obtained from permuting th
 We define the preserved information $P(r,s)$ in a bitstream $s$ when approximating $r$ (e.g. after a lossy compression) via the
 symmetric normalised mutual information
 	\begin{equation}
-	R(r,s) = \frac{2M(r,s)}{H(r) + H(s)}
+	R(r,s) = \frac{2M(r,s)}{H(r) + H(s)}.
 	\end{equation}
 $R$ is the redundancy of information of $r$ in $s$. The preserved information $P$ in units of bits is then the redundancy-weighted real information
-$I$ in $r$
+$I$ in $r$:
 	\begin{equation}
-	P(r,s) = R(r,s)I(r)
+	P(r,s) = R(r,s)I(r).
 	\end{equation}
 The information loss $L$ is $1-P$ and represents the unpreserved information of $r$ in $s$. In most cases we are interested in the preserved
 information of an array $X = (x_1,x_2,...x_q,...x_n)$ of bitstreams $x$ when approximated by a previously compressed array $Y = (y_1,y_2,...y_q,...y_n)$.
 For an array $A$ of floats with $n=~$32 bit, for example, $x_1$ is the bitstream of all sign bits unravelled along a given dimension (e.g. longitudes) and  $x_{32}$
 is the bitstream of the last mantissa bits. The redundancy $R(X,Y)$ and the real information $I(X)$ are then calculated for each bit position $q$ individually,
-and the fraction of preserved information $P$ is the redundancy-weighted mean of the real information in $X$
+and the fraction of preserved information $P$ is the redundancy-weighted mean of the real information in $X$:
 	\begin{equation}
-	P(X,Y) = \frac{ \sum_{q=1}^n R(x_q,y_q)I(x_q)}{\sum_{q=1}^n I(x_q)}
+	P(X,Y) = \frac{ \sum_{q=1}^n R(x_q,y_q)I(x_q)}{\sum_{q=1}^n I(x_q)}.
 	\end{equation}
 The quantity $\sum_{q=1}^nI(x_q)$ is the total information in $X$ and therefore also in $A$. The redundancy is $R=1$ for bits that are
 unchanged during rounding and $R=0$ for bits that are rounded to zero. The preserved information with bitshave or halfshave
@@ -214,14 +221,14 @@ of a bit being $0$ or $1$ approach $p_0 \approx p_1 \approx \tfrac{1}{2}$, but t
 Consequently, the entropy is smaller than 1, but only insignificantly. The probability $p_1$ of successes in the binomial distribution
 (with parameter $\tfrac{1}{2}$) with $l$ trials (using the normal approximation for large $l$) is
 	\begin{equation}
-	p_1 = \frac{1}{2} + \frac{z}{2\sqrt{2}}
+	p_1 = \frac{1}{2} + \frac{z}{2\sqrt{2}},
 	\end{equation}
 where $z$ is the $1-\tfrac{1}{2}(1-c)$ quantile at confidence level c of the standard normal distribution. For $c = 0.99$ corresponding
 to a 99\%-confidence level which is used as default here, $z = 2.58$ and for $l = 5.5 \cdot 10^7$  (the size of a 3D array from CAMS)
 a probability $\tfrac{1}{2} \leq p \leq p_1 = 0.5002$ is considered insignificantly different from equal occurrence $p_0 = p_1$.
 The associated free entropy $H_f$ in units of bits follows as
 	\begin{equation}
-	H_f = 1 - p_1\log_2(p_1) - (1-p_1)\log_2(1-p_1)
+	H_f = 1 - p_1\log_2(p_1) - (1-p_1)\log_2(1-p_1).
 	\end{equation}
 We consider real information below $H_f$ as insignificantly different from 0 and set the real information $I = 0$.
 
@@ -266,7 +273,7 @@ compressibility is found with increased correlation.
 	\label{fig:information_correlation}
 \end{figure}
 
-The compression factors can, however, depend on the range of values represented in binary: A shift in the mean to have
+The compression factors can, however, depend on the range of values represented in binary: a shift in the mean to have
 positive or negative values only means that the sign bit is unused, which increases compression factors
 (compare Fig. \ref{fig:information_correlation}a with b), despite identical correlation coefficients. Although the correlation
 is invariant under multiplicative scaling and addition, the bitwise information changes under addition: When the range of
@@ -274,6 +281,8 @@ values in data fits into a power of two its real information is shifted across b
 the exponent bits are unused. This can be observed for atmospheric temperatures stored in Kelvin (within 200-330K)
 where only the last exponent bit and mantissa bits contain information (Fig. \ref{fig:ensemble_information}).
 Using Celsius instead shifts information from the mantissa bits into the exponent and sign bits.
+In conclusion, while the information stored in temperature is independent of the unit, the required precision can change
+and is in general application-dependent (see section \ref{sec:turing_test}).
 
 \subsection{Limitations of the information-preserving compression}
 \label{sec:information_limitation}
@@ -346,9 +355,9 @@ For images it is based on comparisons of luminance, contrast and structure. For 
 to SSIM can be interpreted as the preservation of the mean; the contrast compares the variances and the structure compares the
 correlation. The SSIM of two arrays $A,B$ of same size is defined as
 	\begin{equation}
-	\op{SSIM}(A,B) = \frac{(2\mu_A\mu_B + c_1)(2\sigma_{AB} + c_2)}{(\mu_A^2 + \mu_B^2 + c_1)(\sigma^2_A + \sigma^2_B + c_2)}
+	\op{SSIM}(A,B) = \frac{(2\mu_A\mu_B + c_1)(2\sigma_{AB} + c_2)}{(\mu_A^2 + \mu_B^2 + c_1)(\sigma^2_A + \sigma^2_B + c_2)},
 	\end{equation}
-With $\mu_A,\mu_B$ the respective means, $\sigma^2_A,\sigma^2_B$ the respective variances and $\sigma_{AB}$ the covariance.
+with $\mu_A,\mu_B$ the respective means, $\sigma^2_A,\sigma^2_B$ the respective variances and $\sigma_{AB}$ the covariance.
 $c_1 = (k_1L)^2$ and $c_2 = (k_2L)^2$  are introduced to increase stability with a small denominator and $k_1 = 0.01, k_2 = 0.03$.
 The dynamic range is $L = \max(\max(A),\max(B)) - \min(\min(A),\min(B))$. The SSIM is a value in $[0,1]$ where the best possible
 similarity $\op{SSIM}=1$ is only achieved for identical arrays.
@@ -389,17 +398,17 @@ information as a metric for data compression.
 
 The $n$-bit linear quantization compression for each element $a$ in an array $A$ is
 	\begin{equation}
-	\tilde{a} = \op{round} \left( 2^{n-1} \frac{a - \min(A)}{\max(A) - \min(A)} \right)
+	\tilde{a} = \op{round} \left( 2^{n-1} \frac{a - \min(A)}{\max(A) - \min(A)} \right),
 	\end{equation}
 with $\op{round}$ a function that rounds to the nearest integer in $0,...,2^{n-1}$. Consequently, every compressed element $\tilde{a}$
 can be stored with $n$ bits. The $n$-bit logarithmic quantization compression for every element $a\geq0$ in $A$ is
 	\begin{equation}
 	\tilde{a} = \begin{cases} 0 \quad &\text{if } a = 0, \\
-	\text{round}\left( c + \Delta^{-1}\log(a) \right) + 1 \quad &\text{else.} \end{cases}
+	\text{round}\left( c + \Delta^{-1}\log(a) \right) + 1 \quad &\text{else,} \end{cases}
 	\end{equation}
 which reserves the bit pattern zero to encode 0. The logarithmic spacing is
 	\begin{equation}
-	\Delta = \frac{\log(\max(A)) - \log(\min^+(A))}{2^{n}-2}
+	\Delta = \frac{\log(\max(A)) - \log(\min^+(A))}{2^{n}-2}.
 	\end{equation}
 The constant $c = 1/2 - \Delta^{-1}\log(\text{min}^+(A)(\exp(\Delta)+1)/2)$ is chosen to implement round-to-nearest in linear space
 instead of in logarithmic space, for which $c=-\Delta^{-1}\log(\text{min}^+(A))$. The function $\min^+(A)$  is the minimum of all
@@ -536,8 +545,10 @@ information, which has to be analysed to identify bits with and without real inf
 be conserved while the latter should be discarded to increase compression efficiency.
 
 \begin{figure}[tbhp]
-	\includegraphics[width=1\textwidth]{Figures/compression/infograph_cut.pdf}
-	\caption{\textbf{The bitwise real information content explained schematically.}}
+	\includegraphics[width=1\textwidth]{Figures/compression/infograph_proof_cut.pdf}
+	\caption{\textbf{The bitwise real information content is defined as the mutual information of bits in adjacent grid points.}
+	A bit contains more real information the stronger the statistical dependence to the adjacent bits is. Independent
+	bits contain only false information and are rounded to 0 to facilitate lossless compression.}
 	\label{fig:infograph}
 \end{figure}
 
@@ -604,7 +615,7 @@ Aiming for 99\% preserved information is found to be a reasonable compromise.
 
 \subsection{Compressing only the real information}
 
-Based on the bitwise real information content, we suggest a new strategy for data compression of climate variables:
+Based on the bitwise real information content, we suggest a new strategy for data compression of climate variables.
 First, we diagnose the real information for each bit position. Afterwards, we round bits with no significant real information
 to zero, before applying lossless data compression. This allows us to minimise information loss but to maximise the
 efficiency of compression algorithms.
@@ -663,7 +674,7 @@ are comparable. The decimal errors are often even lower and naturally bound in a
 	\label{fig:precipitation}
 \end{figure}
 
-A broad applicability of the bitwise real information content analysis for compression is tested with further data sets:
+A broad applicability of the bitwise real information content analysis for compression is tested with further data sets.
 Radar-based observations of precipitation over Great Britain are similarly compressible using the same method
 (Fig. \ref{fig:precipitation}) and so are satellite measurements of brightness temperature with a very high resolution
 of about 300m horizontally (Fig. \ref{fig:brightness_temp}). Even for anthropogenic emissions of methane or nitrogen
@@ -738,7 +749,11 @@ Multidimensional compression imposes additional inflexibilities for data retriev
 in larger chunks, which can increase the load on the data archive. For example, if the data is compressed across the time
 dimension, data of several time steps have to be downloaded and decompressed although only data from a single time
 step might be requested. Downloads from an archive might therefore increase if the data chunking is not well suited to
-typical data requests from users. 
+typical data requests from users. This problem is also faced by one-dimensional or without compression when the
+data request does not match the data structure. Data from an array that is stored along longitudes in an archive cannot
+be efficiently read when data in other dimensions is requested, e.g. a vertical profile at a single location. However,
+multidimensional compression will inevitably exacerbate this problem and random access of large multidimensional data
+sets, whether compressed or not, is an active field of research.
 
 For 1D compression the compressibility varies with the dimension: Longitude (i.e. in the zonal direction) is more compressible,
 reaching 25x for temperature at 99\% preserved information, than compressing in the vertical which yields only 14x
@@ -790,6 +805,7 @@ forecast is therefore unaltered at these levels of preserved information in the 
 \end{figure}
 
 \subsection{A Turing test for data compression}
+\label{sec:turing_test}
 
 In numerical weather predictions, progress in the development of global weather forecasts is often assessed using a set of error metrics,
 summarised in so-called \emph{score cards}. These scores cover important variables in various large scale regions, such as the temperature
@@ -849,7 +865,14 @@ spatial dimensions the entire set of variables in CAMS data can be compressed by
 No additional uncertainty measure has to be assumed for the distinction of real and false information presented here. The uncertainty of a variable
 represented in a data array is directly obtained from the distribution of the data itself. Most lossy compression techniques leave the choice of
 precision to the user, which may lead to subjective choices or the same precision for a group of variables. Instead, our suggestion that
-99\% of information should be preserved may be altered by the user, which will implicitly determine the required precision for each variable individually. 
+99\% of information should be preserved may be altered by the user, which will implicitly determine the required precision for each variable individually.
+
+It is important to distinguish between the real bitwise information content as defined here and the required precision for a data set.
+The required precision depends on the application: a budget analysis in a climate model likely requires a higher precision than a
+highly uncertain variable in a weather forecast. In that sense, the real bitwise information content is one approach to quantify the
+required precision, designed to be applicable in many use cases. However, as an information-based metric, solely derived from the
+data itself, it cannot guarantee to estimate the required precision in all applications accurately. To further refine the required precision
+for an application the iterative Turing test is proposed.
 
 To be attractive for large data sets, a compression method should enable compression as well as decompression at reasonable speeds.
 ECMWF produces data at about 2GB/s, including CAMS which creates about 15 MB/s. Data on ECMWF’s archive is compressed once,

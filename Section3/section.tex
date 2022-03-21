@@ -104,7 +104,7 @@ is analysed with the Wasserstein distance, which is briefly described in section
 \label{sec:randfloat}
 
 Conventional random number generation for a float $f$ from a uniform distribution $U(0,1)$
-in $[0,1)$ uses the following technique: First, 10, 23, or 52 random bits (for Float16, Float32, or Float64, respectively)
+in $[0,1)$ uses the following technique. First, 10, 23, or 52 random bits (for Float16, Float32, or Float64, respectively)
 from an unsigned integer are used to set the mantissa bits of floating-point 1. This creates a floating-point
 number that is uniformly distributed in $[1,2)$ as all float formats are uniformly distributed in that range. Second,
 $1$ is subtracted to obtain a float in $[0,1)$, i.e. $f \sim U(1,2) - 1$. While this approach is fast, it is statistically
@@ -138,7 +138,7 @@ function randfloat(::Type{Float32})
     # ui % UInt32 drops the first 32 bits
     # & 0x007f_ffff sets non-mantissa bits to 0
     # e | then combines exponent and mantissa
-    # and reinterpret the UInt32 as Float32
+    # then reinterpret the UInt32 as Float32
     return reinterpret(Float32,e | ((ui % UInt32) & 0x007f_ffff))
 end
 \end{lstlisting}
@@ -164,7 +164,7 @@ The state of a deterministic dynamical system is entirely determined by $X = (X_
 prognostic variables at a given time step $t$. We define a periodic orbit when the state vector $X^{t_0}$ at time step $t_0$
 reoccurs at a later time step $t_1 > t_0$
 \begin{equation}
-	X^{t_0} = X^{t_1}
+	X^{t_0} = X^{t_1}.
 	\label{eq:periodic_orbit}
 \end{equation}
 Bitwise equality is hereby required with an exception for floats where $-0 = 0$, which arithmetically does not impact on the
@@ -278,17 +278,17 @@ to a natural notion of closeness between probability distributions \citep[Thm 7.
 The generalised Bernoulli map \citep{Parry1960} is a 1-variable chaotic system starting with $x_0 \in [0,1)$
 at time iteration $i=0$ with the parameter $\beta > 1$ defined as
 \begin{equation}
-	x_{i+1} = f_\beta(x_i) = \beta x_i \mod 1
+	x_{i+1} = f_\beta(x_i) = \beta x_i \mod 1.
 	\label{eq:bernoulli}
 \end{equation}
 The modulo-operator $\mathrm{mod}$ satisfies that $x \in [0,1)$ in all future iterations. Simulating this system was found to not represent
 well the periodic orbit spectrum \citep{Boghosian2019}, which is closely related to the simulated invariant measure. For the
-generalised Bernoulli map the analytical invariant measure is known \citep{Hofbauer1978}
+generalised Bernoulli map the analytical invariant measure is known \citep{Hofbauer1978},
 \begin{equation}
-	h_\beta(x) = C\sum_{j=0}^\infty \beta^{-j} \theta(1_j - x)
+	h_\beta(x) = C\sum_{j=0}^\infty \beta^{-j} \theta(1_j - x).
 	\label{eq:hofbauer}
 \end{equation}
-The heaviside function is $\theta$ and $1_j$ is the $j$-th iteration of the Bernoulli map starting from $x_0 = 1$, i.e. $1_j = f_\beta^j(1)$.
+$\theta$ is the Heaviside function and $1_j$ is the $j$-th iteration of the Bernoulli map starting from $x_0 = 1$, i.e. $1_j = f_\beta^j(1)$.
 The normalization constant is chosen as $C=1$, but for the calculation of Wasserstein distances renormalization is applied so that
 $C\int_0^1h_\beta(x) \mathrm{d}x = 1$, which ensures that $Ch_\beta(x)$ is a probability density function. To better visualise the
 invariant measure for varying $\beta$ we introduce a normalisation $h_\beta^*(x) = \tfrac{h_\beta(x)}{\max(h_\beta(x))}$, which is always
@@ -320,7 +320,7 @@ supported on hardware.
 after $n$ iterations with any float format at arbitrary high precision, where $n$ is smaller than the number of bits in the format.
 The subtraction with 1 acts as a bitshift in base-2 format towards more significant bits, pushing zero bits in the mantissa until $x=1$
 and the modulo returns $x = 0$ (Figure \ref{fig:orbits_beta2}a, b and c). This phenomenon occurs
-as the Bernoulli map with $beta=2$ (and similarly for larger even integers) does not introduce any arithmetic rounding error: Both the
+as the Bernoulli map with $\beta=2$ (and similarly for larger even integers) does not introduce any arithmetic rounding error: Both the
 multiplication with $\beta$ and subtraction with 1 are exact with floats (and also with posits) in $[1,2)$. The multiplication with $\beta=2$
 is exact as the base-2 exponent is simply increased by 1. The subtraction with 1 is exact as every finite positive float
 or posit can be written as $2^e(1+f)$ (see Eq. \ref{eq:float}) for some integer exponent $e$ and a sum $f \in [0,1)$ of powers of two
@@ -463,12 +463,10 @@ unaffected for all practical purposes.
 To investigate the dependence of periodic orbits on the number of variables in the system we consider the chaotic Lorenz 1996 system
 \citep{Hatfield2017, Lorenz1998}. With $N$ variables $X_i,i=1,...,N$ the Lorenz 1996 system is a system of coupled ordinary differential
 equations
-
 \begin{equation}
 	\frac{\mathrm{d}X_i}{\mathrm{d}t} = (X_{i+1} - X_{i-2})X_{i-1} - X_i + F
 	\label{eq:lorenz96}
 \end{equation}
-
 in a 1-dimensional spatial domain with periodic boundary conditions, $X_{N+1} = X_1$ etc. The term $(X_{i+1} - X_{i-2})X_{i-1}$
 implements nonlinear advection and drag is represented with the relaxation term $-X_i$. The forcing $F$ is the single parameter
 in the Lorenz 1996 system fixed at the common default $F=8$ which produces chaotic solutions. The forcing is steady in time and
@@ -485,7 +483,7 @@ as $N=4$ variables without an obvious degradation of the simulated dynamics.
 	\label{fig:orbits_hovmoeller}
 \end{figure}
 
-The initial conditions are in equilibrium $X_i = F, \forall i i \neq j$ with only a single variable which is slightly perturbed, 
+The initial conditions are in equilibrium $X_i = F, \forall i \neq j$ with only a single variable which is slightly perturbed, 
 $X_j = F + 0.005 + 0.01\epsilon$ with $\epsilon \sim U(0,1)$, drawn from a random uniform distribution in $[0,1)$.
 Due to the periodic boundary conditions, the system is spatially invariant once the information from the initial conditions
 is removed through the chaotic dynamical evolution, after some several hundred time steps (Figure \ref{fig:orbits_hovmoeller}a).
@@ -494,7 +492,8 @@ as will be further discussed below.
 
 The Lorenz 1996 system is discretized in time using the 4-th order Runge-Kutta scheme \citep{Butcher2008} with a time
 step of $\Delta t = 0.01$. At this temporal resolution the system can also be integrated using a low-precision number format
-such as Float16 (Figure \ref{fig:orbits_hovmoeller}). For more details and a software implementation see Lorenz96.jl (Klöwer, 2019/2021).
+such as Float16 (Figure \ref{fig:orbits_hovmoeller}). For more details and a software implementation see
+\href{https://github.com/milankl/Lorenz96.jl}{Lorenz96.jl} \citep{Klower2021e}.
 
 \subsection{Longer orbits with more variables}
 
@@ -574,7 +573,7 @@ with more variables this chance quickly vanishes. In many complex natural system
 further limiting the relevance of this issue in practice.
 
 Increasing the number of variables in the Lorenz 1996 system, we find that more variables improve the simulated invariant measure
-much more than increased precision with fewer variables does: Doubling the amount of variables yields a more accurate invariant
+much more than increased precision with fewer variables does: doubling the amount of variables yields a more accurate invariant
 measure compared to a high-resolution and high-precision reference than doubling the precision. This provides evidence that
 computational resources should be invested in higher resolution rather than higher precision for the simulation of continuous
 chaotic systems.
@@ -584,6 +583,8 @@ with the number of variables and precision. Experimentally, we find orbits that 
 of independent variables in the Lorenz 1996 system. Every variable is found to add between 4 and 7 maximum entropy bits that
 extend orbits by a factor of $2^4$ to $2^7$. Assuming similarly a maximum entropy for additional mantissa bits beyond a
 sufficiently high precision, the expected length of bitwise periodic orbits doubles with every additional mantissa bit in precision.
+Many complex natural systems have a time-dependent forcing, which will lengthen the bitwise periodic orbits compared to
+steady forcing, further limiting the issue of short orbits in practice.
 
 For more complex simulations of natural systems such as million-variable climate models, the expected bitwise periodic orbits
 extrapolate to lengths beyond $10^{100,000}$ time steps even in 16-bit precision. Bitwise periodic orbits are therefore not in reach
@@ -636,7 +637,7 @@ with added stochasticity to accelerate and improve climate predictions in decade
         \end{tabular}
 	\caption{\textbf{Bitwise periodic orbits in the Lorenz 1996 system simulated with Float16 and N variables.}
 	The period length is given as the number of time steps. The basin is the fraction of initial conditions ending
-	up on a given orbit. The minimum is one point on the orbit for which the  norm is minimized. Simulations
+	up on a given orbit. The minimum is one point on the orbit for which the norm is minimized. Simulations
 	performed with \href{https://github.com/milankl/Lorenz96.jl}{Lorenz96.jl}.}
 	\label{tab:orbits}
 \end{table}

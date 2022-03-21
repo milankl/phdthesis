@@ -80,7 +80,7 @@ based on interval arithmetic, providing rigid rounding error bounds, or on stoch
 While these can be useful to identify the minimal decimal precision for simulating chaotic systems, analysing the limited dynamic range
 of low-precision number formats is largely unaddressed in these tools.
 
-In this chapter, we present, to our knowledge, the first fluid circulation model that runs entirely in hardware-accelerated 16-bit floats on the
+In this chapter, we present, to our knowledge, the first modern fluid circulation model that runs entirely in hardware-accelerated 16-bit floats on the
 ARM architecture-based microprocessor A64FX. Strategies are presented to solve precision and range issues with 16-bit arithmetic:
 In section \ref{sec:hardware_methods} we scale the shallow water equations, and an appropriate scale is found with the
 newly-developed analysis-number format Sherlogs.jl. Additionally, a compensated time integration is presented to minimise
@@ -109,32 +109,48 @@ benchmarks the performance compared to Float64. Section \ref{sec:hardware_discus
 \subsection{Scaling the shallow water equations}
 \label{sec:swm_scaling}
 
-The shallow water equations describe atmospheric or oceanic flow idealised to two horizontal dimensions. They result from
-a vertical integration of the Navier-Stokes equations \citep{Gill1982,Vallis2006} and are simplified but representative of many
-weather and climate models, which are usually solved with many vertically-coupled horizontal layers. They describe the time
+The shallow water equations describe an oceanic flow idealised to two horizontal dimensions. They result from
+a vertical integration of the Navier-Stokes equations \citep{Gill1982,Vallis2006} after several approximations.
+The shallow water equations are simplified but representative of many weather and climate models, which are
+usually solved with many vertically-coupled horizontal layers. They describe the time
 evolution of the prognostic variables velocity $\mathbf{u} = (u,v)$, and interface height $\eta$  in the following form 
 \begin{align}
 \partial_t\mathbf{u} &+ \mathbf{u} \cdot \nabla \mathbf{u} + f\mathbf{z} \times \mathbf{u} =
--g\nabla \eta + \nu_B \nabla^4 \mathbf{u} - r \mathbf{u} + \mathbf{F} \nonumber \\
+-g\nabla \eta + \nu_B \nabla^4 \mathbf{u} - r \mathbf{u} + \mathbf{F}, \nonumber \\
 \partial_t\eta &+ \nabla \cdot (\mathbf{u}h) = 0 \nonumber \\ 
-\partial_tq &+ \mathbf{u} \cdot \nabla q = -\tau(q-q_0)
+\partial_tq &+ \mathbf{u} \cdot \nabla q = -\tau(q-q_0),
+\label{eq:swm_a64fx}
 \end{align}
-defined over a rectangular domain with zonal and meridional coordinates $x,y$ of size $L_x = 8000\op{km}$,
-$L_y  = 4000\op{km}$, respectively. The domain is a zonal channel with boundary conditions being periodic in $x$.
-The channel setup is motivated by zonal flows like the Antarctic Circumpolar Current but highly idealised \citep{Jansen2015,Jansen2015a}.
+The shallow water model and its discretisation is explained in more detail in Appendix \ref{sec:swm_appendix}. Here we
+discuss the parameter choices relevant for this chapter and in contrast to the previous chapter which used an older version
+of the same model. The shallow water equations are defined over a rectangular domain
+with zonal and meridional coordinates $x,y$ of size $L_x = 8000\op{km}$, $L_y  = 4000\op{km}$, respectively. The domain
+is a zonal channel with boundary conditions being periodic in $x$. The channel setup is motivated by zonal oceanic flows like
+the Antarctic Circumpolar Current but highly idealised \citep{Jansen2015,Jansen2015a}.
 
-The non-linear momentum advection is $\mathbf{u} \cdot \nabla\mathbf{u}$. The Coriolis force is
-$f\mathbf{\hat{z}} \times \mathbf{u} = (-fv,fu)$ with the Coriolis parameter $f$ using a $\beta$-plane approximation at 45\textdegree{}N.
-The pressure gradient $-g\nabla \eta$ scales with a reduced gravitational acceleration $g = 0.01\op{ms}^{-2}$ to represent
-baroclinic ocean/atmosphere dynamics \citep{Gill1982}, which is in contrast to the barotropic model setup in chapter \ref{chap:shallow_water}.
-The zonal wind forcing $\mathbf{F} = (F_x,0)$ is a meridional shear $F_x = F_0\sin(\omega t) \tanh(2\pi(L_y^{-1} - \tfrac{1}{2}))$ which
-reverses seasonally ($\omega^{-1} = 365\op{days}$). Lateral diffusion of momentum is described by $\nu_B\nabla^4\mathbf{u}$, with
-biharmonic viscosity coefficient $\nu_B$. Linear bottom friction is represented by $-r\mathbf{u}$ which decelerates the flow at a time
-scale of $r^{-1} = 300\op{days}$. The equation for interface height $\eta$ is the shallow water-variant of the continuity equation, ensuring
-conservation of volume (and mass as the density $\rho$ is constant). The layer thickness is $h = \eta + H$ of a fluid with depth $H$ at rest.
-Several meridional ridges on the seafloor trigger instabilities in the zonal flow, but they are small compared to the fluid depth.
-The shallow water equations are complemented with an advection for the passive tracer $q$ , which is stirred by the flow
-through $\mathbf{u} \cdot \nabla q$ and slowly ($\tau^{-1} = 100\op{days}$) relaxed back to a reference $q_0$.
+In contrast to the barotropic model setup in chapter \ref{chap:shallow_water}, we reduce the gravitational acceleration to
+$g = 0.1\op{ms}^{-2}$. A reduced gravity is usually chosen to represent baroclinic dynamics in a two-layer ocean
+with a rigid surface and an interface $\eta$ between them. The lower layer is motionless. Despite its physical representation,
+here the main motivation to reduce gravity is to slow down gravity waves which allows for longer time steps.
+The shallow water gravity wave speed is with $c_{ph} = 7 \mathrm{ms}^{-1}$ a factor of 10 slower than in
+chapter \ref{chap:shallow_water}, which allows for 10 times longer time steps.
+
+The Rossby number $Ro$ is small for basin-wide motions, $Ro < 0.01$, but unity is approached for dynamics near the grid scale,
+which is here on the order of kilometres. The Coriolis parameter changes from $f=7\cdot10^{-5}~\mathrm{s}^{-1}$ at the southern boundary
+to $f=1.4\cdot10^{-4}~\mathrm{s}^{-1}$ at the northern boundary. The Rossby radius of deformation $L_R = \tfrac{c_{ph}}{f}$ is
+between 50 and 100~km and in comparison to chapter \ref{chap:shallow_water} smaller due to slower gravity waves.
+
+To increase the turbulence throughout the domain, the zonal wind forcing $\mathbf{F} = (F_x,0)$ is a meridional shear
+$F_x = F_0\sin(\omega t) \tanh(2\pi(yL_y^{-1} - \tfrac{1}{2}))$ which reverses seasonally ($\omega^{-1} = 365\op{days}$). 
+In comparison to chapter \ref{chap:shallow_water} this effectively reduces the spin-up time, requiring fewer computational
+resources at higher resolution. Similarly, four meridional ridges on the seafloor have been added, irregularly spaced in the zonal direction,
+in comparison to chapter \ref{chap:shallow_water} to trigger more instabilities in the zonal flow. All mountain ridges have
+a height of $H_1 = 100~\mathrm{m}$ compared to the fluid depth of $H_0 = 500~\mathrm{m}$.
+
+To better visualise the turbulence throughout the domain, the advection for the passive tracer $q$ (Eq. \ref{eq:swm_a64fx})c)
+includes a relaxation term, which slowly restores the tracer field to the reference $q_0$ at the time scale of $\tau^{-1} = 100\op{days}$.
+Bottom friction is disabled in simulations in this chapter ($c_D = 0$ in Eq. \ref{eq:diss}), but for illustrative purposes we retain
+a linear bottom friction term $-r\mathbf{u}$ in the scaling of the shallow water equations. 
 
 In order to control the range of numbers occurring in the simulation, the shallow water equations are scaled with a multiplicative
 constant. The evaluation of linear terms is not affected, but the non-linear terms involve an unscaling. The same constant $s$
@@ -145,25 +161,24 @@ but generalisation to less regular grids is possible. The grid spacing $\Delta x
 $\widehat{\Delta t} = \tfrac{\Delta t}{\Delta x}$ and $\hat{\partial_t} = \Delta x \partial_t$. Due to the 4th-order gradient in the
 viscosity, we scale its coefficient as $\hat{\nu_B} = \Delta x^{-3}\nu_B$. Using the potential vorticity $h^{-1}(f + \zeta)$,
 with the relative vorticity $\zeta = \partial_xv - \partial_yu$, and the Bernoulli potential $\tfrac{1}{2}(u^2 + v^2) + g\eta$,
-the shallow water equations can be written into a scaled form as
-
+the shallow water equations can be written into a vector-invariant form (section \ref{sec:vector_invariant}). A scaled version
+of this form is solved by the numerical model and reads as
 \begin{align}
 \hat{\partial_t}\hat{u} &= \frac{[s\Delta x f]+ \hat{\zeta}}{\hat{h}}\frac{\hat{v}\hat{h}}{s} -\hat{\partial_x}
 \left([\frac{1}{2s}](\hat{u}^2 + \hat{v}^2) + [\frac{sg}{s_\eta}]\hat{\eta} \right) + \hat{\nu_B} \hat{\nabla}^4 \hat{u}
-- [r\Delta x]\hat{u} + [s\Delta x F_x] \nonumber \\
+- [r\Delta x]\hat{u} + [s\Delta x F_x], \nonumber \\
 \hat{\partial_t}\hat{v} &= - \frac{[s\Delta x f]+ \hat{\zeta}}{\hat{h}}\frac{\hat{u}\hat{h}}{s} -\hat{\partial_y}
 \left([\frac{1}{2s}](\hat{u}^2 + \hat{v}^2) + [\frac{sg}{s_\eta}]\hat{\eta} \right) + \hat{\nu_B} \hat{\nabla}^4 \hat{v}
-- [r\Delta x]\hat{v} + [s\Delta x F_y]
+- [r\Delta x]\hat{v} + [s\Delta x F_y].
 \end{align}
 Square brackets denote pre-computed constants and only the volume fluxes $uh,vh$ have to be unscaled on every time step.
 As the volume fluxes are quadratic terms, the evaluation of $\hat{u}\hat{h}$ scales as $s^2$, which therefore has to be
 partly unscaled with $s^{-1}$. The continuity equation is rescaled with $s_\eta$, i.e. $\hat{\eta} = s_\eta \eta$ as well as
-$\hat{h} = \hat{\eta} + s_\eta H$, and the tracer advection equation is rescaled with $s_q$, so that $\hat{q} = s_q q$
+$\hat{h} = \hat{\eta} + s_\eta H$, and the tracer advection equation is rescaled with $s_q$, so that $\hat{q} = s_q q$.
 \begin{align}
-\hat{\partial_t} \hat{\eta} &= -\hat{\partial_x}(\frac{\hat{u}\hat{h}}{s}) - \hat{\partial_y}(\frac{\hat{v}\hat{h}}{s}) \nonumber \\
-[s\hat{\partial_t}] \hat{q} &= \left(-\hat{u}\hat{\partial_x} \hat{q} - \hat{v}\hat{\partial_y} \hat{q}\right) - [\tau \Delta x](\hat{q} - \hat{q_0})
+\hat{\partial_t} \hat{\eta} &= -\hat{\partial_x}(\frac{\hat{u}\hat{h}}{s}) - \hat{\partial_y}(\frac{\hat{v}\hat{h}}{s}), \nonumber \\
+[s\hat{\partial_t}] \hat{q} &= \left(-\hat{u}\hat{\partial_x} \hat{q} - \hat{v}\hat{\partial_y} \hat{q}\right) - [\tau \Delta x](\hat{q} - \hat{q_0}).
 \end{align}
-
 ShallowWaters.jl solves these scaled shallow water equations with 2nd order finite differencing on a regular,
 but staggered Arakawa C-grid \citep{Arakawa1977}. The advection of potential vorticity uses the energy
 and enstrophy-conserving scheme of \cite{Arakawa1990}. The tracer advection equation for $q$ is solved
@@ -307,7 +322,7 @@ Furthermore, the algorithm might cause stagnation, a phenomenon for which the pa
 causing each subsequent addition to be neglected due to rounding. Compensated summation offers a much
 better alternative at the cost of introducing an additional compensation variable \texttt{c} (Listing \ref{lst:compensated_summation})
 
-\begin{figure}
+\vspace{11pt}
 \begin{lstlisting}[language=JuliaLocal,caption={\textbf{An algorithm for compensated summation.}},label=lst:compensated_summation]
 c = 0                      # compensation, initially 0
 sum = 0                    # variable to store the sum
@@ -319,7 +334,6 @@ for ai in a                # loop over all elements of a
 end
 return sum
 \end{lstlisting}
-\end{figure}
 
 At infinite precision, the compensation \texttt{c} will remain 0. At finite precision, however, calculating \texttt{c = (temp-sum) - aic}
 will estimate the rounding error in the addition \texttt{sum + aic} and subsequently attempt to compensate for it in the next iteration
@@ -348,13 +362,13 @@ is subtracted from the total tendency $du$ in an attempt to compensate for the r
 This is illustrated here for the zonal velocity $u$ in isolation, although in practice the time integration has to update the
 prognostic variables $u,v,\eta$ simultaneously. A compensated time integration for $u$ with RK4 can be written as
 \begin{align}
-k_1 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_1) \nonumber \\
-k_2 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_2) \nonumber \\
-k_3 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_3) \nonumber \\
-k_4 &= \op{rhs}(u + \Delta t k_3) \nonumber \\
-du &= \tfrac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4) \nonumber \\
-u_{n+1}^* &= u_n + du \nonumber \\
-c_u &= (u^*_{n+1} - u_n) - du
+k_1 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_1), \nonumber \\
+k_2 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_2), \nonumber \\
+k_3 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_3), \nonumber \\
+k_4 &= \op{rhs}(u + \Delta t k_3), \nonumber \\
+du &= \tfrac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4), \nonumber \\
+u_{n+1}^* &= u_n + du, \nonumber \\
+c_u &= (u^*_{n+1} - u_n) - du,
 \label{eq:RK4_compensated}
 \end{align}
 with $c_u = 0$ as initial condition. The addition $u_n + du$ usually suffers from rounding errors as described above.
@@ -368,9 +382,9 @@ $c_u$ from Eq. \ref{eq:RK4_compensated} is subtracted from the total dissipative
 In that sense, the rounding error from Eq. \ref{eq:RK4_compensated} is attempted to be compensated subsequently
 in Eq. \ref{eq:RK4_compensated2}, and vice versa.
 \begin{align}
-du_{\op{diss}} &= \Delta t \op{rhs}_{\op{diss}}(u_{n+1}^*) - c_u \nonumber \\
-u_{n+1} &= u^*_{n+1} + du_{\op{diss}} \nonumber \\
-c_u &= (u_{n+1} - u_{n+1}^*) - du_{\op{diss}}
+du_{\op{diss}} &= \Delta t \op{rhs}_{\op{diss}}(u_{n+1}^*) - c_u, \nonumber \\
+u_{n+1} &= u^*_{n+1} + du_{\op{diss}}, \nonumber \\
+c_u &= (u_{n+1} - u_{n+1}^*) - du_{\op{diss}}.
 \label{eq:RK4_compensated2}
 \end{align}
 Only the addition of the total tendency is compensated here to minimise the amount of additional calculations, which
@@ -496,10 +510,12 @@ for Float16 is, although as precise, faster than mixed precision.
 
 Low-precision calculations for weather and climate simulations are a potential that is not yet fully exploited.
 While the first weather forecast models are moving towards Float32, 16-bit arithmetics will likely find increasing
-support on future supercomputers. We present, to our knowledge, the first fluid simulation that runs entirely in
-hardware-accelerated 16 bit with minimal rounding errors but at almost 4x the speed. The simulations were
-performed on A64FX, the microprocessor that is used in Fugaku, the fastest supercomputer as of November
-2020 (\href{https://top500.org}{TOP500}, \cite{Dongarra2011}).
+support on future supercomputers. Before the prevalence of 64-bit computing started in the 1990s, fluid models
+were written for available 16 or 32-bit hardware. Since then scientific computing has focused on 64-bit precision
+as higher performance through higher clock rates was expected to increase continuously \citep{Moore1998}.
+We present, to our knowledge, the first modern fluid simulation that runs entirely in hardware-accelerated 16 bits
+with minimal rounding errors but at almost 4x the speed. The simulations were performed on A64FX, the microprocessor
+that is used in Fugaku, the fastest supercomputer as of November 2020 (\href{https://top500.org}{TOP500}, \cite{Dongarra2011}).
 
 The complex partial differential equations underlying weather and climate simulations are difficult to fit into the
 limited range of Float16, but here we have presented a method to do this more systematically. We present 
