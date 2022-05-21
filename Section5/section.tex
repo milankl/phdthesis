@@ -362,11 +362,11 @@ is subtracted from the total tendency $du$ in an attempt to compensate for the r
 This is illustrated here for the zonal velocity $u$ in isolation, although in practice the time integration has to update the
 prognostic variables $u,v,\eta$ simultaneously. A compensated time integration for $u$ with RK4 can be written as
 \begin{align}
-k_1 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_1), \nonumber \\
-k_2 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_2), \nonumber \\
-k_3 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_3), \nonumber \\
+k_1 &= \op{rhs}(u), \nonumber \\
+k_2 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_1), \nonumber \\
+k_3 &= \op{rhs}(u + \tfrac{\Delta t}{2}k_2), \nonumber \\
 k_4 &= \op{rhs}(u + \Delta t k_3), \nonumber \\
-du &= \tfrac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4), \nonumber \\
+du &= \tfrac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4) - c_u, \nonumber \\
 u_{n+1}^* &= u_n + du, \nonumber \\
 c_u &= (u^*_{n+1} - u_n) - du,
 \label{eq:RK4_compensated}
